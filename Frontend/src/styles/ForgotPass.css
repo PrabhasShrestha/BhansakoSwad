@@ -1,0 +1,70 @@
+.forgot-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  .forgot-box {
+    width: 100%;
+    max-width: 400px;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .forgot-box h1 {
+    font-size: 24px;
+    color: #333333;
+    margin-bottom: 10px;
+  }
+  
+  .forgot-box p {
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 20px;
+  }
+  
+  .forgot-box label {
+    font-size: 14px;
+    display: block;
+    margin-bottom: 8px;
+    color: #666666;
+    text-align: left;
+  }
+  
+  .forgot-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .forgot-box button {
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .forgot-box button:hover {
+    background: #0056b3;
+  }
+  
+  .forgot-box a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .forgot-box a:hover {
+    text-decoration: underline;
+  }
+  

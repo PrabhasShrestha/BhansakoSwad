@@ -1,0 +1,223 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* Responsive Layout */
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 100vh;
+  }
+  
+  .form-section {
+    flex: 1;
+    background-color: #ffffff;
+    flex-direction: column;
+    padding-top: 25px;
+    align-items: center;
+  }
+  
+  .info-section {
+    flex: 1;
+    padding: 40px;
+    background-image: url('../assets/Signupbg.jpg'); /* Adjust path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: white;
+    position: relative; /* Enables layering */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-weight: bold;
+    margin-left: -150px;
+  }
+  
+  .info-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Black overlay with 50% opacity */
+    z-index: 1;
+  }
+  
+  .info-section * {
+    position: relative;
+    z-index: 2; /* Keeps text above the overlay */
+  }
+  
+  
+  .form-section h2 {
+    font-size: 24px;
+    font-family: "Bebas Neue", serif;
+    color: #00A2FC;
+    margin-left: 180px;
+  }
+  
+  .form-section h1 {
+    font-family: "Bebas Neue", serif;
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #000;
+    margin-left: 180px;
+  }
+  
+  .input-box {
+    width: 330px;
+    height: 60px;
+    padding: 10px;
+    margin-bottom: 1px;
+    font-size: 16px;
+    border: 1px solid #000000;
+    transition: border-color 0.3s ease;
+    margin-left: 180px;
+  }
+
+  
+  .create-account-btn {
+    width: 30%;
+    height: 56px;
+    background-color: #BD5FC4;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: 180px;
+  }
+  
+  .create-account-btn:hover {
+    background-color: #681d6d;
+  }
+  
+  .login-link {
+    color: #ff0000;
+    text-decoration: none;
+   
+  }
+  
+  .login-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Info Section Styling */
+  .info-section h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+  
+  .info-section h3 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: 400;
+    color: #000;
+  }
+  
+  .info-section ul {
+    list-style: none;
+    line-height: 1.8;
+    font-size: 16px;
+    opacity: 0.9;
+  }
+  
+  .info-section li {
+    margin-bottom: 10px;
+  }
+  
+  .info-section p.brand {
+    margin-top: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    opacity: 0.9;
+  }
+  
+  /* Error Message Styling */
+  .input-container {
+    position: relative;
+    margin-bottom: 15px;
+  }
+  
+  .error {
+    color: red;
+    font-size: 12px;
+    position: absolute;
+    bottom: -15px; /* Adjust the position above the input */
+    left: 0;
+    margin-left: 180px;
+  }
+  .input-error {
+    border: 2px solid red;
+    margin-left: 180px;
+  }
+  .input-container label {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+    margin-left: 180px;
+  }
+
+  .info-section .brand-text {
+    position: absolute;
+    bottom: 20px; /* Adjust the spacing from the bottom */
+    right: 20px; /* Adjust the spacing from the right */
+    font-size: 18px; /* Adjust font size as needed */
+    color: white;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.7); /* Add shadow for better visibility */
+  }
+  .pw-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  
+  .pw-eye-icon {
+    position: absolute;
+    left: 480px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .pw-eye-icon:hover{
+    color: rgb(133, 133, 133);
+  }
+
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+  
+    .form-section, .info-section {
+      width: 100%;
+      padding: 20px;
+    }
+  
+    .form-section h1, .form-section h2 {
+      text-align: center;
+    }
+  
+    .info-section h1, .info-section h3 {
+      text-align: center;
+    }
+  
+    .info-section ul {
+      padding: 0 20px;
+    }
+  
+    .create-account-btn {
+      max-width: 300px;
+      margin: 0 auto;
+    }
+  }
+  
