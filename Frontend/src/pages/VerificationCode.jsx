@@ -7,10 +7,12 @@ const VerificationCode = () => {
   const [code, setCode] = useState(new Array(6).fill(""));
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [resendMessage, setResendMessage] = useState("");
+  const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
 
-  // Retrieve email stored after user registration (e.g., from localStorage or state)
-  const email = localStorage.getItem("email"); // Store email after registration in localStorage
+  // Retrieve email stored after user registration
+  const email = localStorage.getItem("email");
 
   useEffect(() => {
     if (!email) {
@@ -32,7 +34,7 @@ const VerificationCode = () => {
   };
 
   const handleVerify = async () => {
-    const verificationCode = code.join(""); // Join the code array to make a string
+    const verificationCode = code.join("");
 
     if (verificationCode.length !== 6) {
       setError("Please enter a complete 6-digit verification code.");
@@ -47,23 +49,54 @@ const VerificationCode = () => {
 
       if (response.data.success) {
         setSuccess("Verification successful! You can now log in.");
-        setError(""); // Clear previous errors
+        setError("");
         setTimeout(() => {
-          navigate("/Login"); // Navigate to login or wherever needed
+          navigate("/Login");
         }, 2000);
       } else {
         setError(response.data.message || "Verification failed. Please try again.");
       }
     } catch (error) {
-      setError("An error occurred during verification.");
+      if (error.response) {
+        setError(error.response.data.message || "An error occurred during verification.");
+      } else if (error.request) {
+        setError("No response from server. Please check your connection.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
       console.error("Verification Error:", error);
     }
   };
 
-  // Function to handle "Back" button
-  const handleBack = () => {
-    navigate(-1); // Navigate to the previous page in history
+  const handleResendCode = async () => {
+    setIsResending(true);
+    setResendMessage("");
+  
+    try {
+      const response = await axios.post("http://localhost:3000/api/resend-code", { email });
+  
+      console.log("Resend Code Response:", response.data); // Debugging log
+  
+      if (response.data.success) {
+        setResendMessage("A new verification code has been sent to your email.");
+        setError(""); // Clear any previous errors
+      } else {
+        setError(response.data.message || "Failed to resend the code. Please try again.");
+      }
+    } catch (error) {
+      if (error.response) {
+        setError(error.response.data.message || "Failed to resend the code.");
+      } else if (error.request) {
+        setError("No response from server. Please check your connection.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
+      console.error("Resend Code Error:", error);
+    } finally {
+      setIsResending(false);
+    }
   };
+
 
   return (
     <div className="verification-container">
@@ -83,10 +116,15 @@ const VerificationCode = () => {
           ))}
         </div>
         <div className="digits-left">{6 - code.filter(Boolean).length} digits left</div>
-        <button className="verify-button" onClick={handleVerify}>Verify</button>
-        <button className="back-button" onClick={handleBack}>Back</button> {/* Back button */}
+        <button className="verify-button" onClick={handleVerify}>
+          Verify
+        </button>
+        <button className="resend-button" onClick={handleResendCode} disabled={isResending}>
+          {isResending ? "Sending..." : "Resend Code"}
+        </button>
         {error && <p className="error-message">{error}</p>}
         {success && <p className="success-message">{success}</p>}
+        {resendMessage && <p className="resend-message">{resendMessage}</p>}
       </div>
     </div>
   );

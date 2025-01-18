@@ -17,5 +17,7 @@ router.post('/forgot-password', forgetValidation, userController.forgetPassword)
 
 router.post('/reset-password', userController.resetPassword);
 
+router.post('/resend-code', userController.resendCode);
+
 router.get('/get-user',auth.isAuthorize,userController.getUser)
 module.exports = router;

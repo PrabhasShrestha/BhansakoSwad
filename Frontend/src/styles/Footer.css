@@ -54,7 +54,7 @@
   }
   
   .footer-section.review {
-    text-align: left;
+    margin-left: 200px;
   }
   
   .footer-section.review h3 {
@@ -95,11 +95,12 @@
     border: 0;
     border-top: 1px solid white;
     margin: 0 auto;
-    max-width: 90%;
+    max-width: 1360px;
+    margin-left: 175px;
   }
   
   .footer-bottom p {
-    margin-top: 20px;
+    margin-left: 1080px;
     color: white;
   }
   

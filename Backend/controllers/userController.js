@@ -118,6 +118,70 @@ const verifyCode = (req, res) => {
     );
 };
 
+const resendCode = (req, res) => {
+  const { email } = req.body;
+
+  // Check if the email exists in the database
+  db.query(
+      `SELECT * FROM users WHERE email = ${db.escape(email)};`,
+      (err, result) => {
+          if (err) {
+              return res.status(500).send({ msg: "Internal Server Error" });
+          }
+
+          if (!result.length) {
+              return res.status(404).send({ msg: "Email not found" });
+          }
+
+          const user = result[0];
+
+          // Check if the user is already verified
+          if (user.isVerified) {
+              return res.status(400).send({ msg: "User is already verified." });
+          }
+
+          // Generate a new verification code
+          const verificationCode = randomstring.generate({ length: 6, charset: "numeric" });
+          const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000); // Expires in 10 minutes
+
+          // Update the new code in the database
+          db.query(
+              `UPDATE users SET verificationCode = ${db.escape(verificationCode)}, verificationCodeExpiryAT = ${db.escape(
+                  verificationCodeExpiryAT
+              )} WHERE email = ${db.escape(email)};`,
+              (err) => {
+                  if (err) {
+                      return res.status(500).send({ msg: "Internal Server Error" });
+                  }
+
+                  // Send the new verification code via email
+                  const mailSubject = "Your New Verification Code";
+                  const content = `
+                  <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9;">
+                    <h1 style="color: #4CAF50;">New Verification Code</h1>
+                    <p style="font-size: 16px;">Hello <strong>${user.first_name} ${user.last_name}</strong>,</p>
+                    <p style="font-size: 14px;">We noticed you requested a new verification code. Use the code below to verify your email:</p>
+                    <div style="margin: 20px auto; padding: 10px; border: 1px solid #ddd; display: inline-block; background-color: #fff;">
+                      <h2 style="color: #333; font-size: 24px; margin: 0;">${verificationCode}</h2>
+                    </div>
+                    <p style="font-size: 12px; color: #888;">This code is valid for 10 minutes.</p>
+                  </div>`;
+                  
+                  sendMail(email, mailSubject, content)
+                      .then(() => {
+                          return res.status(200).send({ success: true, msg: "New verification code sent successfully." });
+                      })
+                      .catch((error) => {
+                          console.error("Error sending email:", error);
+                          return res.status(500).send({ msg: "Failed to send email. Please try again later." });
+                      });
+              }
+          );
+      }
+  );
+};
+
+
 const login = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -311,5 +375,6 @@ module.exports = {
     login,
     getUser,
     forgetPassword,
+    resendCode,
     resetPassword
 };

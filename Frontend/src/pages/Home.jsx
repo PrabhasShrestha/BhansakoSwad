@@ -1,6 +1,6 @@
 import React from 'react';
 import Footer from '../components/Footer';
-import Navbar from '../components/Header';
+import Navigationbar from '../components/NavBar';
 import '../styles/Index.css'; // Custom styles for Index page // Styles for Footer
 import IndexpageImage from '../assets/HomePage/Indexpage1.jpg';
 import NonVegImage from '../assets/HomePage/non veg.jpg';
@@ -17,7 +17,7 @@ const Home = () => {
   return (
     <div className="index-page">
       {/* Navbar Section */}
-      <Navbar/>
+      <Navigationbar/>
 
       {/* Hero Section */}
       <section className="hero">

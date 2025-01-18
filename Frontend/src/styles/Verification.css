@@ -86,7 +86,7 @@
     background-color: #0056b3;
   }
 
-  .back-button {
+  .resend-button{
     width: 100%;
     height: 50px;
     background-color: #007bff;
@@ -100,6 +100,6 @@
     margin-top: 5px;
   }
   
-  .back-button:hover {
+  .resend-button:hover {
     background-color: #0056b3;
   }
