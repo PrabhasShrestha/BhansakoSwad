@@ -52,7 +52,7 @@ const Login = () => {
 
         // Store the JWT token (if login is successful)
         localStorage.setItem("authToken", response.data.token);
-        navigate("/homepage "); 
+        navigate("/home "); 
       } catch (error) {
         if (error.response && error.response.status === 401) {
           // Handle wrong password

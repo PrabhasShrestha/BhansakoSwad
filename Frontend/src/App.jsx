@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgetPass";
 import CreateNewPassword from "./pages/NewPass";
 import Index from "./components/Index";
+import Home from "./pages/Home";
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
   <Route path="/ForgotPass" element={<ForgotPassword />} />
   <Route path="/NewPass" element={<CreateNewPassword />} />
   <Route path="/" element={<Index />} />
+  <Route path="/home" element={<Home />} />
 </Routes>
   );
 }

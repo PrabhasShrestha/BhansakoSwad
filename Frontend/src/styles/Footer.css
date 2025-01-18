@@ -3,7 +3,6 @@
     color: #fff; /* Light text */
     padding: 60px 0; /* Remove side padding by setting padding to 0 for left and right */
     margin-top: 100px;
-   
   }
   
   .footer-content {
@@ -28,20 +27,79 @@
     text-transform: uppercase;
   }
   
-  .footer-section-contact{
+  .footer-section p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: white;
+    margin-top: 0;
+    max-width: 350px;
+  }
+  
+  .footer-section-contact {
     margin-left: 170px;
   }
-  .footer-section-contact h3{
-    color: white; /* Purple header color */
+  
+  .footer-section-contact h3 {
+    color: white;
     font-size: 1.6rem;
     font-weight: 700;
     text-transform: uppercase;
   }
   
-  .footer-section-contact p{
+  .footer-section-contact p {
     margin-top: 15px;
     font-size: 1rem;
     line-height: 1.6;
     color: white;
-    
   }
+  
+  .footer-section.review {
+    text-align: left;
+  }
+  
+  .footer-section.review h3 {
+    color: white;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  
+  .footer-section.review p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: white;
+  }
+  
+  .review-button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #5C5C5C;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .review-button:hover {
+    background-color: #707070;
+  }
+  
+  .footer-bottom {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #bbb;
+  }
+  
+  .footer-bottom hr {
+    border: 0;
+    border-top: 1px solid white;
+    margin: 0 auto;
+    max-width: 90%;
+  }
+  
+  .footer-bottom p {
+    margin-top: 20px;
+    color: white;
+  }
+  
