@@ -1,0 +1,123 @@
+/* General styles for the Contact Us page */
+.contact-us-page {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+  }
+  
+  /* Header Section */
+  .contact-header {
+    text-align: center;
+    padding: 30px 20px;
+  }
+  
+  .contact-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+  }
+  
+  .contact-header p {
+    max-width: 800px;
+    margin: 10px auto;
+    font-size: 1rem;
+    color: #666;
+  }
+  
+  /* Container for Contact Info and Form */
+  .contact-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  /* Contact Information Section */
+  .contact-info {
+    flex: 1 1 300px;
+    max-width: 400px;
+    background-color: #e0f7f4;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .contact-info h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: #007bff;
+  }
+  
+  .contact-info p {
+    margin-bottom: 10px;
+    color: #444;
+  }
+  
+  .info-details p {
+    margin: 5px 0;
+    font-size: 1rem;
+  }
+  
+  /* Contact Form Section */
+  .contact-form {
+    flex: 1 1 400px;
+    max-width: 600px;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .contact-form h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .contact-form .form-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .contact-form .form-group div {
+    flex: 1;
+  }
+  
+  .contact-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  .contact-form input,
+  .contact-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  
+  .contact-form textarea {
+    resize: vertical;
+  }
+  
+  .contact-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .contact-form button:hover {
+    background-color: #0056b3;
+  }
+  

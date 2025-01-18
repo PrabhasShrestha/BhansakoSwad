@@ -1,0 +1,416 @@
+/* General Styling for Index Page */
+.index-page {
+  max-width: 1980px; /* Optional: Set a max width for the page content */
+  margin: 0 auto; /* Center the page content */
+  background-color: white;
+}
+  
+  /* Hero Section */
+  .hero { 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 40px;
+    margin-bottom: 0; /* Remove spacing to blend */
+  }
+  
+  .hero-content {
+    padding: 0 60px;
+    max-width: 60%;
+    text-align: left;
+    margin-left: 70px;
+  }
+  
+  .hero h1 {
+    font-size: 60px;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    font-weight: 400;
+    
+    
+  }
+  
+  .hero .highlight {
+    color: #d580ff;
+    font-weight: bold;
+  }
+  
+  .hero p {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #555;
+  }
+  
+  .hero-image img {
+    width: 400px; /* Increase the size */
+    height: 400px;
+    margin-right: 100px;
+    border-radius: 50%; /* Makes the image circular */
+    object-fit: cover; /* Ensures the image content fits well within the circle */
+    border: 2px solid #ffffff; /* Optional: Add a border for aesthetics */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for depth */
+  }
+  
+  .explore-button {
+    background-color: #b05bdb;
+    color: white;
+    border: none;
+    padding: 10px 20px; /* Adjust padding for smaller size */
+    font-size: 1rem; /* Adjust font size */
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    width: auto; /* Ensure the button doesn't stretch */
+    max-width: 300px; /* Optional: Limit the width */
+    text-align: center; /* Keep the text centered */
+  }
+  
+  
+  .explore-button:hover {
+    background-color: #670D6D;
+  }
+  
+  /* Diet Preference Section */
+  .diet-preference {
+    background-color: #ffffff; /* Match background */
+    padding: 40px 20px;
+    text-align: center;
+    margin-bottom: 40px;
+    margin-top: 20px;
+  }
+  
+  .diet-preference h2 {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+  
+  .diet-preference p {
+    max-width: 660px; /* Set a maximum width to control the paragraph length */
+    margin: 0 auto; /* Center align the paragraph horizontally */
+    text-align: center; /* Center align the text content */
+    line-height: 1.6; /* Add proper line spacing */
+    font-size: 1rem; /* Adjust the font size */
+    color: #555; /* Ensure the text color is subtle */
+    margin-bottom: 20px;
+  }
+  
+  
+  .diet-options {
+    display: flex;
+    justify-content: center; /* Center aligns the cards */
+    gap: 15px; /* Reduced gap between cards */
+    flex-wrap: wrap; /* Ensures responsiveness */
+    padding: 0 40px; /* Adjusted padding */
+  }
+  
+  .card {
+    text-align: center;
+    width: 260px;
+    padding: 25px; /* Slightly reduced padding */
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin: 0; /* Ensure no extra space around cards */
+  }
+  
+  .card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  
+  .card img {
+    width: 150px; /* Larger image size for balance */
+    height: 150px;
+    border-radius: 50%; /* Circular images */
+    object-fit: cover;
+    margin-bottom: 20px; /* Space between the image and text */
+  }
+  
+  .card h3 {
+    font-size: 1.5rem; /* Slightly larger text for titles */
+    margin-bottom: 12px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .card button {
+    margin-top: 20px; /* More space above the button */
+    padding: 12px 25px; /* Larger button size */
+    border: 1px solid #d580ff;
+    color: #d580ff;
+    background: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 8px; /* Rounded button corners */
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .card button:hover {
+    background-color: #d580ff;
+    color: white;
+  }
+    
+  /* Cuisine Type Section */
+  .cuisine-type {
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .cuisine-type  h2 {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+  
+  .cuisine-type  p {
+    max-width: 660px; /* Set a maximum width to control the paragraph length */
+    margin: 0 auto; /* Center align the paragraph horizontally */
+    text-align: center; /* Center align the text content */
+    line-height: 1.6; /* Add proper line spacing */
+    font-size: 1rem; /* Adjust the font size */
+    color: #555; /* Ensure the text color is subtle */
+    margin-bottom: 20px;
+  }
+  
+  .cuisine-options {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  
+  .cuisine-options img {
+    margin-top: 20px;
+    width: 320px;
+    height: 400px;
+    border-radius: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .cuisine-options img:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  .cuisine-button {
+    margin-top: 20px;
+    display: inline-block;
+    padding: 10px 30px;
+    background-color: transparent; /* Transparent background */
+    color: #333; /* Dark text color */
+    border: 2px solid #333; /* Border matching the text color */
+    border-radius: 8px; /* Rounded corners */
+    font-size: 1rem; /* Adjust font size */
+    font-weight: bold; /* Bold text */
+    cursor: pointer;
+    max-width: 300px;
+    transition: all 0.3s ease; /* Smooth transition for hover effects */
+  }
+  
+  .cuisine-button:hover {
+    background-color: #333; /* Dark background on hover */
+    color: white; /* White text on hover */
+    border-color: #333; /* Match border with background */
+  }
+  .image-container {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    border-radius: 10px; /* Optional rounded corners */
+  }
+  
+  /* Overlay styling */
+  .image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 1rem;
+    font-weight: bold;
+    opacity: 0; /* Initially hidden */
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Hover effects */
+  .image-container:hover img {
+    transform: scale(1.1); /* Slight zoom on hover */
+  }
+  
+  .image-container:hover .image-overlay {
+    opacity: 1; /* Show the overlay on hover */
+  }
+  
+  
+  /* Testimonials Section */
+  .testimonials {
+    margin: 20px auto;
+    max-width: 1350px;
+    text-align: center;
+  }
+  
+  .testimonials h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  .testimonials p {
+    margin-left: 100px;
+    font-size: 25px;
+    color: black;
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
+  
+  .testimonial-card {
+    position: relative;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    background-color: #fff;
+  }
+  
+  .testimonial-card blockquote {
+    line-height: 1.8;
+    color: black;
+    margin-bottom: 80px;
+    position: relative;
+    padding-left: 40px;
+    margin-top: 0px;
+  }
+  
+  .testimonial-card blockquote:before {
+    content: "“";
+    position: absolute;
+    left: 10px;
+    font-size: 100px;
+  }
+  
+  .author {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .author img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-left: 100px;
+  }
+  
+  .author p {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    margin-left: 0;
+  }
+
+/* Footer Styles */
+.footer {
+  background-color: #3E3E3E; /* Dark background */
+  color: #fff; /* Light text */
+  padding: 60px 0; /* Remove side padding by setting padding to 0 for left and right */
+  margin-top: 100px;
+ 
+}
+
+.footer-content {
+  display: grid; /* Use grid for alignment */
+  grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+  gap: 50px; /* Space between sections */
+  max-width: 1340px; /* Center content */
+  margin: 0 auto; /* Horizontally center the content */
+  text-align: left; /* Align text to the left */
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.footer-section h3 {
+  color: #BD5FC4; /* Purple header color */
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.footer-section-contact{
+  margin-left: 170px;
+}
+.footer-section-contact h3{
+  color: white; /* Purple header color */
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.footer-section-contact p{
+  margin-top: 15px;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: white;
+  
+}
+
+
+.footer-section p,
+.footer-section ul {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: white;
+  margin-top: 0;
+  max-width: 350px;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 8px;
+}
+
+.footer-section ul li a {
+  text-decoration: none;
+  color: #ccc;
+  transition: color 0.3s;
+  font-weight: 500;
+}
+
+.footer-section ul li a:hover {
+  color: #fff;
+}
+
+.footer-bottom {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #bbb;
+}
+
+.footer-bottom hr {
+  border: 0;
+  border-top: 1px solid white;
+  margin-left: 160px;
+  max-width: 1400px;
+  text-align: center;
+}
+.footer-bottom p {
+ margin-left: 1125px;
+ color: white;
+}
+  

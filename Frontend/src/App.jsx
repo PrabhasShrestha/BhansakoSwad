@@ -5,15 +5,18 @@ import VerificationCode from "./pages/VerificationCode";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgetPass";
 import CreateNewPassword from "./pages/NewPass";
+import Index from "./components/Index";
+
 
 function App() {
   return (
 <Routes>
-  <Route path="/" element={<UserSignUp />} />
+  <Route path="/signUp" element={<UserSignUp />} />
   <Route path="/verify" element={<VerificationCode />} />
   <Route path="/login" element={<Login />} />
   <Route path="/ForgotPass" element={<ForgotPassword />} />
   <Route path="/NewPass" element={<CreateNewPassword />} />
+  <Route path="/" element={<Index />} />
 </Routes>
   );
 }

@@ -52,7 +52,7 @@ const Login = () => {
 
         // Store the JWT token (if login is successful)
         localStorage.setItem("authToken", response.data.token);
-        navigate("/dashboard"); // Redirect to dashboard or protected page
+        navigate("/homepage "); 
       } catch (error) {
         if (error.response && error.response.status === 401) {
           // Handle wrong password
@@ -119,7 +119,7 @@ const Login = () => {
           <button type="submit">Log In</button>
         </form>
         <p>
-          Don’t have an account? <a href="/">Sign Up</a>
+          Don’t have an account? <a href="/signUp">Sign Up</a>
         </p>
       </div>
     </div>
