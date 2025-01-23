@@ -7,7 +7,7 @@ import ForgotPassword from "./pages/ForgetPass";
 import CreateNewPassword from "./pages/NewPass";
 import Index from "./components/Index";
 import Home from "./pages/Home";
-
+import AboutUs from "./pages/AboutUs";
 
 function App() {
   return (
@@ -19,6 +19,7 @@ function App() {
   <Route path="/NewPass" element={<CreateNewPassword />} />
   <Route path="/" element={<Index />} />
   <Route path="/home" element={<Home />} />
+  <Route path="/aboutus" element={<AboutUs />} />
 </Routes>
   );
 }

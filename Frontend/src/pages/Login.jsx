@@ -39,34 +39,32 @@ const Login = () => {
     e.preventDefault();
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors); // Display frontend validation errors
+      setErrors(validationErrors);
     } else {
-      setErrors({}); // Clear previous validation errors
+      setErrors({});
       try {
-        // Send login request to backend
         const response = await axios.post(
           "http://localhost:3000/api/login",
           formData
         );
         console.log("Login successful", response.data);
-
-        // Store the JWT token (if login is successful)
-        localStorage.setItem("authToken", response.data.token);
-        navigate("/home "); 
+  
+        // Store the JWT token using a consistent key
+        localStorage.setItem("token", response.data.token);
+        console.log("Updated token in localStorage:", localStorage.getItem("token"));
+        navigate("/home");
       } catch (error) {
         if (error.response && error.response.status === 401) {
-          // Handle wrong password
           setErrors({ password: "Incorrect password. Please try again." });
         } else if (error.response && error.response.status === 404) {
-          // Handle email not found
           setErrors({ email: "Email not registered. Please sign up first." });
         } else {
-          // General error message
-          setErrors({ api: "Email not verified. Please Verify first" });
+          setErrors({ api: "Email not verified. Please Verify first." });
         }
       }
     }
   };
+  
 
   // Toggle password visibility
   const togglePasswordVisibility = () => {

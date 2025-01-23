@@ -3,7 +3,6 @@ const router = express.Router();
 const { signUpValidation , loginValidation, forgetValidation} = require('../helpers/validation');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth')
-
 // User Registration Route
 router.post('/register', signUpValidation, userController.register);
 
@@ -20,4 +19,8 @@ router.post('/reset-password', userController.resetPassword);
 router.post('/resend-code', userController.resendCode);
 
 router.get('/get-user',auth.isAuthorize,userController.getUser)
+
+router.post('/testimonials', auth.isAuthorize, userController.saveTestimonial);
+
+router.get('/testimonials', userController.getTestimonial)
 module.exports = router;

@@ -221,6 +221,7 @@ const login = async (req, res) => {
                     }
                     if (Bresult) {
                         const token = jwt.sign({ id: result[0]['id'] }, JWT_SECRET, { expiresIn: '1hr' });
+                        
                         return res.status(200).send({
                             msg: 'Logged In',
                             token,
@@ -235,8 +236,6 @@ const login = async (req, res) => {
         }
     );
 };
-
-
 
 const getUser = (req,res) =>{
     const token= req.headers.auth.split(' ')[1]; 
@@ -367,6 +366,59 @@ const resetPassword = (req, res) => {
       });
     });
   };
+
+  const saveTestimonial = (req, res) => {
+    const { text } = req.body;
+    const userId = req.user.id; // Retrieved from the token middleware
+  
+    if (!text) {
+      return res.status(400).json({ message: 'Review text is required.' });
+    }
+  
+    // Fetch user's name from the database
+    db.query(
+      'SELECT CONCAT(first_name, " ", last_name) AS user_name FROM users WHERE id = ?',
+      [userId],
+      (err, results) => {
+        if (err) {
+          console.error('Error fetching user name:', err);
+          return res.status(500).json({ message: 'Internal Server Error' });
+        }
+  
+        if (results.length === 0) {
+          return res.status(404).json({ message: 'User not found.' });
+        }
+  
+        const userName = results[0].user_name;
+  
+        // Insert the review into the testimonials table
+        const query = 'INSERT INTO testimonials (user_id, user_name, text) VALUES (?, ?, ?)';
+        db.query(query, [userId, userName, text], (err) => {
+          if (err) {
+            console.error('Error saving review:', err);
+            return res.status(500).json({ message: 'Internal Server Error' });
+          }
+  
+          res.status(200).json({ message: 'Review submitted successfully.' });
+        });
+      }
+    );
+  };
+
+const getTestimonial = (req, res) => {
+    console.log('Fetching testimonials...');
+    const query = 'SELECT id, user_name, text, created_at FROM testimonials';
+  
+    db.query(query, (err, results) => {
+      if (err) {
+        console.error('Error fetching testimonials:', err.message);
+        return res.status(500).json({ message: 'Failed to fetch testimonials.' });
+      }
+  
+      return res.status(200).json({ testimonials: results });
+    });
+  };
+  
   
 
 module.exports = {
@@ -376,5 +428,7 @@ module.exports = {
     getUser,
     forgetPassword,
     resendCode,
-    resetPassword
+    saveTestimonial,
+    resetPassword,
+    getTestimonial
 };

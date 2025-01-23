@@ -26,7 +26,7 @@ const Navbar = () => {
           Recipes
         </NavLink>
         <NavLink
-          to="/about"
+          to="/aboutus"
           className={({ isActive }) => (isActive ? 'active' : '')}
         >
           About
