@@ -8,11 +8,16 @@ import CreateNewPassword from "./pages/NewPass";
 import Index from "./components/Index";
 import Home from "./pages/Home";
 import AboutUs from "./pages/AboutUs";
+import SellerSignUp from "./pages/SellerSignUp";
+import ChefSignUp from "./pages/ChefSignUp";
+import ProfilePage from "./pages/UpdateUser";
 
 function App() {
   return (
 <Routes>
   <Route path="/signUp" element={<UserSignUp />} />
+  <Route path="/sellersignUp" element={<SellerSignUp />} />
+  <Route path="/chefsignUp" element={<ChefSignUp />} />
   <Route path="/verify" element={<VerificationCode />} />
   <Route path="/login" element={<Login />} />
   <Route path="/ForgotPass" element={<ForgotPassword />} />
@@ -20,6 +25,7 @@ function App() {
   <Route path="/" element={<Index />} />
   <Route path="/home" element={<Home />} />
   <Route path="/aboutus" element={<AboutUs />} />
+  <Route path="/userProfile" element={<ProfilePage />} />
 </Routes>
   );
 }

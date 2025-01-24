@@ -237,14 +237,50 @@ const login = async (req, res) => {
     );
 };
 
-const getUser = (req,res) =>{
-    const token= req.headers.auth.split(' ')[1]; 
-    const decode = jwt.verify(token, JWT_SECRET);
-    db.query('SELECT * FROM users where id=?', decode.id,(error,result,fields)=> {
-        if(error) throw error;
-        return res.status(200).send({ success:true, data:result[0], message: 'Fetch Successfully!'});
-    })
-}
+const getUser = (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).send({ message: 'Unauthorized: Missing or malformed token.' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    db.query('SELECT * FROM users WHERE id = ?', [decoded.id], (error, result) => {
+      if (error) {
+        console.error('Database Error:', error);
+        return res.status(500).send({ message: 'Internal server error.' });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).send({ message: 'User not found.' });
+      }
+
+      const user = { ...result[0] };
+
+      // Correct the `image` URL construction
+      if (user.image) {
+        user.image = `http://localhost:3000/uploads/users/${user.image.split('/').pop()}`; // Extract the file name
+      }
+
+      return res.status(200).send({
+        success: true,
+        data: user,
+        message: 'Fetch Successful!',
+      });
+    });
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).send({ message: 'Unauthorized: Invalid token.' });
+    }
+    console.error('Unexpected Error:', err);
+    return res.status(500).send({ message: 'Internal server error.' });
+  }
+};
+
+
+
 
 const forgetPassword = (req, res) => {
     const { email } = req.body;
@@ -420,6 +456,58 @@ const getTestimonial = (req, res) => {
   };
   
   
+  const updateProfile = (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const userId = req.user.id; // Retrieved from the token middleware
+    const { first_name, last_name, address, email, phone_number } = req.body;
+
+    let sql = '';
+    let data = [];
+
+    if (req.file) {
+        // If an image is provided, include the `image` field
+        const imagePath = `uploads/users/${req.file.filename}`; // Correct backend path
+        sql = `UPDATE users 
+               SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ?, image = ? 
+               WHERE id = ?`;
+        data = [
+            first_name,
+            last_name,
+            address,
+            email,
+            phone_number,
+            imagePath,
+            userId
+        ];
+    } else {
+        // If no image is provided, update only other fields
+        sql = `UPDATE users 
+               SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ? 
+               WHERE id = ?`;
+        data = [first_name, last_name, address, email, phone_number, userId];
+    }
+
+    db.query(sql, data, (err, result) => {
+        if (err) {
+            console.error('Error updating profile:', err.message);
+            return res.status(500).json({ message: 'Internal Server Error' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        return res.status(200).json({ message: 'Profile updated successfully.' });
+    });
+};
+
+
+
 
 module.exports = {
     register,
@@ -430,5 +518,6 @@ module.exports = {
     resendCode,
     saveTestimonial,
     resetPassword,
-    getTestimonial
+    getTestimonial,
+    updateProfile
 };

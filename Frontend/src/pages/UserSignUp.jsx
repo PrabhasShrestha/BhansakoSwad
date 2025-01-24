@@ -194,12 +194,12 @@ function UserSignUp() {
         <h1>CREATE ACCOUNT</h1>
         <h1 style={{ fontSize: "30px" }}>What Will You Get?</h1>
         <ul>
-          <li>Manage your ingredient sales the easy way</li>
-          <li>Streamline your ingredient inventory and track supply efficiently</li>
-          <li>Reach a wider audience by offering ingredients for diverse cuisines</li>
-          <li>Simplify the ordering process for customers with a seamless interface</li>
-          <li>Make ordering convenient and hassle-free for your customers</li>
-          <li>Boost your sales by catering to home cooks and professional chefs alike</li>
+          <li>Manage your recipe the easy way</li>
+          <li>Track your nutritional intake and maintain a balanced diet.</li>
+          <li>Discover a variety of recipes from different cultures and cuisines.</li>
+          <li>Get recipes tailored to your taste and available ingredients.</li>
+          <li>Access recipes curated and approved by professional chefs.</li>
+          <li>Easily order the ingredients you need directly</li>
         </ul>
         <span className="brand-text">Bhansako Swad</span>
       </div>
