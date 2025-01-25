@@ -28,23 +28,22 @@
     border: 1px solid #e0e0e0;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px #0000001a;
     margin-bottom: 20px;
   }
   
   /* Left Section - Profile Info */
   .profile-info {
     flex: 1;
-    text-align: center;
     border-right: 1px solid #e0e0e0;
     padding-right: 20px;
+    
   }
   
   .profile-avatar {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    margin-bottom: 15px;
+    width: 375px; /* Makes the image span the full width of the container */
+    height: 375px; /* Keeps the height fixed */
+    border-radius: 0; /* Keeps the image square */
   }
   
   .profile-name {
@@ -128,3 +127,164 @@
     color: #fff;
   }
   
+  .secondary-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    max-width: 190px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: #fff;
+    gap: 10px;
+    margin: 0 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .secondary-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .cancel-btn {
+    background-color: #dc3545;
+    color: #fff;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #b02a37;
+  }
+  
+  .image-btn{
+    padding: 10px 20px;
+    font-size: 16px;
+    max-width: 170px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    gap: 10px;
+    margin: 5px 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .logout-btn {
+    width: 100px;
+    padding: 10px;
+    margin-top: 65px;
+    background-color: #f44336; /* Red color for log out */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 0px;
+  }
+  
+  .logout-btn:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+  }
+
+  /* Password Modal */
+.password-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 30px;
+  width: 400px;
+  max-width: 90%;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.password-modal h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.password-modal p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.password-modal .input-group {
+  margin-bottom: 15px;
+}
+
+.password-modal .input-group label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: bold;
+}
+
+.password-modal .password-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px 10px;
+}
+
+.password-modal .password-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 10px;
+}
+
+.password-modal .password-input svg {
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+}
+
+.password-modal button {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.password-modal button:first-of-type {
+  background-color: #3498db;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.password-modal button:first-of-type:hover {
+  background-color: #2980b9;
+}
+
+.password-modal button:last-of-type {
+  background-color: #e74c3c;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.password-modal button:last-of-type:hover {
+  background-color: #c0392b;
+}
+
+/* Modal Background Overlay */
+.password-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent overlay */
+  backdrop-filter: blur(5px); /* Apply blur effect */
+  z-index: 999;
+}

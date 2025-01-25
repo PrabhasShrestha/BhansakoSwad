@@ -16,6 +16,7 @@ import Cusine1Image from '../assets/HomePage/turkey.jpg';
 import Cusine2Image from '../assets/HomePage/nepali.jpg';
 import Cusine3Image from '../assets/HomePage/pakistani.jpg';
 import Cusine4Image from '../assets/HomePage/indian.jpg';
+import userImage from '../assets/user.png';
 
 const Home = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -157,11 +158,15 @@ const Home = () => {
                   <div className="quote-icon">“</div>
                   <p className="testimonial-text">{testimonial.text}</p>
                   <div className="author">
-                    <img
-                      src="/path/to/default-user.png" // Replace with user avatar
-                      alt={testimonial.user_name}
-                      className="author-image"
-                    />
+                  <img
+                src={
+                  testimonial.user_image
+                    ? `http://localhost:3000${testimonial.user_image}` // Use user's profile image if available
+                    : userImage // Fallback to default user image (imported)
+                }
+                alt={`${testimonial.user_name}'s profile`}
+                className="author-image"
+              />
                     <p className="author-name">{testimonial.user_name}</p>
                   </div>
                 </div>

@@ -1,5 +1,4 @@
 /* Navbar Header */
-/* Navbar Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -41,9 +40,26 @@
   text-decoration: underline; /* Underline for active state */
 }
 
-/* User Icon */
 .user-icon {
-  font-size: 1.2rem;
-  color: #555; /* Neutral color for the user icon */
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-right: 20px; /* Adjust as needed */
+}
+
+.profile-image {
+  height: 40px; /* Set the desired height */
+  width: 40px;  /* Set the desired width */
+  border-radius: 50%; /* Make the image circular */
+  object-fit: cover; /* Ensure the image fits well within the circle */
+  border: 2px solid #ddd; /* Optional: Add a border for better visibility */
+  cursor: pointer; /* Pointer cursor for interactivity */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Add a subtle shadow */
+}
+
+.sign-up-link img {
+  height: 40px; /* Set the desired height */
+  width: 40px;  /* Set the desired width */
+  border-radius: 50%; /* Make the image circular */
+  object-fit: cover; /* Ensure the image fits well within the circle */
+  cursor: pointer; /* Pointer cursor for interactivity */
 }

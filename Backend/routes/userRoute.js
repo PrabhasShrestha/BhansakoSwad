@@ -4,7 +4,7 @@ const {
     signUpValidation,
     loginValidation,
     forgetValidation,
-    updateProfileValidation
+    updateProfileValidation,
 } = require('../helpers/validation');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
@@ -48,6 +48,7 @@ router.post('/login', loginValidation, userController.login);
 router.post('/forgot-password', forgetValidation, userController.forgetPassword);
 router.post('/reset-password', userController.resetPassword);
 router.post('/resend-code', userController.resendCode);
+router.post('/change-password', auth.isAuthorize,userController.changePassword);
 
 // Handle file uploads and validation in update-profile
 router.post(
@@ -67,6 +68,10 @@ router.post(
     userController.updateProfile
 );
 
+;
+
+router.post("/upload-image", auth.isAuthorize, upload.single('image'), userController.uploadImage);
+router.delete("/remove-image", auth.isAuthorize, userController.removeImage);
 router.get('/get-user', auth.isAuthorize, userController.getUser);
 router.post('/testimonials', auth.isAuthorize, userController.saveTestimonial);
 router.get('/testimonials', userController.getTestimonial);

@@ -506,18 +506,120 @@ const getTestimonial = (req, res) => {
     });
 };
 
+const removeImage = (req, res) => {
+  const userId = req.user.id; // Retrieved from the token middleware
 
+  // Update the `image` field to NULL in the database
+  const query = "UPDATE users SET image = NULL WHERE id = ?";
+
+  db.query(query, [userId], (err, result) => {
+    if (err) {
+      console.error("Error removing image:", err.message);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.status(200).json({ message: "Image removed successfully." });
+  });
+};
+
+const uploadImage = (req, res) => {
+  try {
+    // Check if file exists
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded." });
+    }
+
+    const userId = req.user.id; // Retrieved from the authentication middleware
+    const imagePath = `/uploads/users/${req.file.filename}`; // Relative path to the image
+
+    // Update the image path in the database
+    db.query(
+      "UPDATE users SET image = ? WHERE id = ?",
+      [imagePath, userId],
+      (err) => {
+        if (err) {
+          console.error("Error updating database:", err.message);
+          return res.status(500).json({ message: "Failed to save image in database." });
+        }
+
+        return res.status(200).json({ message: "Image uploaded successfully.", image: imagePath });
+      }
+    );
+  } catch (err) {
+    console.error("Error uploading image:", err.message);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+const changePassword = (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.id; // Get the user ID from the token middleware
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  // Fetch the current hashed password from the database
+  db.query("SELECT password FROM users WHERE id = ?", [userId], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ message: "Internal server error." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const currentHashedPassword = results[0].password;
+
+    // Compare the old password with the current hashed password
+    bcrypt.compare(oldPassword, currentHashedPassword, (err, isMatch) => {
+      if (err || !isMatch) {
+        return res.status(400).json({ message: "Old password is incorrect." });
+      }
+
+      // Hash the new password
+      bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+        if (err) {
+          console.error("Hashing error:", err);
+          return res.status(500).json({ message: "Error hashing the password." });
+        }
+
+        // Update the password in the database
+        db.query(
+          "UPDATE users SET password = ? WHERE id = ?",
+          [hashedPassword, userId],
+          (err) => {
+            if (err) {
+              console.error("Update error:", err);
+              return res.status(500).json({ message: "Failed to update the password." });
+            }
+
+            return res.status(200).json({ message: "Password updated successfully." });
+          }
+        );
+      });
+    });
+  });
+};
 
 
 module.exports = {
-    register,
-    verifyCode,
-    login,
-    getUser,
-    forgetPassword,
-    resendCode,
-    saveTestimonial,
-    resetPassword,
-    getTestimonial,
-    updateProfile
+  register,
+  verifyCode,
+  login,
+  getUser,
+  forgetPassword,
+  resendCode,
+  saveTestimonial,
+  resetPassword,
+  getTestimonial,
+  updateProfile,
+  removeImage,
+  uploadImage,
+  changePassword
 };
