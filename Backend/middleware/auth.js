@@ -3,27 +3,33 @@ const { JWT_SECRET } = process.env;
 
 const isAuthorize = (req, res, next) => {
   try {
-    // Use the standard "Authorization" header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Unauthorized: Token required.' });
     }
 
-    // Extract the token from "Bearer <token>"
     const token = authHeader.split(' ')[1];
 
     // Verify the token
-    const decoded = jwt.verify(token, JWT_SECRET);
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        const message =
+          err.name === 'TokenExpiredError'
+            ? 'Unauthorized: Token has expired.'
+            : 'Unauthorized: Invalid token.';
+        return res.status(401).json({ message });
+      }
 
-    // Attach user information to the request object
-    req.user = { id: decoded.id };
-
-    next(); // Proceed to the next middleware or route handler
+      // Attach user info to the request object
+      req.user = { id: decoded.id };
+      next(); // Proceed to the next middleware or route handler
+    });
   } catch (error) {
     console.error('Authorization error:', error.message);
-    res.status(401).json({ message: 'Unauthorized: Invalid token.' });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 module.exports = { isAuthorize };

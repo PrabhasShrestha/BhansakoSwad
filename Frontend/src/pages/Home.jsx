@@ -26,13 +26,12 @@ const Home = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/testimonials'); // Update the API URL if needed
-
+        const response = await fetch('http://localhost:3000/api/testimonials'); // Adjust URL as necessary
         if (response.ok) {
           const data = await response.json();
           setTestimonials(data.testimonials);
         } else {
-          console.error('Failed to fetch testimonials, status:', response.status);
+          console.error('Failed to fetch testimonials:', response.status);
         }
       } catch (error) {
         console.error('Error fetching testimonials:', error);
@@ -40,10 +39,10 @@ const Home = () => {
         setLoading(false);
       }
     };
-
+  
     fetchTestimonials();
   }, []);
-
+  
  
 
   return (
@@ -153,7 +152,7 @@ const Home = () => {
             className="testimonial-swiper"
           >
             {testimonials.map((testimonial) => (
-              <SwiperSlide key={testimonial.id || `testimonial-${testimonial.user_name}`}>
+              <SwiperSlide key={testimonial.id}>
                 <div className="testimonial-card">
                   <div className="quote-icon">“</div>
                   <p className="testimonial-text">{testimonial.text}</p>

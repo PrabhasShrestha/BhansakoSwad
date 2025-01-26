@@ -181,61 +181,102 @@ const resendCode = (req, res) => {
   );
 };
 
-
 const login = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+  }
 
-    db.query(
-        `SELECT * FROM users WHERE email = ${db.escape(req.body.email)};`,
-        (err, result) => {
-            if (err) {
-                return res.status(400).send({
-                    msg: err
-                });
-            }
+  db.query(
+      `SELECT * FROM users WHERE email = ${db.escape(req.body.email)};`,
+      (err, result) => {
+          if (err) {
+              return res.status(400).send({
+                  msg: err
+              });
+          }
 
-            if (!result.length) {
-                return res.status(404).send({
-                    msg: 'Email not found. Please check the email or sign up.'
-                });
-            }
+          if (!result.length) {
+              return res.status(404).send({
+                  msg: 'Email not found. Please check the email or sign up.'
+              });
+          }
 
-            // Check if the user is verified
-            if (result[0].isVerified === 0) {
-                return res.status(403).send({
-                    msg: 'Your email is not verified. Please check your inbox for the verification code.'
-                });
-            }
+          // Check if the user is verified
+          if (result[0].isVerified === 0) {
+              return res.status(403).send({
+                  msg: 'Your email is not verified. Please check your inbox for the verification code.'
+              });
+          }
 
-            bcrypt.compare(
-                req.body.password,
-                result[0]['password'],
-                (bErr, Bresult) => {
-                    if (bErr) {
-                        return res.status(400).send({
-                            msg: bErr
-                        });
-                    }
-                    if (Bresult) {
-                        const token = jwt.sign({ id: result[0]['id'] }, JWT_SECRET, { expiresIn: '1hr' });
-                        
-                        return res.status(200).send({
-                            msg: 'Logged In',
-                            token,
-                            user: result[0]
-                        });
-                    }
-                    return res.status(401).send({
-                        msg: 'Incorrect password. Please try again.'
-                    });
-                }
-            );
-        }
-    );
+          bcrypt.compare(
+              req.body.password,
+              result[0]['password'],
+              (bErr, Bresult) => {
+                  if (bErr) {
+                      return res.status(400).send({
+                          msg: bErr
+                      });
+                  }
+                  if (Bresult) {
+                      // Generate a token
+                      const token = jwt.sign({ id: result[0]['id'] }, JWT_SECRET);
+
+                      // Save the token to the database
+                      db.query(
+                          `UPDATE users SET token = ${db.escape(token)} WHERE id = ${db.escape(result[0].id)};`,
+                          (updateErr) => {
+                              if (updateErr) {
+                                  return res.status(500).send({
+                                      msg: 'Failed to update token in the database.',
+                                      error: updateErr
+                                  });
+                              }
+
+                              return res.status(200).send({
+                                  msg: 'Logged In',
+                                  token,
+                                  user: result[0]
+                              });
+                          }
+                      );
+                  } else {
+                      return res.status(401).send({
+                          msg: 'Incorrect password. Please try again.'
+                      });
+                  }
+              }
+          );
+      }
+  );
 };
+
+const logout = async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+      return res.status(401).send({
+          msg: 'Unauthorized. No token provided.'
+      });
+  }
+
+  db.query(
+      `UPDATE users SET token = NULL WHERE token = ${db.escape(token)};`,
+      (err) => {
+          if (err) {
+              return res.status(500).send({
+                  msg: 'Failed to log out. Please try again.',
+                  error: err
+              });
+          }
+
+          return res.status(200).send({
+              msg: 'Logged out successfully.'
+          });
+      }
+  );
+};
+
 
 const getUser = (req, res) => {
   try {
@@ -278,9 +319,6 @@ const getUser = (req, res) => {
     return res.status(500).send({ message: 'Internal server error.' });
   }
 };
-
-
-
 
 const forgetPassword = (req, res) => {
     const { email } = req.body;
@@ -441,18 +479,42 @@ const resetPassword = (req, res) => {
     );
   };
 
-const getTestimonial = (req, res) => {
-    console.log('Fetching testimonials...');
-    const query = 'SELECT id, user_name, text, created_at FROM testimonials';
+  const getTestimonial = async (req, res) => {
+    try {
+      db.query(
+        `
+        SELECT t.id, t.text, u.first_name, u.last_name, u.image
+        FROM testimonials t
+        JOIN users u ON t.user_id = u.id
+        `,
+        (error, testimonials) => {
+          if (error) {
+            console.error('Database query error:', error);
+            return res.status(500).json({ message: 'Failed to fetch testimonials' });
+          }
+
   
-    db.query(query, (err, results) => {
-      if (err) {
-        console.error('Error fetching testimonials:', err.message);
-        return res.status(500).json({ message: 'Failed to fetch testimonials.' });
-      }
+          // Ensure testimonials is an array
+          if (!Array.isArray(testimonials)) {
+            console.error('Unexpected database result:', testimonials);
+            return res.status(500).json({ message: 'Invalid data format from database' });
+          }
   
-      return res.status(200).json({ testimonials: results });
-    });
+          // Transform and send response
+          res.status(200).json({
+            testimonials: testimonials.map((testimonial) => ({
+              id: testimonial.id,
+              text: testimonial.text,
+              user_name: `${testimonial.first_name} ${testimonial.last_name}`,
+              user_image: testimonial.image,
+            })),
+          });
+        }
+      );
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
   };
   
   
@@ -621,5 +683,6 @@ module.exports = {
   updateProfile,
   removeImage,
   uploadImage,
-  changePassword
+  changePassword,
+  logout
 };
