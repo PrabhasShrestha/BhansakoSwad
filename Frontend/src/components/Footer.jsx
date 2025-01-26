@@ -85,7 +85,7 @@ const Footer = ({ addTestimonial }) => {
           </div>
 
           {/* Contact Section */}
-          <div className="footer-section contact">
+          <div className="footer-section-contact">
             <h3>Contact Us</h3>
             <p>bhansakoswad@gmail.com</p>
             <p>214 Kathmandu, Nepal, Bhansako Swad</p>

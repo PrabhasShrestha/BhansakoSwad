@@ -168,4 +168,37 @@
   .password-toggle-icon:hover {
     color: rgb(68, 65, 65); /* Change the color on hover */
   }
-  
+
+/* Dropdown Container */
+.role-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.role-dropdown label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.role-dropdown select {
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.role-dropdown select:focus {
+  border-color: #a355d4;
+}
+
+.role-dropdown select option {
+  font-size: 16px;
+  color: #555;
+}

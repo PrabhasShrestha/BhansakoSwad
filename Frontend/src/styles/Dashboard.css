@@ -1,0 +1,121 @@
+/* Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background-color: #f9fafb;
+  }
+  
+  /* Sidebar */
+  .dashboard-sidebar {
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dashboard-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .dashboard-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .dashboard-menu-item {
+    font-size: 1rem;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  
+  .dashboard-menu-item:hover {
+    color: #007bff;
+  }
+  
+  /* Main Content */
+  .dashboard-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dashboard-heading {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  /* Cards */
+  .dashboard-card {
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dashboard-card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  /* Earnings Section */
+  .dashboard-earnings {
+    margin-top: 1rem;
+  }
+  
+  .dashboard-balance {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  /* Table Styles */
+  .dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+  }
+  
+  .dashboard-table th,
+  .dashboard-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border: 1px solid #ddd;
+  }
+  
+  .dashboard-table th {
+    background-color: #f1f5f9;
+    font-size: 0.9rem;
+    font-weight: bold;
+  }
+  
+  .dashboard-table tbody tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  .dashboard-paid {
+    color: #4caf50;
+    font-weight: bold;
+  }
+  
+  .dashboard-unpaid {
+    color: #f44336;
+    font-weight: bold;
+  }
+  

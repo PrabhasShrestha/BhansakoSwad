@@ -6,9 +6,9 @@ import { FaEye, FaEyeSlash } from "react-icons/fa"; // Importing new eye icons
 
 function SellerSignUp() {
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    address: "",
+    shop_name: "",
+    owner_name: "",
+    store_address: "",
     email: "",
     phone_number: "",
     password: "",
@@ -28,9 +28,9 @@ function SellerSignUp() {
 
   const validateForm = () => {
     let errors = {};
-    if (!formData.first_name) errors.first_name = "First Name is required";
-    if (!formData.last_name) errors.last_name = "Last Name is required";
-    if (!formData.address) errors.address = "Address is required";
+    if (!formData.shop_name) errors.shop_name = "Shop Name is required";
+    if (!formData.owner_name) errors.owner_name = "Owner Name is required";
+    if (!formData.store_address) errors.store_address = "Store Address is required";
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
       errors.email = "Valid email is required";
     if (!formData.phone_number || formData.phone_number.length !== 10)
@@ -45,28 +45,26 @@ function SellerSignUp() {
     if (validateForm()) {
       try {
         const response = await axios.post(
-          "http://localhost:3000/api/register",
+          "http://localhost:3000/api/registerseller", // Backend endpoint
           formData
         );
         console.log("Response from backend:", response.data);
-
-        localStorage.setItem("email", formData.email);
+  
+        localStorage.setItem("email", formData.email); // Store email for verification
         setFormData({
-          first_name: "",
-          last_name: "",
-          address: "",
+          shop_name: "",
+          owner_name: "",
+          store_address: "",
           email: "",
           phone_number: "",
           password: "",
         });
         setErrors({});
-        navigate("/verify"); // Navigate to the verification page
+        navigate("/SellerVerificationCode"); // Redirect to seller verification
       } catch (error) {
         if (error.response?.status === 409) {
-          // Handle duplicate email error
           setErrors({ email: "This email is already registered" });
         } else {
-          // Handle other API errors
           console.error(
             "Error during registration:",
             error.response?.data?.message || error.message
@@ -77,7 +75,7 @@ function SellerSignUp() {
         }
       }
     }
-  };
+  };  
 
   return (
     <div className="container">
@@ -87,45 +85,45 @@ function SellerSignUp() {
         <h1>SIGN UP</h1>
         <form onSubmit={handleSubmit}>
           <div className="input-container">
-            <label htmlFor="first_name">Shop Name</label>
+            <label htmlFor="shop_name">Shop Name</label>
             <input
               type="text"
-              id="first_name"
-              name="first_name"
-              placeholder="Enter your first name"
-              className={`input-box ${errors.first_name ? "input-error" : ""}`}
-              value={formData.first_name}
+              id="shop_name"
+              name="shop_name"
+              placeholder="Enter your shop name"
+              className={`input-box ${errors.shop_name ? "input-error" : ""}`}
+              value={formData.shop_name}
               onChange={handleChange}
             />
-            {errors.first_name && <p className="error">{errors.first_name}</p>}
+            {errors.shop_name && <p className="error">{errors.shop_name}</p>}
           </div>
 
           <div className="input-container">
-            <label htmlFor="last_name">Shop Owner Name</label>
+            <label htmlFor="owner_name">Shop Owner Name</label>
             <input
               type="text"
-              id="last_name"
-              name="last_name"
-              placeholder="Enter your last name"
-              className={`input-box ${errors.last_name ? "input-error" : ""}`}
-              value={formData.last_name}
+              id="owner_name"
+              name="owner_name"
+              placeholder="Enter your owner name"
+              className={`input-box ${errors.owner_name ? "input-error" : ""}`}
+              value={formData.owner_name}
               onChange={handleChange}
             />
-            {errors.last_name && <p className="error">{errors.last_name}</p>}
+            {errors.owner_name && <p className="error">{errors.owner_name}</p>}
           </div>
 
           <div className="input-container">
-            <label htmlFor="address">Store Address</label>
+            <label htmlFor="store_address">Store Address</label>
             <input
               type="text"
-              id="address"
-              name="address"
-              placeholder="Enter your address"
-              className={`input-box ${errors.address ? "input-error" : ""}`}
-              value={formData.address}
+              id="store_address"
+              name="store_address"
+              placeholder="Enter your store address"
+              className={`input-box ${errors.store_address ? "input-error" : ""}`}
+              value={formData.store_address}
               onChange={handleChange}
             />
-            {errors.address && <p className="error">{errors.address}</p>}
+            {errors.store_address && <p className="error">{errors.store_address}</p>}
           </div>
 
           <div className="input-container">
@@ -185,7 +183,10 @@ function SellerSignUp() {
           </button>
         </form>
         <p style={{ marginLeft: "180px" }}>
-          Already have an account? <a href="/login" className="login-link">Login</a>
+          Already have an account?{" "}
+          <a href="/login" className="login-link">
+            Login
+          </a>
         </p>
       </div>
 

@@ -11,6 +11,8 @@ import AboutUs from "./pages/AboutUs";
 import SellerSignUp from "./pages/SellerSignUp";
 import ChefSignUp from "./pages/ChefSignUp";
 import ProfilePage from "./pages/UpdateUser";
+import SellerVerificationCode from "./pages/SellerVerificationCode";
+import Dashboard from "./pages/Vendor/Dahboard";
 
 function App() {
   return (
@@ -26,6 +28,9 @@ function App() {
   <Route path="/home" element={<Home />} />
   <Route path="/aboutus" element={<AboutUs />} />
   <Route path="/userProfile" element={<ProfilePage />} />
+  <Route path="/SellerVerificationCode" element={<SellerVerificationCode />} />
+  <Route path="/dashboard" element={<Dashboard />} />
+  Dashboard
 </Routes>
   );
 }

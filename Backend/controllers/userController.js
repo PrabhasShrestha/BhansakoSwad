@@ -118,6 +118,7 @@ const verifyCode = (req, res) => {
     );
 };
 
+
 const resendCode = (req, res) => {
   const { email } = req.body;
 
@@ -276,7 +277,6 @@ const logout = async (req, res) => {
       }
   );
 };
-
 
 const getUser = (req, res) => {
   try {
@@ -517,10 +517,10 @@ const resetPassword = (req, res) => {
     }
   };
   
-  
   const updateProfile = (req, res) => {
     const errors = validationResult(req);
 
+    // Handle validation errors
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
@@ -554,19 +554,41 @@ const resetPassword = (req, res) => {
         data = [first_name, last_name, address, email, phone_number, userId];
     }
 
+    // Execute the query
     db.query(sql, data, (err, result) => {
         if (err) {
+            // Handle duplicate email entry error
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({
+                    message: 'The email address is already in use. Please use a different email address.',
+                });
+            }
+
+            // Log and return internal server error
             console.error('Error updating profile:', err.message);
             return res.status(500).json({ message: 'Internal Server Error' });
         }
 
+        // Handle case where no rows are affected
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: 'User not found.' });
         }
 
-        return res.status(200).json({ message: 'Profile updated successfully.' });
+        // Respond with success message
+        return res.status(200).json({
+            message: 'Profile updated successfully.',
+            data: {
+                first_name,
+                last_name,
+                address,
+                email,
+                phone_number,
+                image: req.file ? `http://localhost:3000/${imagePath}` : null, // Return the full image URL if updated
+            },
+        });
     });
 };
+
 
 const removeImage = (req, res) => {
   const userId = req.user.id; // Retrieved from the token middleware
@@ -617,6 +639,7 @@ const uploadImage = (req, res) => {
   }
 };
 
+
 const changePassword = (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const userId = req.user.id; // Get the user ID from the token middleware
@@ -625,50 +648,75 @@ const changePassword = (req, res) => {
     return res.status(400).json({ message: "All fields are required." });
   }
 
-  // Fetch the current hashed password from the database
-  db.query("SELECT password FROM users WHERE id = ?", [userId], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ message: "Internal server error." });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    const currentHashedPassword = results[0].password;
-
-    // Compare the old password with the current hashed password
-    bcrypt.compare(oldPassword, currentHashedPassword, (err, isMatch) => {
-      if (err || !isMatch) {
-        return res.status(400).json({ message: "Old password is incorrect." });
+  // Fetch the current hashed password and user email from the database
+  db.query(
+    "SELECT password, email, first_name FROM users WHERE id = ?",
+    [userId],
+    (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Internal server error." });
       }
 
-      // Hash the new password
-      bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
-        if (err) {
-          console.error("Hashing error:", err);
-          return res.status(500).json({ message: "Error hashing the password." });
+      if (results.length === 0) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      const currentHashedPassword = results[0].password;
+      const userEmail = results[0].email;
+      const firstName = results[0].first_name;
+
+      // Compare the old password with the current hashed password
+      bcrypt.compare(oldPassword, currentHashedPassword, (err, isMatch) => {
+        if (err || !isMatch) {
+          return res.status(400).json({ message: "Old password is incorrect." });
         }
 
-        // Update the password in the database
-        db.query(
-          "UPDATE users SET password = ? WHERE id = ?",
-          [hashedPassword, userId],
-          (err) => {
-            if (err) {
-              console.error("Update error:", err);
-              return res.status(500).json({ message: "Failed to update the password." });
-            }
-
-            return res.status(200).json({ message: "Password updated successfully." });
+        // Hash the new password
+        bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+          if (err) {
+            console.error("Hashing error:", err);
+            return res.status(500).json({ message: "Error hashing the password." });
           }
-        );
-      });
-    });
-  });
-};
 
+          // Update the password in the database
+          db.query(
+            "UPDATE users SET password = ? WHERE id = ?",
+            [hashedPassword, userId],
+            (err) => {
+              if (err) {
+                console.error("Update error:", err);
+                return res.status(500).json({ message: "Failed to update the password." });
+              }
+
+              // Prepare email content
+              const mailSubject = "Password Changed Successfully";
+              const content = `
+                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9;">
+                  <h1 style="color: #4CAF50;">Password Change Confirmation</h1>
+                  <p style="font-size: 16px;">Hello <strong>${firstName}</strong>,</p>
+                  <p style="font-size: 14px;">Your password has been successfully changed.</p>
+                  <div style="margin: 20px auto; padding: 10px; border: 1px solid #ddd; display: inline-block; background-color: #fff;">
+                    <p style="font-size: 14px; color: #333; margin: 0;">If you did not make this change, please contact our support team immediately.</p>
+                  </div>
+                  <p style="font-size: 12px; color: #888;">Thank you for using our service.</p>
+                  <p style="font-size: 12px; color: #888;">The <strong>Your App Team</strong></p>
+                </div>`;
+
+              // Send email notification
+              sendMail(userEmail, mailSubject, content);
+
+              return res.status(200).json({
+                message:
+                  "Password updated successfully. A confirmation email has been sent to your email address.",
+              });
+            }
+          );
+        });
+      });
+    }
+  );
+};
 
 module.exports = {
   register,

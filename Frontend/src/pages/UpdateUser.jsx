@@ -148,10 +148,17 @@ const ProfilePage = () => {
         setSuccessMessage("Profile updated successfully!");
         setEditMode(false); // Disable edit mode after saving
         setTimeout(() => setSuccessMessage(""), 3000);
-        window.location.reload(); // Clear message after 3 seconds
+        setTimeout(() => {
+          window.location.reload(); // Reload the page after 3 seconds
+        }, 3000); // Clear message after 3 seconds
       })
       .catch((error) => {
         setError(error.response?.data?.message || "Failed to update profile");
+        if (errorMessage.includes("Duplicate entry")) {
+          setError("The email address is already in use. Please try a different one.");
+        } else {
+          setError(errorMessage);
+        }
       });
   };
 
@@ -281,6 +288,7 @@ const ProfilePage = () => {
         <div className="profile-details">
           <h2 className="details-title">General Information</h2>
           <form onSubmit={handleSubmit}>
+          {error && <div className="error-message">{error}</div>}
             <div className="input-group">
               <label>First Name:</label>
               <input
