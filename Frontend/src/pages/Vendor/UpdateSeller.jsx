@@ -21,6 +21,19 @@ const SellerUpdatePage = () => {
   const [error, setError] = useState("");
   const [editMode, setEditMode] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
+  const [passwordChangeError, setPasswordChangeError] = useState("");
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [showPassword, setShowPassword] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
 
   useEffect(() => {
     fetchVendorData();
@@ -147,6 +160,66 @@ const SellerUpdatePage = () => {
     });
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({ ...passwordData, [name]: value });
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPassword((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  const handleSubmitPasswordChange = (e) => {
+    e.preventDefault();
+  
+    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordChangeError("All fields are required.");
+      setPasswordChangeSuccess(""); // Clear success message
+      return;
+    }
+  
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordChangeError("New password and confirm password do not match.");
+      setPasswordChangeSuccess(""); // Clear success message
+      return;
+    }
+  
+    // Send the API request to change the password
+    axios
+      .post(
+        "http://localhost:3000/api/change-password-seller",
+        {
+          oldPassword: passwordData.oldPassword,
+          newPassword: passwordData.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`, // Attach the JWT token
+          },
+        }
+      )
+      .then((response) => {
+        // Display success message
+        setPasswordChangeSuccess(response.data.message || "Password updated successfully.");
+        setPasswordChangeError(""); // Clear error message
+        setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+        setTimeout(() => {
+          setIsChangePasswordOpen(false);
+          localStorage.removeItem("token"); // Clear the token
+          navigate("/login"); // Redirect to login page
+        }, 2000); // Clear form
+      })
+      .catch((error) => {
+        // Display error message
+        setPasswordChangeError(error.response?.data?.message || "Failed to change password. Please try again.");
+        setPasswordChangeSuccess(""); // Clear success message
+      });
+  };
+  
+
   if (loading) return <div>Loading vendor profile...</div>;
  
 
@@ -263,6 +336,14 @@ const SellerUpdatePage = () => {
                   </button>
                 </div>
               )}
+              {!editMode && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => setIsChangePasswordOpen(true)}>
+                  Change Password
+                </button>
+              )}
               </form>
               <div className="form-actions">
               {!editMode && (
@@ -280,7 +361,99 @@ const SellerUpdatePage = () => {
             </div>
             </div>
           </div>
-
+           {isChangePasswordOpen && (
+                  <div className="password-modal-overlay">
+                    <div className="password-modal">
+                      <form onSubmit={handleSubmitPasswordChange}>
+                        <h2>Change Password</h2>
+                        <div className="input-group">
+                          <label>Old Password</label>
+                          <div className="password-input">
+                            <input
+                              type={showPassword.oldPassword ? "text" : "password"}
+                              name="oldPassword"
+                              value={passwordData.oldPassword}
+                              onChange={handlePasswordChange}
+                              required
+                            />
+                            {showPassword.oldPassword ? (
+                              <AiFillEyeInvisible
+                                onClick={() => togglePasswordVisibility("oldPassword")}
+                              />
+                            ) : (
+                              <AiFillEye
+                                onClick={() => togglePasswordVisibility("oldPassword")}
+                              />
+                            )}
+                          </div>
+                        </div>
+                        <div className="input-group">
+                          <label>New Password</label>
+                          <div className="password-input">
+                            <input
+                              type={showPassword.newPassword ? "text" : "password"}
+                              name="newPassword"
+                              value={passwordData.newPassword}
+                              onChange={handlePasswordChange}
+                              required
+                            />
+                            {showPassword.newPassword ? (
+                              <AiFillEyeInvisible
+                                onClick={() => togglePasswordVisibility("newPassword")}
+                              />
+                            ) : (
+                              <AiFillEye
+                                onClick={() => togglePasswordVisibility("newPassword")}
+                              />
+                            )}
+                          </div>
+                        </div>
+                        <div className="input-group">
+                          <label>Confirm Password</label>
+                          <div className="password-input">
+                            <input
+                              type={showPassword.confirmPassword ? "text" : "password"}
+                              name="confirmPassword"
+                              value={passwordData.confirmPassword}
+                              onChange={handlePasswordChange}
+                              required
+                            />
+                            {showPassword.confirmPassword ? (
+                              <AiFillEyeInvisible
+                                onClick={() => togglePasswordVisibility("confirmPassword")}
+                              />
+                            ) : (
+                              <AiFillEye
+                                onClick={() => togglePasswordVisibility("confirmPassword")}
+                              />
+                            )}
+                          </div>
+                        </div>
+                        {/* Success and Error Messages */}
+                        {passwordChangeError && (
+                          <div className="error-message">{passwordChangeError}</div>
+                        )}
+                        {passwordChangeSuccess && (
+                          <div className="success-message">{passwordChangeSuccess}</div>
+                        )}
+                        <div className="button-group">
+                          <button type="submit">Submit</button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPasswordChangeError(""); // Clear error message
+                              setPasswordChangeSuccess(""); // Clear success message
+                              setIsChangePasswordOpen(false);
+                            }}
+                            disabled={!!passwordChangeSuccess} 
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
           {successMessage && <p className="success-message">{successMessage}</p>}
         </div>
       </div>

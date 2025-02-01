@@ -117,3 +117,57 @@ exports.updateSellerValidation = [
       throw new Error('Please upload an image of type JPG or PNG');
     }),
 ];
+
+// Validation adding products
+exports.addproductsValidation = [
+  check("name", "Product name is required").not().isEmpty().trim().isLength({ max: 100 })
+    .withMessage("Name cannot exceed 100 characters"),
+
+  check("category", "Category is required").not().isEmpty().trim().isLength({ max: 50 })
+    .withMessage("Category cannot exceed 50 characters"),
+
+  check("price", "Price must be a positive number").isFloat({ gt: 0 }),
+
+  check("in_stock", "Stock must be a non-negative integer").isInt({ min: 0 }),
+
+  check("image").custom((value, { req }) => {
+    // If no file is provided, skip validation for the image
+    if (!req.file) {
+      return true;
+    }
+
+    // Validate if file exists and is of correct type
+    if (req.file.mimetype === "image/jpeg" || req.file.mimetype === "image/png") {
+      return true;
+    }
+    throw new Error("Please upload an image of type JPG or PNG");
+  }),
+];
+
+exports.updateproductsValidation = [
+  check("name").optional().trim().notEmpty().withMessage("Products name cannot be empty")
+    .isLength({ max: 100 }).withMessage("Name cannot exceed 100 characters"),
+
+  check("category").optional().trim().notEmpty().withMessage("Category cannot be empty")
+    .isLength({ max: 50 }).withMessage("Category cannot exceed 50 characters"),
+
+  check("quantity").optional().isFloat({ gt: 0 }).withMessage("Quantity must be a positive number"),
+
+  check("unit").optional().trim().notEmpty().withMessage("Unit cannot be empty")
+    .isLength({ max: 20 }).withMessage("Unit cannot exceed 20 characters"),
+
+  check("in_stock").optional().isBoolean().withMessage("In-stock status must be a boolean value"),
+
+  check("image").custom((value, { req }) => {
+    // If no file is provided, skip validation for the image
+    if (!req.file) {
+      return true;
+    }
+
+    // Validate if file exists and is of correct type
+    if (req.file.mimetype === "image/jpeg" || req.file.mimetype === "image/png") {
+      return true;
+    }
+    throw new Error("Please upload an image of type JPG or PNG");
+  }),
+];

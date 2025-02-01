@@ -403,127 +403,349 @@ const removeImage = (req, res) => {
   );
 };
 
-const { validationResult } = require("express-validator");
-const db = require("../config/dbConnection");
-const randomstring = require("randomstring");
+// Add New products
+const addproducts = (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+  }
 
-// Add New Ingredient
-const addIngredient = (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+  const { name, category, price, in_stock } = req.body;
+  const image = req.file ? req.file.filename : null;
+  const sellerId = req.user.id;
 
-    const { name, category, quantity, unit, in_stock = true } = req.body;
-    const image = req.file ? req.file.filename : null;
+  db.query(`SELECT * FROM products WHERE LOWER(name) = LOWER(?)`, [name], (err, result) => {
+      if (err) return res.status(500).send({ msg: 'Database error' });
 
-    // Check if the ingredient already exists
-    db.query(
-        `SELECT * FROM ingredients WHERE LOWER(name) = LOWER(${db.escape(name)});`,
-        (err, result) => {
-            if (result && result.length) {
-                return res.status(409).send({ msg: "This ingredient already exists!" });
-            } else {
-                // Insert ingredient into the database
+      if (result.length > 0) {
+          // Product exists, check if it's already linked to the seller
+          const productId = result[0].id;
+
+          db.query(
+              `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?`,
+              [productId, sellerId],
+              (err, detailResult) => {
+                  if (err) return res.status(500).send({ msg: 'Database error' });
+
+                  if (detailResult.length > 0) {
+                      return res.status(409).send({ msg: "You have already listed this product!" });
+                  }
+
+                  // Link existing product to the seller with a unique image
+                  db.query(
+                      `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image) VALUES (?, ?, ?, ?, ?)`,
+                      [productId, sellerId, price, in_stock, image],
+                      (err) => {
+                          if (err) return res.status(500).send({ msg: 'Error saving product details' });
+
+                          return res.status(201).send({ msg: 'Product added successfully with unique image!' });
+                      }
+                  );
+              }
+          );
+      } else {
+          // Product does not exist, create a new entry
+          db.query(
+              `INSERT INTO products (name, category) VALUES (?, ?)`,
+              [name, category],
+              (err, productResult) => {
+                  if (err) return res.status(500).send({ msg: 'Error saving product' });
+
+                  const productId = productResult.insertId;
+
+                  // Link the newly created product to the seller with an image
+                  db.query(
+                      `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image) VALUES (?, ?, ?, ?, ?)`,
+                      [productId, sellerId, price, in_stock, image],
+                      (err) => {
+                          if (err) return res.status(500).send({ msg: 'Error saving product details' });
+
+                          return res.status(201).send({ msg: 'Product added successfully with unique image!' });
+                      }
+                  );
+              }
+          );
+      }
+  });
+};
+
+
+const getproducts = (req, res) => {
+  const sellerId = req.query.seller_id; // Get seller_id from query params
+
+  let sqlQuery = `
+      SELECT p.id AS product_id, p.name, p.category, pd.seller_id, s.shop_name, pd.price, pd.in_stock, pd.image 
+      FROM products p 
+      JOIN productdetails pd ON p.id = pd.product_id 
+      JOIN sellers s ON pd.seller_id = s.id
+  `;
+
+  // If seller_id is provided, filter by seller
+  if (sellerId) {
+      sqlQuery += ` WHERE pd.seller_id = ?`;
+  }
+
+  db.query(sqlQuery, sellerId ? [sellerId] : [], (err, result) => {
+      if (err) return res.status(500).json({ msg: 'Database error', details: err });
+      if (!result.length) return res.status(404).json({ msg: 'No products found' });
+      
+      res.json(result);
+  });
+};
+
+// Update products
+const updateproducts = (req, res) => {
+  const { id, price, in_stock } = req.body; // Get ID from request body
+  const image = req.file ? req.file.filename : null;
+  const sellerId = req.user.id;
+
+  if (!id) {
+      return res.status(400).json({ msg: "Product ID is required" });
+  }
+
+  // Check if the product exists in productdetails for the seller
+  db.query(
+      `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
+      [id, sellerId],
+      (err, results) => {
+          if (err) {
+              return res.status(500).json({ msg: "Database error" });
+          }
+          if (results.length === 0) {
+              return res.status(404).json({ msg: "Product not found for this seller" });
+          }
+
+          // Update `productdetails` for the specific seller
+          db.query(
+              `UPDATE productdetails SET price = ?, in_stock = ?, image = ? WHERE product_id = ? AND seller_id = ?`,
+              [price, in_stock, image, id, sellerId],
+              (err) => {
+                  if (err) {
+                      return res.status(500).json({ msg: "Failed to update product details" });
+                  }
+                  res.status(200).json({ msg: "Product details updated successfully" });
+              }
+          );
+      }
+  );
+};
+
+// Delete products
+const deleteproducts = (req, res) => {
+  const { id } = req.body; // Get Product ID from request body
+  const sellerId = req.user.id; // Get seller ID from authenticated user
+
+  if (!id) {
+    return res.status(400).json({ msg: "Product ID is required" });
+  }
+
+  // Check if the product exists for this specific seller in productdetails
+  db.query(
+    `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
+    [id, sellerId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ msg: "Database error", details: err });
+      }
+      if (!result.length) {
+        return res.status(404).json({ msg: "Product not found for this seller" });
+      }
+
+      // Delete the product from productdetails for this seller
+      db.query(
+        `DELETE FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
+        [id, sellerId],
+        (err) => {
+          if (err) {
+            return res.status(500).json({ msg: "Failed to delete product details", details: err });
+          }
+
+          // Check if there are any remaining sellers for this product
+          db.query(
+            `SELECT * FROM productdetails WHERE product_id = ?;`,
+            [id],
+            (err, remainingSellers) => {
+              if (err) {
+                return res.status(500).json({ msg: "Database error", details: err });
+              }
+
+              // If no other sellers are selling this product, remove it from products
+              if (remainingSellers.length === 0) {
                 db.query(
-                    `INSERT INTO ingredients (name, category, quantity, unit, in_stock, image) 
-                     VALUES (${db.escape(name)}, ${db.escape(category)}, ${db.escape(quantity)}, 
-                             ${db.escape(unit)}, ${db.escape(in_stock)}, ${db.escape(image)});`,
-                    (err) => {
-                        if (err) {
-                            return res.status(500).send({ msg: "Error saving ingredient to database" });
-                        }
-                        return res.status(201).send({
-                            msg: "Ingredient added successfully.",
-                        });
+                  `DELETE FROM products WHERE id = ?;`,
+                  [id],
+                  (err) => {
+                    if (err) {
+                      return res.status(500).json({ msg: "Failed to delete product from main table", details: err });
                     }
+                    return res.status(200).json({ msg: "Product deleted successfully from all records" });
+                  }
                 );
+              } else {
+                // If other sellers still have this product, just remove the seller's entry
+                return res.status(200).json({ msg: "Product deleted successfully for this seller" });
+              }
             }
+          );
         }
-    );
-};
-
-const getIngredient = (req, res) => {
-    const { id } = req.params;
-
-    db.query(`SELECT * FROM ingredients WHERE id = ${db.escape(id)};`, (err, result) => {
-        if (err) return res.status(500).json({ msg: "Database error", details: err });
-        if (!result.length) return res.status(404).json({ msg: "Ingredient not found" });
-        res.json(result[0]);
-    });
-};
-
-// Update Ingredient
-const updateIngredient = (req, res) => {
-    const { id } = req.params;
-    const { name, category, quantity, unit, in_stock } = req.body;
-    const image = req.file ? req.file.filename : null;
-
-    db.query(
-        `SELECT id FROM ingredients WHERE LOWER(name) = LOWER(${db.escape(name)}) AND id != ${db.escape(id)};`,
-        (err, results) => {
-            if (err) {
-                return res.status(500).json({ msg: "Database error" });
-            }
-            if (results.length > 0) {
-                return res.status(409).json({ msg: "Ingredient with this name already exists" });
-            }
-
-            const query = `UPDATE ingredients 
-                           SET name = ?, category = ?, quantity = ?, unit = ?, in_stock = ?, image = ? 
-                           WHERE id = ?`;
-
-            db.query(query, [name, category, quantity, unit, in_stock, image, id], (error) => {
-                if (error) {
-                    return res.status(500).json({ msg: "Failed to update ingredient" });
-                }
-                res.status(200).json({ msg: "Ingredient updated successfully" });
-            });
-        }
-    );
-};
-
-// Delete Ingredient
-const deleteIngredient = (req, res) => {
-    const { id } = req.params;
-
-    db.query(`DELETE FROM ingredients WHERE id = ${db.escape(id)};`, (err) => {
-        if (err) return res.status(500).json({ msg: "Database error", details: err });
-        res.status(200).json({ msg: "Ingredient deleted successfully" });
-    });
-};
-
-// Upload Image for Ingredient
-const uploadIngredientImage = (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ msg: "No file uploaded." });
-        }
-
-        const ingredientId = req.params.id;
-        const imagePath = `http://localhost:3000/uploads/ingredients/${req.file.filename}`;
-
-        db.query(`UPDATE ingredients SET image = ? WHERE id = ?`, [imagePath, ingredientId], (err) => {
-            if (err) {
-                return res.status(500).json({ msg: "Failed to save image in database." });
-            }
-            return res.status(200).json({ msg: "Image uploaded successfully.", image: imagePath });
-        });
-    } catch (err) {
-        res.status(500).json({ msg: "Internal server error" });
+      );
     }
+  );
 };
 
-// Remove Image from Ingredient
-const removeIngredientImage = (req, res) => {
-    const { id } = req.params;
 
-    db.query(`UPDATE ingredients SET image = NULL WHERE id = ?`, [id], (err) => {
-        if (err) return res.status(500).json({ msg: "Failed to remove image" });
-        res.status(200).json({ msg: "Image removed successfully" });
-    });
+// Upload Image for products
+const uploadproductsImage = (req, res) => {
+  try {
+      if (!req.file) {
+          return res.status(400).json({ msg: "No file uploaded." });
+      }
+
+      const productId = req.body.id;
+      const sellerId = req.user.id; // Get seller ID from token
+      const imagePath = req.file.filename;
+
+      // Check if the seller owns this product
+      db.query(
+          `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
+          [productId, sellerId],
+          (err, result) => {
+              if (err) {
+                  return res.status(500).json({ msg: "Database error", details: err });
+              }
+              if (!result.length) {
+                  return res.status(404).json({ msg: "Product not found for this seller" });
+              }
+
+              // Update image for this seller's product
+              db.query(
+                  `UPDATE productdetails SET image = ? WHERE product_id = ? AND seller_id = ?;`,
+                  [imagePath, productId, sellerId],
+                  (err) => {
+                      if (err) {
+                          return res.status(500).json({ msg: "Failed to save image in database." });
+                      }
+                      return res.status(200).json({ msg: "Image uploaded successfully.", image: imagePath });
+                  }
+              );
+          }
+      );
+  } catch (err) {
+      res.status(500).json({ msg: "Internal server error" });
+  }
 };
 
+
+// Remove Image from products
+const removeproductsImage = (req, res) => {
+  const { id } = req.body; // Product ID
+  const sellerId = req.user.id; // Get seller ID from token
+
+  // Check if the seller owns this product
+  db.query(
+      `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
+      [id, sellerId],
+      (err, result) => {
+          if (err) {
+              return res.status(500).json({ msg: "Database error", details: err });
+          }
+          if (!result.length) {
+              return res.status(404).json({ msg: "Product not found for this seller" });
+          }
+
+          // Remove only this seller's product image
+          db.query(
+              `UPDATE productdetails SET image = NULL WHERE product_id = ? AND seller_id = ?;`,
+              [id, sellerId],
+              (err) => {
+                  if (err) {
+                      return res.status(500).json({ msg: "Failed to remove image" });
+                  }
+                  res.status(200).json({ msg: "Image removed successfully" });
+              }
+          );
+      }
+  );
+};
+
+const sellerchangePassword = (req, res) => {
+
+  const { oldPassword, newPassword } = req.body;
+  const sellerId = req.user.id; 
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  // Fetch the current hashed password and user email from the database
+  db.query(
+    "SELECT password, email, shop_name FROM sellers WHERE id = ?",
+    [sellerId],
+    (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Internal server error." });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      const currentHashedPassword = results[0].password;
+      const userEmail = results[0].email;
+      const shop_name = results[0].shop_name;
+
+      // Compare the old password with the current hashed password
+      bcrypt.compare(oldPassword, currentHashedPassword, (err, isMatch) => {
+        if (err || !isMatch) {
+          return res.status(400).json({ message: "Old password is incorrect." });
+        }
+
+        // Hash the new password
+        bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+          if (err) {
+            console.error("Hashing error:", err);
+            return res.status(500).json({ message: "Error hashing the password." });
+          }
+
+          // Update the password in the database
+          db.query(
+            "UPDATE sellers SET password = ? WHERE id = ?",
+            [hashedPassword, sellerId],
+            (err) => {
+              if (err) {
+                console.error("Update error:", err);
+                return res.status(500).json({ message: "Failed to update the password." });
+              }
+
+              // Prepare email content
+              const mailSubject = "Password Changed Successfully";
+              const content = `
+                <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9;">
+                  <h1 style="color: #4CAF50;">Password Change Confirmation</h1>
+                  <p style="font-size: 16px;">Hello owner of <strong>${shop_name}</strong>,</p>
+                  <p style="font-size: 14px;">Your password has been successfully changed.</p>
+                  <div style="margin: 20px auto; padding: 10px; border: 1px solid #ddd; display: inline-block; background-color: #fff;">
+                    <p style="font-size: 14px; color: #333; margin: 0;">If you did not make this change, please contact our support team immediately.</p>
+                  </div>
+                  <p style="font-size: 12px; color: #888;">Thank you for using our service.</p>
+                  <p style="font-size: 12px; color: #888;">The <strong>Your App Team</strong></p>
+                </div>`;
+
+              // Send email notification
+              sendMail(userEmail, mailSubject, content);
+
+              return res.status(200).json({
+                message:
+                  "Password updated successfully. A confirmation email has been sent to your email address.",
+              });
+            }
+          );
+        });
+      });
+    }
+  );
+};
 // Add these to module.exports
 module.exports = {
   registerSeller,
@@ -534,10 +756,11 @@ module.exports = {
   updateSeller,
   uploadImage,
   removeImage,
-  addIngredient,
-  getIngredient,
-  updateIngredient,
-  deleteIngredient,
-  uploadIngredientImage,
-  removeIngredientImage
+  addproducts,
+  getproducts,
+  updateproducts,
+  deleteproducts,
+  uploadproductsImage,
+  removeproductsImage,
+  sellerchangePassword
 };

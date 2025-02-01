@@ -3,20 +3,18 @@ const router = express.Router();
 const { 
   registerSellerValidation,
   loginSellerValidation,
-  updateSellerValidation
+  updateSellerValidation,
+  addproductsValidation,
+  updateproductsValidation
 } = require('../helpers/validation');
 const sellerController = require('../controllers/sellerController');
 const { isAuthorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
-// Configure Multer storage
-const multer = require("multer");
-const path = require("path");
-
 const storage = multer.diskStorage({
     destination: function (req, file, callback) {
-        const uploadPath = path.join(__dirname, "../uploads/ingredients");
+        const uploadPath = path.join(__dirname, "../uploads/products");
         if (process.env.NODE_ENV !== "production") {
             console.log("Storing file in:", uploadPath); // Debug log
         }
@@ -58,11 +56,11 @@ router.post('/upload-seller-image', isAuthorize, upload.single('image'), sellerC
 router.delete('/remove-seller-image', isAuthorize, sellerController.removeImage);
 
 //AddIngridients
-router.post("/addingredient", isAuthorize, upload.single("image"), addIngredientValidation, sellerController.addIngredient);
-router.get("/getingredient", isAuthorize, sellerController.getIngredient);
-router.post("/updateingredient", isAuthorize, upload.single("image"), updateIngredientValidation, sellerController.updateIngredient);
-router.delete("/deleteingredient", isAuthorize, sellerController.deleteIngredient);
-router.post("/upload-image-ingredient", isAuthorize, upload.single("image"), sellerController.uploadIngredientImage);
-router.delete("/remove-image-ingredient", isAuthorize, sellerController.removeIngredientImage);
-
+router.post("/addproducts", isAuthorize, upload.single("image"), addproductsValidation, sellerController.addproducts);
+router.get("/getproducts", isAuthorize, sellerController.getproducts);
+router.post("/updateproducts", isAuthorize, upload.single("image"), updateproductsValidation, sellerController.updateproducts);
+router.delete("/deleteproducts", isAuthorize, sellerController.deleteproducts);
+router.post("/upload-image-products", isAuthorize, upload.single("image"), sellerController.uploadproductsImage);
+router.delete("/remove-image-products", isAuthorize, sellerController.removeproductsImage);
+router.post('/change-password-seller', isAuthorize,sellerController.sellerchangePassword);
 module.exports = router;

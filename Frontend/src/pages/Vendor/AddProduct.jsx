@@ -41,6 +41,7 @@ const AddProduct = () => {
   };
 
   return (
+    <div className="add-product-page">
     <div className="add-product">
       {/* Back Button */}
       <button className="back-button" onClick={() => navigate("/product")}>
@@ -124,6 +125,7 @@ const AddProduct = () => {
           </div>
         </div>
       </form>
+    </div>
     </div>
   );
 };
