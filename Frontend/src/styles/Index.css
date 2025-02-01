@@ -186,6 +186,7 @@
     width: 320px;
     height: 400px;
     border-radius: 10px;
+    background-size: cover;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   

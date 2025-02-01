@@ -1,0 +1,191 @@
+.seller-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+.vendor-update-page {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+  }
+  
+  .vendor-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  
+  .vendor-header {
+    font-size: 2.5rem;
+    color: #2d3748;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .vendor-subheader {
+    text-align: center;
+    color: #718096;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+  
+  .vendor-profile-wrapper {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .vendor-image-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding-right: 2rem;
+    border-right: 2px solid #e2e8f0;
+  }
+  
+  .shop-logo {
+    width: 250px;
+    height: 250px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
+    padding: 0.5rem;
+  }
+  
+  .image-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+  }
+  
+  .image-btn {
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background-color: #4299e1;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .image-btn:hover {
+    background-color: #3182ce;
+  }
+  
+  .remove-btn {
+    background-color: #f56565;
+  }
+  
+  .remove-btn:hover {
+    background-color: #e53e3e;
+  }
+  
+  .vendor-details-section {
+    padding: 1rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+  }
+  
+  .form-group input:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  }
+  
+  .form-group input:disabled {
+    background-color: #f8fafc;
+    cursor: not-allowed;
+  }
+  
+  .form-actions {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .save-btn {
+    background-color: #48bb78;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .save-btn:hover {
+    background-color: #38a169;
+  }
+  
+  .edit-btn {
+    background-color: #4299e1;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .edit-btn:hover {
+    background-color: #3182ce;
+  }
+  
+  .cancel-btn {
+    background-color: #718096;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #4a5568;
+  }
+  
+  @media (max-width: 768px) {
+    .vendor-profile-wrapper {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+  
+    .vendor-image-section {
+      border-right: none;
+      padding-right: 0;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 2rem;
+    }
+  
+    .shop-logo {
+      width: 200px;
+      height: 200px;
+    }
+  }

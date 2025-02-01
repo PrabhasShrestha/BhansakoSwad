@@ -88,3 +88,32 @@ exports.loginSellerValidation = [
     .withMessage('Invalid email format'),
   check('password', 'Password is required').not().isEmpty(),
 ];
+
+// Add to validation.js
+exports.updateSellerValidation = [
+  check('shop_name', 'Shop name is required').not().isEmpty(),
+  check('owner_name', 'Owner name is required').not().isEmpty(),
+  check('store_address', 'Store address is required').not().isEmpty(),
+  check('email', 'A valid email is required')
+  .not()
+  .isEmpty()
+  .withMessage('Email is required')
+  .bail()
+  .isEmail()
+  .withMessage('Invalid email format'),
+  check('phone_number', 'Valid phone number required')
+    .isMobilePhone('ne-NP')
+    .isLength({ min: 10, max: 10 }),
+    check('image').custom((value, { req }) => {
+      // If no file is provided, skip validation for the image
+      if (!req.file) {
+        return true;
+      }
+  
+      // Validate if file exists
+      if (req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/png') {
+        return true;
+      }
+      throw new Error('Please upload an image of type JPG or PNG');
+    }),
+];

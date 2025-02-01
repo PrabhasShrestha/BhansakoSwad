@@ -1,6 +1,7 @@
 import React from 'react';
 import '../../components/chartConfig';
-import '../../styles/Dashboard.css';
+import Sidebar from '../../components/Sidebar'
+import '../../styles/Vendor/Dashboard.css';
 import { Line } from 'react-chartjs-2';
 import { Doughnut } from 'react-chartjs-2';
 
@@ -31,19 +32,7 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-grid">
-      {/* Sidebar */}
-      <aside className="dashboard-sidebar">
-        <h2 className="dashboard-title">Dashboard</h2>
-        <nav>
-          <ul className="dashboard-menu">
-            <li className="dashboard-menu-item">Overview</li>
-            <li className="dashboard-menu-item">Products</li>
-            <li className="dashboard-menu-item">Orders</li>
-            <li className="dashboard-menu-item">Account</li>
-            <li className="dashboard-menu-item">View your Store</li>
-          </ul>
-        </nav>
-      </aside>
+      <Sidebar/>
 
       {/* Main Content */}
       <div className="dashboard-main-content">

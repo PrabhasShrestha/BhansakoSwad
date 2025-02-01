@@ -120,6 +120,7 @@ const loginSeller = (req, res) => {
                                 owner_name: seller.owner_name,
                                 email: seller.email,
                                 store_address: seller.store_address,
+                                phone_number: seller.phone_number
                             },
                         });
                     }
@@ -268,9 +269,275 @@ const resendSellerCode = (req, res) => {
   );
 };
 
+// Add to sellerController.js
+const getSeller = (req, res) => {
+  try {
+    const sellerId = req.user.id;
+
+    db.query(
+      `SELECT shop_name, owner_name, store_address, email, phone_number, image 
+       FROM sellers WHERE id = ?`,
+      [sellerId],
+      (error, result) => {
+        if (error) {
+          console.error('Database Error:', error);
+          return res.status(500).send({ message: 'Internal server error.' });
+        }
+
+        if (result.length === 0) {
+          return res.status(404).send({ message: 'Seller not found.' });
+        }
+
+        const seller = result[0];
+        if (seller.image) {
+          seller.image = `http://localhost:3000/uploads/sellers/${seller.image.split('/').pop()}`;
+        }
+
+        res.status(200).json({
+          success: true,
+          data: seller,
+          message: 'Seller data fetched successfully'
+        });
+      }
+    );
+  } catch (err) {
+    console.error('Unexpected Error:', err);
+    res.status(500).send({ message: 'Internal server error.' });
+  }
+};
+
+const updateSeller = (req, res) => {
+  const sellerId = req.user.id;
+  const { shop_name, owner_name, store_address, email, phone_number } = req.body;
+
+  // Add validation check
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  // Rest of the implementation remains the same
+  db.query(
+    `SELECT id FROM sellers WHERE email = ? AND id != ?`,
+    [email, sellerId],
+    (err, results) => {
+      if (err) {
+        console.error('Database Error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (results.length > 0) {
+        return res.status(409).json({ message: 'Email already in use' });
+      }
+
+      const query = `
+        UPDATE sellers 
+        SET shop_name = ?, owner_name = ?, store_address = ?, 
+            email = ?, phone_number = ?
+        WHERE id = ?
+      `;
+      
+      db.query(
+        query,
+        [shop_name, owner_name, store_address, email, phone_number, sellerId],
+        (error) => {
+          if (error) {
+            console.error('Update Error:', error);
+            return res.status(500).json({ message: 'Failed to update profile' });
+          }
+
+          res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully'
+          });
+        }
+      );
+    }
+  );
+};
+
+const uploadImage = (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded." });
+    }
+
+    const sellerId = req.user.id;
+    const imagePath =  `http://localhost:3000/uploads/sellers/${req.file.filename}`;
+
+    db.query(
+      `UPDATE sellers SET image = ? WHERE id = ?`,
+      [imagePath, sellerId],
+        (err) => {
+          if (err) {
+            console.error("Error updating database:", err.message);
+            return res.status(500).json({ message: "Failed to save image in database." });
+          }
+  
+          return res.status(200).json({ message: "Image uploaded successfully.", image: imagePath });
+        }
+      );
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const removeImage = (req, res) => {
+  const sellerId = req.user.id;
+
+  db.query(
+    `UPDATE sellers SET image = NULL WHERE id = ?`,
+    [sellerId],
+    (err) => {
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).json({ message: "Failed to remove image" });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Image removed successfully"
+      });
+    }
+  );
+};
+
+const { validationResult } = require("express-validator");
+const db = require("../config/dbConnection");
+const randomstring = require("randomstring");
+
+// Add New Ingredient
+const addIngredient = (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { name, category, quantity, unit, in_stock = true } = req.body;
+    const image = req.file ? req.file.filename : null;
+
+    // Check if the ingredient already exists
+    db.query(
+        `SELECT * FROM ingredients WHERE LOWER(name) = LOWER(${db.escape(name)});`,
+        (err, result) => {
+            if (result && result.length) {
+                return res.status(409).send({ msg: "This ingredient already exists!" });
+            } else {
+                // Insert ingredient into the database
+                db.query(
+                    `INSERT INTO ingredients (name, category, quantity, unit, in_stock, image) 
+                     VALUES (${db.escape(name)}, ${db.escape(category)}, ${db.escape(quantity)}, 
+                             ${db.escape(unit)}, ${db.escape(in_stock)}, ${db.escape(image)});`,
+                    (err) => {
+                        if (err) {
+                            return res.status(500).send({ msg: "Error saving ingredient to database" });
+                        }
+                        return res.status(201).send({
+                            msg: "Ingredient added successfully.",
+                        });
+                    }
+                );
+            }
+        }
+    );
+};
+
+const getIngredient = (req, res) => {
+    const { id } = req.params;
+
+    db.query(`SELECT * FROM ingredients WHERE id = ${db.escape(id)};`, (err, result) => {
+        if (err) return res.status(500).json({ msg: "Database error", details: err });
+        if (!result.length) return res.status(404).json({ msg: "Ingredient not found" });
+        res.json(result[0]);
+    });
+};
+
+// Update Ingredient
+const updateIngredient = (req, res) => {
+    const { id } = req.params;
+    const { name, category, quantity, unit, in_stock } = req.body;
+    const image = req.file ? req.file.filename : null;
+
+    db.query(
+        `SELECT id FROM ingredients WHERE LOWER(name) = LOWER(${db.escape(name)}) AND id != ${db.escape(id)};`,
+        (err, results) => {
+            if (err) {
+                return res.status(500).json({ msg: "Database error" });
+            }
+            if (results.length > 0) {
+                return res.status(409).json({ msg: "Ingredient with this name already exists" });
+            }
+
+            const query = `UPDATE ingredients 
+                           SET name = ?, category = ?, quantity = ?, unit = ?, in_stock = ?, image = ? 
+                           WHERE id = ?`;
+
+            db.query(query, [name, category, quantity, unit, in_stock, image, id], (error) => {
+                if (error) {
+                    return res.status(500).json({ msg: "Failed to update ingredient" });
+                }
+                res.status(200).json({ msg: "Ingredient updated successfully" });
+            });
+        }
+    );
+};
+
+// Delete Ingredient
+const deleteIngredient = (req, res) => {
+    const { id } = req.params;
+
+    db.query(`DELETE FROM ingredients WHERE id = ${db.escape(id)};`, (err) => {
+        if (err) return res.status(500).json({ msg: "Database error", details: err });
+        res.status(200).json({ msg: "Ingredient deleted successfully" });
+    });
+};
+
+// Upload Image for Ingredient
+const uploadIngredientImage = (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ msg: "No file uploaded." });
+        }
+
+        const ingredientId = req.params.id;
+        const imagePath = `http://localhost:3000/uploads/ingredients/${req.file.filename}`;
+
+        db.query(`UPDATE ingredients SET image = ? WHERE id = ?`, [imagePath, ingredientId], (err) => {
+            if (err) {
+                return res.status(500).json({ msg: "Failed to save image in database." });
+            }
+            return res.status(200).json({ msg: "Image uploaded successfully.", image: imagePath });
+        });
+    } catch (err) {
+        res.status(500).json({ msg: "Internal server error" });
+    }
+};
+
+// Remove Image from Ingredient
+const removeIngredientImage = (req, res) => {
+    const { id } = req.params;
+
+    db.query(`UPDATE ingredients SET image = NULL WHERE id = ?`, [id], (err) => {
+        if (err) return res.status(500).json({ msg: "Failed to remove image" });
+        res.status(200).json({ msg: "Image removed successfully" });
+    });
+};
+
+// Add these to module.exports
 module.exports = {
-    registerSeller,
-    loginSeller,
-    verifySellerCode,
-    resendSellerCode
-}
+  registerSeller,
+  loginSeller,
+  verifySellerCode,
+  resendSellerCode,
+  getSeller,
+  updateSeller,
+  uploadImage,
+  removeImage,
+  addIngredient,
+  getIngredient,
+  updateIngredient,
+  deleteIngredient,
+  uploadIngredientImage,
+  removeIngredientImage
+};
