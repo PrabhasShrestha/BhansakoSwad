@@ -269,7 +269,6 @@ const resendSellerCode = (req, res) => {
   );
 };
 
-// Add to sellerController.js
 const getSeller = (req, res) => {
   try {
     const sellerId = req.user.id;
@@ -305,7 +304,6 @@ const getSeller = (req, res) => {
     res.status(500).send({ message: 'Internal server error.' });
   }
 };
-
 const updateSeller = (req, res) => {
   const sellerId = req.user.id;
   const { shop_name, owner_name, store_address, email, phone_number } = req.body;
@@ -316,42 +314,60 @@ const updateSeller = (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  // Rest of the implementation remains the same
+  // Check if an image is uploaded
+  let imagePath = null;
+  if (req.file) {
+    imagePath = `uploads/sellers/${req.file.filename}`; // Ensure correct path
+  }
+
+  // Check if the email is already used by another seller
   db.query(
     `SELECT id FROM sellers WHERE email = ? AND id != ?`,
     [email, sellerId],
     (err, results) => {
       if (err) {
-        console.error('Database Error:', err);
-        return res.status(500).json({ message: 'Internal server error' });
+        console.error("Database Error:", err);
+        return res.status(500).json({ message: "Internal server error" });
       }
 
       if (results.length > 0) {
-        return res.status(409).json({ message: 'Email already in use' });
+        return res.status(409).json({ message: "Email already in use" });
       }
 
-      const query = `
+      // Dynamically update SQL query to include image if provided
+      let query = `
         UPDATE sellers 
-        SET shop_name = ?, owner_name = ?, store_address = ?, 
-            email = ?, phone_number = ?
-        WHERE id = ?
+        SET shop_name = ?, owner_name = ?, store_address = ?, email = ?, phone_number = ?
       `;
-      
-      db.query(
-        query,
-        [shop_name, owner_name, store_address, email, phone_number, sellerId],
-        (error) => {
-          if (error) {
-            console.error('Update Error:', error);
-            return res.status(500).json({ message: 'Failed to update profile' });
-          }
+      let data = [shop_name, owner_name, store_address, email, phone_number];
 
-          res.status(200).json({
-            success: true,
-            message: 'Profile updated successfully'
-          });
+      if (imagePath) {
+        query += `, image = ?`;
+        data.push(imagePath);
+      }
+
+      query += ` WHERE id = ?`;
+      data.push(sellerId);
+
+      db.query(query, data, (error) => {
+        if (error) {
+          console.error("Update Error:", error);
+          return res.status(500).json({ message: "Failed to update profile" });
         }
-      );
+
+        res.status(200).json({
+          success: true,
+          message: "Profile updated successfully",
+          data: {
+            shop_name,
+            owner_name,
+            store_address,
+            email,
+            phone_number,
+            image: imagePath ? `http://localhost:3000/${imagePath}` : null, // Return full URL
+          },
+        });
+      });
     }
   );
 };
@@ -363,25 +379,30 @@ const uploadImage = (req, res) => {
     }
 
     const sellerId = req.user.id;
-    const imagePath =  `http://localhost:3000/uploads/sellers/${req.file.filename}`;
+    const imagePath = `uploads/sellers/${req.file.filename}`; // Store only relative path
+    const fullImageUrl = `http://localhost:3000/${imagePath}`; // Convert to full URL
 
     db.query(
       `UPDATE sellers SET image = ? WHERE id = ?`,
-      [imagePath, sellerId],
-        (err) => {
-          if (err) {
-            console.error("Error updating database:", err.message);
-            return res.status(500).json({ message: "Failed to save image in database." });
-          }
-  
-          return res.status(200).json({ message: "Image uploaded successfully.", image: imagePath });
+      [imagePath, sellerId], // Store only relative path
+      (err) => {
+        if (err) {
+          console.error("Error updating database:", err.message);
+          return res.status(500).json({ message: "Failed to save image in database." });
         }
-      );
+
+        return res.status(200).json({
+          message: "Image uploaded successfully.",
+          image: fullImageUrl, // Send full URL to frontend
+        });
+      }
+    );
   } catch (err) {
     console.error("Error:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 const removeImage = (req, res) => {
   const sellerId = req.user.id;
@@ -471,27 +492,23 @@ const addproducts = (req, res) => {
 
 
 const getproducts = (req, res) => {
-  const sellerId = req.query.seller_id; // Get seller_id from query params
+  const sellerId = req.user.id; // Get seller ID from token
 
   let sqlQuery = `
-      SELECT p.id AS product_id, p.name, p.category, pd.seller_id, s.shop_name, pd.price, pd.in_stock, pd.image 
+      SELECT p.id AS product_id, p.name, p.category, pd.price, pd.in_stock, pd.image 
       FROM products p 
       JOIN productdetails pd ON p.id = pd.product_id 
-      JOIN sellers s ON pd.seller_id = s.id
+      WHERE pd.seller_id = ?
   `;
 
-  // If seller_id is provided, filter by seller
-  if (sellerId) {
-      sqlQuery += ` WHERE pd.seller_id = ?`;
-  }
-
-  db.query(sqlQuery, sellerId ? [sellerId] : [], (err, result) => {
+  db.query(sqlQuery, [sellerId], (err, result) => {
       if (err) return res.status(500).json({ msg: 'Database error', details: err });
       if (!result.length) return res.status(404).json({ msg: 'No products found' });
       
       res.json(result);
   });
 };
+
 
 // Update products
 const updateproducts = (req, res) => {

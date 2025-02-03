@@ -15,7 +15,6 @@ import SellerVerificationCode from "./pages/SellerVerificationCode";
 import Dashboard from "./pages/Vendor/Dahboard";
 import SellerUpdatePage from "./pages/Vendor/UpdateSeller"
 import ProductPage from "./pages/Vendor/Product";
-import AddProduct from "./pages/Vendor/AddProduct";
 
 function App() {
   return (
@@ -35,7 +34,6 @@ function App() {
   <Route path="/dashboard" element={<Dashboard />} />
   <Route path="/sellerprofile" element={<SellerUpdatePage />} />
   <Route path='/product' element ={<ProductPage/>}/>
-  <Route path='/addproduct' element ={<AddProduct/>}/>
 </Routes>
   );
 }

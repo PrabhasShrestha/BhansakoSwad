@@ -1,290 +1,241 @@
 /* General Container */
 .profile-page-container {
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  
-  .profile-title {
-    margin-top: 20px;
-    font-size: 2rem;
-    text-align: center;
-    margin-bottom: 5px;
-  }
-  
-  .profile-subtitle {
-    text-align: center;
-    color: #777;
-    margin-bottom: 20px;
-  }
-  
-  /* Wrapper for Left and Right Sections */
-  .profile-wrapper {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 6px #0000001a;
-    margin-bottom: 20px;
-  }
-  
-  /* Left Section - Profile Info */
-  .profile-info {
-    flex: 1;
-    border-right: 1px solid #e0e0e0;
-    padding-right: 20px;
-    
-  }
-  
-  .profile-avatar {
-    width: 375px; /* Makes the image span the full width of the container */
-    height: 375px; /* Keeps the height fixed */
-    border-radius: 0; /* Keeps the image square */
-  }
-  
-  .profile-name {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-  
-  .profile-phone {
-    font-size: 1rem;
-    color: #555;
-    margin-top: 5px;
-  }
-  
-  /* Right Section - Details */
-  .profile-details {
-    flex: 2;
-  }
-  
-  .details-title {
-    font-size: 1.25rem;
-    margin-bottom: 15px;
-  }
-  
-  .input-group {
-    margin-bottom: 15px;
-  }
-  
-  .input-group label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .input-group input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
-  }
-  
-  .input-group input:disabled {
-    background: #f9f9f9;
-  }
-  
-  /* Security Section */
-  .security-section {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .security-fields {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    margin-bottom: 20px;
-  }
-  
-  .security-buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-  }
-  
-  .secondary-btn {
-    padding: 10px 15px;
-    border: 1px solid #007bff;
-    background-color: transparent;
-    color: #007bff;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  
-  .secondary-btn:hover {
-    background-color: #007bff;
-    color: #fff;
-  }
-  
-  .secondary-btn {
-    padding: 10px 20px;
-    font-size: 16px;
-    max-width: 190px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: #007bff;
-    color: #fff;
-    gap: 10px;
-    margin: 0 5px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .secondary-btn:hover {
-    background-color: #0056b3;
-  }
-  
-  .cancel-btn {
-    background-color: #dc3545;
-    color: #fff;
-  }
-  
-  .cancel-btn:hover {
-    background-color: #b02a37;
-  }
-  
-  .image-btn{
-    padding: 10px 20px;
-    font-size: 16px;
-    max-width: 170px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    color: #fff;
-    gap: 10px;
-    margin: 5px 5px;
-    transition: background-color 0.3s ease;
-  }
+  font-family: Arial, sans-serif;
+  padding: 2rem;
+  max-width: 980px;
+  margin: 0 auto;
 
-  .logout-btn {
-    width: 100px;
-    padding: 10px;
-    margin-top: 65px;
-    background-color: #f44336; /* Red color for log out */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-left: 0px;
-  }
-  
-  .logout-btn:hover {
-    background-color: #d32f2f; /* Darker red on hover */
-  }
+}
 
-  /* Password Modal */
+/* Titles */
+.profile-title {
+  margin-top: 1.5rem;
+  font-size: 2.5rem;
+  color: #2d3748;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.profile-subtitle {
+  text-align: center;
+  color: #718096;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+/* Profile Wrapper */
+.profile-wrapper {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+/* Left Section - Profile Info */
+.profile-info {
+  flex: 1;
+  border-right: 1px solid #e2e8f0;
+  padding-right: 2rem;
+}
+
+.profile-avatar {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 3px solid #e2e8f0;
+}
+
+/* Right Section - Details */
+.profile-details {
+  flex: 2;
+  padding-left: 2rem;
+  max-width: 1900px;
+}
+
+.details-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #2d3748;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-group label {
+  font-weight: 500;
+  display: block;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3);
+}
+
+.input-group input:disabled {
+  background-color: #f8fafc;
+  cursor: not-allowed;
+}
+
+/* Buttons */
+.secondary-btn, .cancel-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  max-width: 240px;
+  margin-right: 10px;
+}
+
+.image-btn{
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  max-width: 110px;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+.image-btn-cancel{
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  max-width: 120px;
+  margin-right: 10px;
+  margin-top: 10px;
+  background-color: #718096;
+}
+.image-btn-cancel:hover{
+  background-color: #535962;
+}
+
+.secondary-btn {
+  background-color: #4299e1;
+  color: #fff;
+  border: none;
+}
+
+.secondary-btn:hover {
+  background-color: #3182ce;
+}
+
+.cancel-btn {
+  background-color: #e53e3e;
+  color: #fff;
+  border: none;
+}
+
+.cancel-btn:hover {
+  background-color: #c53030;
+}
+
+/* Modal */
 .password-modal {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  padding: 30px;
-  width: 400px;
-  max-width: 90%;
-  border-radius: 10px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   z-index: 1000;
 }
 
 .password-modal h2 {
-  font-size: 20px;
+  font-size: 1.5rem;
   font-weight: bold;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.password-modal p {
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
   text-align: center;
 }
 
 .password-modal .input-group {
-  margin-bottom: 15px;
+  margin-bottom: 1.5rem;
 }
 
 .password-modal .input-group label {
   display: block;
-  font-size: 14px;
-  margin-bottom: 5px;
-  color: #333;
-  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
+  font-weight: 500;
 }
 
 .password-modal .password-input {
   display: flex;
   align-items: center;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 5px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
 }
 
 .password-modal .password-input input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 14px;
-  padding: 10px;
-}
-
-.password-modal .password-input svg {
-  font-size: 20px;
-  color: #666;
-  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.75rem 0;
 }
 
 .password-modal button {
   width: 100%;
-  padding: 10px;
-  font-size: 14px;
+  padding: 0.75rem;
+  font-size: 1rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 1rem;
 }
 
 .password-modal button:first-of-type {
-  background-color: #3498db;
+  background-color: #4299e1;
   color: white;
-  transition: background-color 0.3s ease;
 }
 
 .password-modal button:first-of-type:hover {
-  background-color: #2980b9;
+  background-color: #3182ce;
 }
 
 .password-modal button:last-of-type {
-  background-color: #e74c3c;
+  background-color: #e53e3e;
   color: white;
-  transition: background-color 0.3s ease;
 }
 
 .password-modal button:last-of-type:hover {
-  background-color: #c0392b;
+  background-color: #c53030;
 }
 
-/* Modal Background Overlay */
 .password-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent overlay */
-  backdrop-filter: blur(5px); /* Apply blur effect */
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
   z-index: 999;
 }

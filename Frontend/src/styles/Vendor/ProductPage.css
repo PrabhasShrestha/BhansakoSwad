@@ -154,3 +154,239 @@ td {
   background-color: #e9d5ff;
   color: #6b21a8;
 }
+
+.action-column {
+  position: relative;
+}
+
+.action-dots {
+  cursor: pointer;
+  font-size: 20px;
+  padding: 5px;
+}
+
+.dropdown-menu {
+  position: absolute;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  right: 10px;
+  top: 30px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+}
+
+.dropdown-menu button {
+  padding: 10px;
+  border: none;
+  background: white;
+  color: black;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dropdown-menu button:hover {
+  background: #f0f0f0;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  width: 300px;
+  text-align: center;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.delete-btn {
+  background: red;
+  color: white;
+  margin-left: 10px;
+}
+
+.can-btn{
+  background: #D3D3D3;
+  color: white;
+}
+
+/* Action Column */
+.action-column {
+  position: relative;
+  text-align: center;
+}
+
+/* Three Dots Icon */
+.action-dots {
+  cursor: pointer;
+  font-size: 22px;
+  padding: 5px;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  right: 10px;
+  top: 30px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+}
+
+.dropdown-menu button {
+  padding: 10px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease-in-out;
+}
+
+.dropdown-menu button:hover {
+  background: #f0f0f0;
+}
+
+/* Modal (Common for Update & Delete) */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  width: 350px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.modal-content p {
+  font-size: 14px;
+  color: #555;
+}
+
+/* Form Styling */
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modal-content label {
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-content input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+/* Buttons */
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-actions button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.modal-actions button:first-child {
+  background: #ddd;
+  color: #333;
+}
+
+.modal-actions button:first-child:hover {
+  background: #bbb;
+}
+
+.modal-actions .delete-btn {
+  background: red;
+  color: white;
+}
+
+.modal-actions .delete-btn:hover {
+  background: darkred;
+}
+
+.modal-actions .update-btn {
+  background: #007bff;
+  color: white;
+  margin-left: 10px;
+}
+
+.modal-actions .update-btn:hover {
+  background: #0056b3;
+}
+
+/* Product Image Styling */
+.product-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 5px;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.add-btn {
+  background: #8e44ad; /* Vibrant Purple */
+  color: white;
+  box-shadow: 0px 4px 8px rgba(142, 68, 173, 0.3);
+  margin-left: 10px;
+}
+
+.add-btn:hover {
+  background: #732d91; /* Darker Purple */
+  box-shadow: 0px 4px 12px rgba(115, 45, 145, 0.4);
+}

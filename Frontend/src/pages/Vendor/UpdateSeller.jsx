@@ -5,6 +5,7 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import Sidebar from "../../components/Sidebar";
 import "../../styles/Vendor/UpdateSeller.css";
 import vendorImage from '../../assets/store.jpg';
+import { FiLogOut } from "react-icons/fi";
 
 const SellerUpdatePage = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const SellerUpdatePage = () => {
         storeAddress: data.store_address,
         email: data.email,
         phoneNumber: data.phone_number,
-        image: data.image || null,
+        image: data.image || vendorImage,
       };
       setFormData(FormData);
       setVendor(FormData);
@@ -128,13 +129,16 @@ const SellerUpdatePage = () => {
         },
       })
       .then((response) => {
-        console.log("Uploaded Image URL:", response.data.image); // Debugging
+        console.log("Uploaded Image Response:", response.data); // Debugging
   
-        // Ensure the new image URL is correctly set
-        setFormData((prevData) => ({
-          ...prevData,
-          image: response.data.image, // Ensure full URL
-        }));
+        if (response.data?.image) {
+          setFormData((prevData) => ({
+            ...prevData,
+            image: response.data.image + `?t=${new Date().getTime()}`, // Force cache refresh
+          }));
+        } else {
+          console.error("Image field missing in API response", response.data);
+        }
   
         setSuccessMessage("Image uploaded successfully!");
         setTimeout(() => setSuccessMessage(""), 3000);
@@ -142,8 +146,8 @@ const SellerUpdatePage = () => {
       .catch((error) => {
         setError(error.response?.data?.message || "Image upload failed");
       });
-  };  
-
+  };
+  
   const handleRemoveImage = () => {
     axios.delete("http://localhost:3000/api/remove-seller-image", {
       headers: {
@@ -234,10 +238,11 @@ const SellerUpdatePage = () => {
           <div className="vendor-profile-wrapper">
             <div className="vendor-image-section">
             <img
-                src={formData.image ? `${formData.image}?${Date.now()}` : vendorImage}
-                alt="Shop Logo"
-                className="shop-logo"
-              />
+              src={formData.image ? `${formData.image}?t=${new Date().getTime()}` : vendorImage}
+              alt="Shop Logo"
+              className="shop-logo"
+            />
+
               {editMode && (
                 <div className="image-controls">
                   <input
@@ -250,10 +255,10 @@ const SellerUpdatePage = () => {
                     className="image-btn"
                     onClick={() => document.getElementById("shop-image-upload").click()}
                   >
-                    Upload Logo
+                    Upload
                   </button>
                   <button className="image-btn remove-btn" onClick={handleRemoveImage}>
-                    Remove Logo
+                    Remove
                   </button>
                 </div>
               )}
@@ -336,31 +341,30 @@ const SellerUpdatePage = () => {
                   </button>
                 </div>
               )}
-              {!editMode && (
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  onClick={() => setIsChangePasswordOpen(true)}>
-                  Change Password
-                </button>
-              )}
               </form>
-              <div className="form-actions">
               {!editMode && (
-                <button
-                  type="button"
-                  className="edit-btn"
-                  onClick={() => {
-                    setEditMode(true);
-                    setSuccessMessage("");
-                  }}
-                >
-                  Edit Profile
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="edit-btn"
+                    onClick={() => {
+                      setEditMode(true);
+                      setSuccessMessage("");
+                    }}
+                  >
+                    Edit Profile
+                  </button>
+                  <button
+                    type="button"
+                    className="edit-btn"
+                    onClick={() => setIsChangePasswordOpen(true)}
+                  >
+                    Change Password
+                  </button>
+                </>
               )}
             </div>
             </div>
-          </div>
            {isChangePasswordOpen && (
                   <div className="password-modal-overlay">
                     <div className="password-modal">
@@ -455,6 +459,13 @@ const SellerUpdatePage = () => {
                   </div>
                 )}
           {successMessage && <p className="success-message">{successMessage}</p>}
+          <p className="logout-text" onClick={() => {
+              localStorage.removeItem("token"); // Clear the token
+              window.location.href = "/login"; // Redirect to the login page
+            }}
+          >
+        <FiLogOut className="logout-icon" /> Logout
+        </p>
         </div>
       </div>
     </div>

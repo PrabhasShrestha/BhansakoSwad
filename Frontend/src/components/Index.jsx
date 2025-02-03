@@ -160,8 +160,12 @@ const Home = () => {
                   <p className="testimonial-text">{testimonial.text}</p>
                   <div className="author">
                     <img
-                      src="/path/to/default-user.png" // Replace with user avatar
-                      alt={testimonial.user_name}
+                      src={
+                        testimonial.user_image
+                          ? `http://localhost:3000${testimonial.user_image}` // Use user's profile image if available
+                          : userImage // Fallback to default user image (imported)
+                      }
+                      alt={`${testimonial.user_name}'s profile`}
                       className="author-image"
                     />
                     <p className="author-name">{testimonial.user_name}</p>

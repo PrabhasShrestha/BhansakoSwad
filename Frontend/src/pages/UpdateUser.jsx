@@ -6,6 +6,7 @@ import "../styles/UpdateUser.css";
 import Footer from "../components/Footer";
 import Navigationbar from "../components/NavBar";
 import userImage from '../assets/user.png';
+import { FiLogOut } from "react-icons/fi";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -245,19 +246,6 @@ const ProfilePage = () => {
           className="profile-avatar"
           
         />
-        
-        {!editMode && (
-            <button
-            type="button"
-            className="logout-btn"
-            onClick={() => {
-              localStorage.removeItem("token"); // Clear the token
-              window.location.href = "/login"; // Redirect to the login page
-            }}
-          >
-            Log Out
-          </button>
-        )}
 
           {editMode && (
             <div className="image-actions">
@@ -269,17 +257,17 @@ const ProfilePage = () => {
               />
               <button
                 type="button"
-                className="image-btn secondary-btn"
+                className="image-btn"
                 onClick={() => document.getElementById("file-input").click()}
               >
-                Add Image
+                Set
               </button>
               <button
                 type="button"
-                className="image-btn cancel-btn"
+                className="image-btn-cancel"
                 onClick={handleRemoveImage}
               >
-                Remove Image
+                Remove
               </button>
             </div>
           )}
@@ -475,10 +463,16 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
-             {/* Success Message */}
       {successMessage && <div className="success-message">{successMessage}</div>}
         </div>
       </div>
+      <p className="logout-text" onClick={() => {
+                    localStorage.removeItem("token"); // Clear the token
+                    window.location.href = "/login"; // Redirect to the login page
+                  }}
+                >
+              <FiLogOut className="logout-icon" /> Logout
+              </p>
       </div>
       <Footer/>
     </div>

@@ -41,6 +41,36 @@ const upload = multer({
     limits: { fileSize: 2 * 1024 * 1024 } // Limit to 2MB
 });
 
+const sellerStorage = multer.diskStorage({
+    destination: function (req, file, callback) {
+        const uploadPath = path.join(__dirname, "../uploads/sellers");
+        if (process.env.NODE_ENV !== "production") {
+            console.log("Storing seller image in:", uploadPath); // Debug log
+        }
+        callback(null, uploadPath);
+    },
+    filename: function (req, file, callback) {
+        const name = Date.now() + "-" + file.originalname;
+        callback(null, name);
+    }
+});
+
+// File filter for seller images (JPG & PNG only)
+const sellerFileFilter = (req, file, callback) => {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+        callback(null, true);
+    } else {
+        callback(new Error("Only JPG and PNG images are allowed for sellers!"), false);
+    }
+};
+
+// Seller Image Upload Middleware
+const uploadSellerImage = multer({
+    storage: sellerStorage,
+    fileFilter: sellerFileFilter,
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
+});
+
 // Existing routes
 router.post('/registerseller', registerSellerValidation, sellerController.registerSeller);
 router.post('/loginseller', loginSellerValidation, sellerController.loginSeller);
@@ -51,8 +81,8 @@ router.post('/resendseller', sellerController.resendSellerCode);
 router.get('/get-seller', isAuthorize, sellerController.getSeller);
 // Change from PUT to POST
 
-router.post('/update-seller', isAuthorize, upload.single('image'), updateSellerValidation, sellerController.updateSeller);
-router.post('/upload-seller-image', isAuthorize, upload.single('image'), sellerController.uploadImage);
+router.post('/update-seller', isAuthorize, uploadSellerImage.single('image'), updateSellerValidation, sellerController.updateSeller);
+router.post('/upload-seller-image', isAuthorize, uploadSellerImage.single('image'), sellerController.uploadImage);
 router.delete('/remove-seller-image', isAuthorize, sellerController.removeImage);
 
 //AddIngridients
