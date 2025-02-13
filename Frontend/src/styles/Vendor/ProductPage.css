@@ -1,11 +1,12 @@
-.product-grid{
+.products-grid {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 260px 1fr; /* Increase width slightly */
   min-height: 100vh;
   background-color: #f8fafc;
   gap: 1.5rem;
   padding: 1.5rem;
 }
+
 .product-page {
   padding: 20px;
   background-color: #f3f4f6;
@@ -113,13 +114,13 @@ td {
   gap: 10px;
 }
 
-.product-image {
+.products-image {
   width: 30px;
   height: 30px;
   border-radius: 50%;
 }
 
-.product-name {
+.products-name {
   font-weight: bold;
 }
 
@@ -191,7 +192,7 @@ td {
   background: #f0f0f0;
 }
 
-.modal {
+.product-page .modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -271,7 +272,7 @@ td {
 }
 
 /* Modal (Common for Update & Delete) */
-.modal {
+ .modals {
   position: fixed;
   top: 0;
   left: 0;

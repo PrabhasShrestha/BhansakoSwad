@@ -1,20 +1,22 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import UserSignUp from "./pages/UserSignUp";
-import VerificationCode from "./pages/VerificationCode";
+import UserSignUp from "./pages/User/UserSignUp";
+import VerificationCode from "./pages/User/VerificationCode";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgetPass";
 import CreateNewPassword from "./pages/NewPass";
 import Index from "./components/Index";
 import Home from "./pages/Home";
-import AboutUs from "./pages/AboutUs";
+import AboutUs from "./pages/User/AboutUs";
 import SellerSignUp from "./pages/SellerSignUp";
 import ChefSignUp from "./pages/ChefSignUp";
-import ProfilePage from "./pages/UpdateUser";
+import ProfilePage from "./pages/User/UpdateUser";
 import SellerVerificationCode from "./pages/SellerVerificationCode";
 import Dashboard from "./pages/Vendor/Dahboard";
 import SellerUpdatePage from "./pages/Vendor/UpdateSeller"
 import ProductPage from "./pages/Vendor/Product";
+import StoreListing from "./pages/User/Store";
+import StoreDetails from "./pages/User/StoreDetails";
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
   <Route path="/dashboard" element={<Dashboard />} />
   <Route path="/sellerprofile" element={<SellerUpdatePage />} />
   <Route path='/product' element ={<ProductPage/>}/>
+  <Route path='/store' element ={<StoreListing/>}/>
+  <Route path='/store/:id' element ={<StoreDetails/>}/>
 </Routes>
   );
 }

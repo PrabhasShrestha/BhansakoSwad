@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "../styles/UserSignUp.css";
+import "../../styles/UserSignUp.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; // Importing new eye icons
 
 function UserSignUp() {

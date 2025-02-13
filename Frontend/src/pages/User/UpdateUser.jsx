@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import "../styles/UpdateUser.css";
-import Footer from "../components/Footer";
-import Navigationbar from "../components/NavBar";
-import userImage from '../assets/user.png';
+import "../../styles/User/UpdateUser.css";
+import Footer from "../../components/Footer";
+import Navigationbar from "../../components/NavBar";
+import userImage from '../../assets/user.png';
 import { FiLogOut } from "react-icons/fi";
 
 const ProfilePage = () => {
@@ -257,14 +257,14 @@ const ProfilePage = () => {
               />
               <button
                 type="button"
-                className="image-btn"
+                className="image-btns"
                 onClick={() => document.getElementById("file-input").click()}
               >
                 Set
               </button>
               <button
                 type="button"
-                className="image-btn-cancel"
+                className="image-btn-cancels"
                 onClick={handleRemoveImage}
               >
                 Remove
@@ -344,7 +344,7 @@ const ProfilePage = () => {
                 </button>
                 <button
                   type="button"
-                  className="secondary-btn cancel-btn"
+                  className="secondary-btn cancel-btns"
                   onClick={handleCancelClick}
                 >
                   Cancel

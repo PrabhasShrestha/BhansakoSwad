@@ -76,6 +76,8 @@ router.get('/get-user', auth.isAuthorize, userController.getUser);
 router.post('/testimonials', auth.isAuthorize, userController.saveTestimonial);
 router.get('/testimonials', userController.getTestimonial);
 router.post('/logout', auth.isAuthorize, userController.logout);
+router.get('/getstore',userController.getStores)
+ // Public route
 
 
 module.exports = router;

@@ -252,7 +252,7 @@ const SellerUpdatePage = () => {
                     onChange={handleImageUpload}
                   />
                   <button
-                    className="image-btn"
+                    className="image-btns"
                     onClick={() => document.getElementById("shop-image-upload").click()}
                   >
                     Upload

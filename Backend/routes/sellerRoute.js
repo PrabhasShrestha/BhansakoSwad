@@ -93,4 +93,6 @@ router.delete("/deleteproducts", isAuthorize, sellerController.deleteproducts);
 router.post("/upload-image-products", isAuthorize, upload.single("image"), sellerController.uploadproductsImage);
 router.delete("/remove-image-products", isAuthorize, sellerController.removeproductsImage);
 router.post('/change-password-seller', isAuthorize,sellerController.sellerchangePassword);
+router.get("/store/:id", sellerController.getProductsByStore);
+router.get("/store/details/:id", sellerController.getStoreById);
 module.exports = router;

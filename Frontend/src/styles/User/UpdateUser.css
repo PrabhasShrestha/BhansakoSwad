@@ -106,7 +106,8 @@
   margin-right: 10px;
 }
 
-.image-btn{
+.image-btns{
+  background-color: #4299e1;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   border-radius: 8px;
@@ -116,7 +117,7 @@
   margin-right: 10px;
   margin-top: 10px;
 }
-.image-btn-cancel{
+.image-btn-cancels{
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   border-radius: 8px;
@@ -127,10 +128,13 @@
   margin-top: 10px;
   background-color: #718096;
 }
-.image-btn-cancel:hover{
+.image-btn-cancels:hover{
   background-color: #535962;
 }
 
+.image-btns:hover{
+  background-color: #3182ce;
+}
 .secondary-btn {
   background-color: #4299e1;
   color: #fff;
@@ -141,13 +145,13 @@
   background-color: #3182ce;
 }
 
-.cancel-btn {
+.cancel-btns {
   background-color: #e53e3e;
   color: #fff;
   border: none;
 }
 
-.cancel-btn:hover {
+.cancel-btns:hover {
   background-color: #c53030;
 }
 

@@ -763,6 +763,97 @@ const sellerchangePassword = (req, res) => {
     }
   );
 };
+
+const getProductsByStore = (req, res) => {
+  try {
+    const storeId = req.params.id; // Get the Store ID from request parameters
+
+    // Ensure the store exists before fetching products
+    db.query(
+      `SELECT id FROM sellers WHERE id = ?`,
+      [storeId],
+      (error, storeResult) => {
+        if (error) {
+          console.error("Database Error:", error);
+          return res.status(500).json({ message: "Internal server error." });
+        }
+
+        if (storeResult.length === 0) {
+          return res.status(404).json({ message: "Store not found." });
+        }
+
+        // Fetch products linked to the store
+        db.query(
+          `SELECT p.id AS product_id, p.name AS product_name, p.category, pd.price, pd.in_stock, pd.image 
+          FROM products p
+          JOIN productdetails pd ON p.id = pd.product_id
+          WHERE pd.seller_id = ?`,
+          [storeId],
+          (error, productResult) => {
+            if (error) {
+              console.error("Database Error:", error);
+              return res.status(500).json({ message: "Internal server error." });
+            }
+
+            if (productResult.length === 0) {
+              return res.status(404).json({ message: "No products found for this store." });
+            }
+
+            // Format product image URLs correctly
+            const products = productResult.map((product) => ({
+              ...product,
+              image: product.image
+                ? `http://localhost:3000/uploads/products/${product.image}`
+                : null,
+            }));
+
+            res.status(200).json({
+              success: true,
+              data: products,
+              message: "Products fetched successfully.",
+            });
+          }
+        );
+      }
+    );
+  } catch (err) {
+    console.error("Unexpected Error:", err);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+const getStoreById = (req, res) => {
+  const storeId = req.params.id;
+
+  db.query(
+      `SELECT shop_name, owner_name, store_address, email, phone_number, image 
+       FROM sellers WHERE id = ?`,
+      [storeId],
+      (error, result) => {
+          if (error) {
+              console.error("Database Error:", error);
+              return res.status(500).json({ message: "Internal server error." });
+          }
+
+          if (result.length === 0) {
+              return res.status(404).json({ message: "Store not found." });
+          }
+
+          const store = result[0];
+          if (store.image) {
+              store.image = `http://localhost:3000/uploads/sellers/${store.image.split('/').pop()}`;
+          }
+
+          res.status(200).json({
+              success: true,
+              data: store,
+              message: "Store details fetched successfully"
+          });
+      }
+  );
+};
+
+
 // Add these to module.exports
 module.exports = {
   registerSeller,
@@ -779,5 +870,7 @@ module.exports = {
   deleteproducts,
   uploadproductsImage,
   removeproductsImage,
-  sellerchangePassword
+  sellerchangePassword,
+  getProductsByStore,
+  getStoreById
 };

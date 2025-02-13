@@ -134,7 +134,7 @@ const handleAddProduct = async (e) => {
 };
 
   return (
-    <div className="product-grid">
+    <div className="products-grid">
       <Sidebar />
       <div className="product-page">
         <div className="top-section">
@@ -187,8 +187,8 @@ const handleAddProduct = async (e) => {
                   <tr key={product.product_id}>
                     <td>
                       <div className="product-info">
-                        <img src={`http://localhost:3000/uploads/products/${product.image}`} alt={product.name} className="product-image" />
-                        <span className="product-name">{product.name}</span>
+                        <img src={`http://localhost:3000/uploads/products/${product.image}`} alt={product.name} className="products-image" />
+                        <span className="products-name">{product.name}</span>
                       </div>
                     </td>
                     <td>{product.product_id}</td>
@@ -228,7 +228,7 @@ const handleAddProduct = async (e) => {
       </div>
 
       {showAddProductModal && (
-        <div className="modal">
+        <div className="modals">
           <div className="modal-content">
             <h3>Add New Product</h3>
                   {/* Error Message Display */}
@@ -292,7 +292,7 @@ const handleAddProduct = async (e) => {
       )}
 
       {showConfirmDelete && (
-        <div className="modal">
+        <div className="modals">
           <div className="modal-content">
             <h3>Confirm Deletion</h3>
             <p>Are you sure you want to delete this product?</p>
@@ -306,7 +306,7 @@ const handleAddProduct = async (e) => {
 
       {/* Update Modal */}
       {showUpdateModal && (
-        <div className="modal">
+        <div className="modals">
           <div className="modal-content">
             <h3>Update Product</h3>
             <form onSubmit={handleUpdate}>

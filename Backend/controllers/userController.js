@@ -718,6 +718,42 @@ const changePassword = (req, res) => {
   );
 };
 
+const getStores = (req, res) => {
+  try {
+    db.query(
+      `SELECT id, shop_name, owner_name, store_address, image FROM sellers`, 
+      (error, result) => {
+        if (error) {
+          console.error("Database Error:", error);
+          return res.status(500).send({ message: "Internal server error." });
+        }
+
+        if (result.length === 0) {
+          return res.status(404).send({ message: "No stores found." });
+        }
+
+        // Format image URLs correctly
+        const stores = result.map((store) => ({
+          ...store,
+          image: store.image
+            ? `http://localhost:3000/uploads/sellers/${store.image.split("/").pop()}`
+            : null,
+        }));
+
+        res.status(200).json({
+          success: true,
+          data: stores,
+          message: "Stores fetched successfully.",
+        });
+      }
+    );
+  } catch (err) {
+    console.error("Unexpected Error:", err);
+    res.status(500).send({ message: "Internal server error." });
+  }
+};
+
+
 module.exports = {
   register,
   verifyCode,
@@ -732,5 +768,6 @@ module.exports = {
   removeImage,
   uploadImage,
   changePassword,
-  logout
+  logout,
+  getStores,
 };
