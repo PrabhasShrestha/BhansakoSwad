@@ -17,6 +17,7 @@ import SellerUpdatePage from "./pages/Vendor/UpdateSeller"
 import ProductPage from "./pages/Vendor/Product";
 import StoreListing from "./pages/User/Store";
 import StoreDetails from "./pages/User/StoreDetails";
+import ProductDetails from "./pages/User/ProductDetails";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
   <Route path='/product' element ={<ProductPage/>}/>
   <Route path='/store' element ={<StoreListing/>}/>
   <Route path='/store/:id' element ={<StoreDetails/>}/>
+  <Route path="/product/:id" element={<ProductDetails />}/>
 </Routes>
   );
 }

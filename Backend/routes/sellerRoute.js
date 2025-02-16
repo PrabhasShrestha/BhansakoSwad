@@ -95,4 +95,7 @@ router.delete("/remove-image-products", isAuthorize, sellerController.removeprod
 router.post('/change-password-seller', isAuthorize,sellerController.sellerchangePassword);
 router.get("/store/:id", sellerController.getProductsByStore);
 router.get("/store/details/:id", sellerController.getStoreById);
+router.get("/product/:id", sellerController.getProductById);
+router.get("/store/:storeId/products", sellerController.getPublicProducts);
+router.get("/related/:sellerId/:productId", sellerController.getRelatedProducts);
 module.exports = router;

@@ -431,7 +431,7 @@ const addproducts = (req, res) => {
       return res.status(400).json({ errors: errors.array() });
   }
 
-  const { name, category, price, in_stock } = req.body;
+  const { name, category, price, in_stock, description } = req.body;
   const image = req.file ? req.file.filename : null;
   const sellerId = req.user.id;
 
@@ -476,8 +476,9 @@ const addproducts = (req, res) => {
 
                   // Link the newly created product to the seller with an image
                   db.query(
-                      `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image) VALUES (?, ?, ?, ?, ?)`,
-                      [productId, sellerId, price, in_stock, image],
+                    `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image, description) 
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [productId, sellerId, price, in_stock, image, description],                
                       (err) => {
                           if (err) return res.status(500).send({ msg: 'Error saving product details' });
 
@@ -495,11 +496,11 @@ const getproducts = (req, res) => {
   const sellerId = req.user.id; // Get seller ID from token
 
   let sqlQuery = `
-      SELECT p.id AS product_id, p.name, p.category, pd.price, pd.in_stock, pd.image 
-      FROM products p 
-      JOIN productdetails pd ON p.id = pd.product_id 
-      WHERE pd.seller_id = ?
-  `;
+            SELECT p.id AS product_id, p.name AS product_name, p.category, pd.description, pd.price, pd.in_stock, pd.image 
+            FROM products p
+            JOIN productdetails pd ON p.id = pd.product_id
+            WHERE pd.seller_id = ?
+          `;
 
   db.query(sqlQuery, [sellerId], (err, result) => {
       if (err) return res.status(500).json({ msg: 'Database error', details: err });
@@ -512,7 +513,7 @@ const getproducts = (req, res) => {
 
 // Update products
 const updateproducts = (req, res) => {
-  const { id, price, in_stock } = req.body; // Get ID from request body
+  const { id, price, in_stock, description } = req.body; // Get ID from request body
   const image = req.file ? req.file.filename : null;
   const sellerId = req.user.id;
 
@@ -534,8 +535,8 @@ const updateproducts = (req, res) => {
 
           // Update `productdetails` for the specific seller
           db.query(
-              `UPDATE productdetails SET price = ?, in_stock = ?, image = ? WHERE product_id = ? AND seller_id = ?`,
-              [price, in_stock, image, id, sellerId],
+            `UPDATE productdetails SET price = ?, in_stock = ?, image = ?, description = ? WHERE product_id = ? AND seller_id = ?`,
+            [price, in_stock, image, description, id, sellerId],        
               (err) => {
                   if (err) {
                       return res.status(500).json({ msg: "Failed to update product details" });
@@ -784,11 +785,11 @@ const getProductsByStore = (req, res) => {
 
         // Fetch products linked to the store
         db.query(
-          `SELECT p.id AS product_id, p.name AS product_name, p.category, pd.price, pd.in_stock, pd.image 
+          `SELECT p.id AS product_id, p.name AS product_name, p.category, pd.price, pd.in_stock, pd.image, pd.seller_id 
           FROM products p
           JOIN productdetails pd ON p.id = pd.product_id
           WHERE pd.seller_id = ?`,
-          [storeId],
+          [storeId],        
           (error, productResult) => {
             if (error) {
               console.error("Database Error:", error);
@@ -853,6 +854,124 @@ const getStoreById = (req, res) => {
   );
 };
 
+const getProductById = (req, res) => {
+  const productId = req.params.id;
+  const sellerId = req.query.seller_id;
+
+  if (!productId || !sellerId) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Both product ID and seller ID are required.' 
+    });
+  }
+
+  db.query(
+    `SELECT p.id AS product_id, p.name AS product_name, p.category, 
+            pd.description, pd.price, pd.in_stock, pd.image, pd.seller_id AS store_id
+     FROM products p
+     JOIN productdetails pd ON p.id = pd.product_id
+     WHERE p.id = ? AND pd.seller_id = ?`,
+    [productId, sellerId],
+    (error, result) => {
+      if (error) {
+        console.error("Database Error:", error);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Internal server error." 
+        });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Product not found for this seller." 
+        });
+      }
+
+      const product = result[0];
+      if (product.image) {
+        product.image = `http://localhost:3000/uploads/products/${product.image}`;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: product,
+        message: "Product details fetched successfully.",
+      });
+    }
+  );
+};
+
+const getPublicProducts = (req, res) => {
+  const { storeId } = req.params; // Store ID from URL
+
+  let query = `
+  SELECT 
+    p.id AS product_id, 
+    p.name AS product_name, 
+    p.category, 
+    pd.description, 
+    pd.price, 
+    pd.in_stock, 
+    pd.image, 
+    pd.seller_id AS store_id 
+  FROM products p
+  JOIN productdetails pd ON p.id = pd.product_id
+`;
+
+const params = [];
+
+if (storeId) {
+  query += " WHERE pd.seller_id = ?";
+  params.push(storeId);
+}
+
+
+  db.query(query, params, (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ success: false, msg: "Database error", details: err });
+    }
+
+    if (!result.length) {
+      return res.status(404).json({ success: false, msg: "No products found" });
+    }
+
+    // Format image URLs
+    const products = result.map((product) => ({
+      ...product,
+      image: product.image ? `http://localhost:3000/uploads/products/${product.image}` : null,
+    }));
+
+    res.json({ success: true, data: products, message: "Products fetched successfully." });
+  });
+};
+
+const getRelatedProducts = (req, res) => {
+  try {
+      const { sellerId, productId } = req.params;
+
+      db.query(
+          `SELECT p.id AS product_id, p.name AS product_name, p.category, pd.price, pd.image, pd.seller_id 
+           FROM products p
+           JOIN productdetails pd ON p.id = pd.product_id
+           WHERE pd.seller_id = ? AND p.id != ? 
+           LIMIT 5`,  // ✅ Fetch only 5 products from the same seller
+          [sellerId, productId],
+          (error, results) => {
+              if (error) {
+                  console.error("Database Error:", error);
+                  return res.status(500).json({ success: false, message: "Internal server error." });
+              }
+
+              res.status(200).json({ success: true, data: results });
+          }
+      );
+  } catch (err) {
+      console.error(" Unexpected Error:", err);
+      res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
 
 // Add these to module.exports
 module.exports = {
@@ -872,5 +991,8 @@ module.exports = {
   removeproductsImage,
   sellerchangePassword,
   getProductsByStore,
-  getStoreById
+  getStoreById,
+  getProductById,
+  getPublicProducts,
+  getRelatedProducts
 };

@@ -100,24 +100,24 @@
     gap: 0.75rem;
 }
 
-.store-name {
+.store-names {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-dark);
     letter-spacing: -0.5px;
     font-family: 'Inter', sans-serif;
+    margin-bottom: 0px;
 }
 
-.store-location {
+.store-locations {
     font-size: 1rem;
     color: var(--text-light);
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1.5rem;
 }
 
-.store-location svg {
+.store-locations svg {
     width: 20px;
     height: 20px;
     fill: var(--primary-color);

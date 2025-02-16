@@ -34,8 +34,8 @@ const StoreListing = () => {
             <div key={store.id} className="store-card">
             <img src={store.image ? store.image : vendorImage} alt={store.shop_name} className="store-image" />
             <div className="store-info">
-              <h3 className="store-name">{store.shop_name}</h3>
-              <p className="store-location">{store.store_address}</p>
+              <h3 className="store-names">{store.shop_name}</h3>
+              <p className="store-locations">{store.store_address}</p>
               <Link to={`/store/${store.id}`}>
                 <button className="store-view-button">View Store</button>
               </Link>

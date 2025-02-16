@@ -130,6 +130,9 @@ exports.addproductsValidation = [
 
   check("in_stock", "Stock must be a non-negative integer").isInt({ min: 0 }),
 
+  check("description", "Description is required").not().isEmpty().trim().isLength({ max: 500 })
+    .withMessage("Description cannot exceed 500 characters"),
+
   check("image").custom((value, { req }) => {
     // If no file is provided, skip validation for the image
     if (!req.file) {
@@ -157,6 +160,9 @@ exports.updateproductsValidation = [
     .isLength({ max: 20 }).withMessage("Unit cannot exceed 20 characters"),
 
   check("in_stock").optional().isBoolean().withMessage("In-stock status must be a boolean value"),
+
+  check("description").optional().isEmpty().trim().withMessage("Description is required")
+  .isLength({ max: 500 }).withMessage("Description cannot exceed 500 characters"),
 
   check("image").custom((value, { req }) => {
     // If no file is provided, skip validation for the image

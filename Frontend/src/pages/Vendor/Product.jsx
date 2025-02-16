@@ -12,9 +12,9 @@ const ProductPage = () => {
   const [showMenu, setShowMenu] = useState(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [updatedProduct, setUpdatedProduct] = useState({ price: "", in_stock: "", image: null });
+  const [updatedProduct, setUpdatedProduct] = useState({ price: "", in_stock: "", image: null, description: "" });
   const [showAddProductModal, setShowAddProductModal] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: "", category: "", price: "", in_stock: "", image: null });
+  const [newProduct, setNewProduct] = useState({ name: "", category: "", price: "", in_stock: "", image: null, description: "" });
   const [customCategory, setCustomCategory] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -71,8 +71,11 @@ const ProductPage = () => {
       formData.append("id", selectedProduct.product_id);
       formData.append("price", updatedProduct.price);
       formData.append("in_stock", updatedProduct.in_stock);
+      formData.append("description", updatedProduct.description);
       if (updatedProduct.image) {
         formData.append("image", updatedProduct.image);
+      } else {
+        formData.append("existingImage", selectedProduct.image); // Send previous image
       }
 
       await axios.post("http://localhost:3000/api/updateproducts", formData, {
@@ -108,6 +111,7 @@ const handleAddProduct = async (e) => {
     formData.append("category", finalCategory);
     formData.append("price", newProduct.price);
     formData.append("in_stock", newProduct.in_stock);
+    formData.append("description", newProduct.description);
     if (newProduct.image) {
       formData.append("image", newProduct.image);
     }
@@ -118,7 +122,7 @@ const handleAddProduct = async (e) => {
 
     fetchProducts(); // Refresh product list
     setShowAddProductModal(false);
-    setNewProduct({ name: "", category: "", price: "", in_stock: "", image: null });
+    setNewProduct({ name: "", category: "", price: "", in_stock: "", image: null, description: "" });
     setCustomCategory(""); // Reset input
   } catch (error) {
     if (error.response) {
@@ -175,26 +179,28 @@ const handleAddProduct = async (e) => {
                 <th>Price</th>
                 <th>Stock</th>
                 <th>Type</th>
+                <th>Description</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {products
-                .filter((product) => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
+               .filter((product) => product.product_name && product.product_name.toLowerCase().includes(searchTerm.toLowerCase()))
                 .slice(0, showing)
                 .map((product) => (
                   <tr key={product.product_id}>
                     <td>
                       <div className="product-info">
                         <img src={`http://localhost:3000/uploads/products/${product.image}`} alt={product.name} className="products-image" />
-                        <span className="products-name">{product.name}</span>
+                        <span className="products-name">{product.product_name}</span>
                       </div>
                     </td>
                     <td>{product.product_id}</td>
                     <td>{product.price}</td>
                     <td>{product.in_stock}</td>
                     <td>{product.category}</td>
+                    <td>{product.description}</td>
                     <td>
                       <span className={`status ${product.in_stock > 0 ? "available" : "out-of-stock"}`}>
                         {product.in_stock > 0 ? "Available" : "Out of Stock"}
@@ -212,7 +218,7 @@ const handleAddProduct = async (e) => {
                           <div className="dropdown-menu">
                             <button onClick={() => { 
                               setSelectedProduct(product); 
-                              setUpdatedProduct({ price: product.price, in_stock: product.in_stock, image: null });
+                              setUpdatedProduct({ price: product.price, in_stock: product.in_stock, description: product.description, image: null });
                               setShowUpdateModal(true);
                             }}>Update</button>
                             <button onClick={() => { setSelectedProduct(product); setShowConfirmDelete(true); }}>Delete</button>
@@ -279,6 +285,16 @@ const handleAddProduct = async (e) => {
               <label>Price ($)</label>
               <input type="number" name="price" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })} required />
 
+              <label>Description</label>
+              <textarea
+                name="description"
+                value={newProduct.description}
+                onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                placeholder="Enter product description"
+                rows="4"
+                required
+              ></textarea>
+
               <label>Product Image</label>
               <input type="file" accept="image/*" onChange={(e) => setNewProduct({ ...newProduct, image: e.target.files[0] })} />
 
@@ -314,8 +330,36 @@ const handleAddProduct = async (e) => {
               <input type="number" value={updatedProduct.price} onChange={(e) => setUpdatedProduct({ ...updatedProduct, price: e.target.value })} required />
               <label>Stock</label>
               <input type="number" value={updatedProduct.in_stock} onChange={(e) => setUpdatedProduct({ ...updatedProduct, in_stock: e.target.value })} required />
-              <label>Image</label>
-              <input type="file" accept="image/*" onChange={(e) => setUpdatedProduct({ ...updatedProduct, image: e.target.files[0] })} />
+              <label>Description</label>
+              <textarea
+                name="description"
+                value={updatedProduct.description}
+                onChange={(e) => setUpdatedProduct({ ...updatedProduct, description: e.target.value })}
+                placeholder="Update product description"
+                rows="4"
+                required
+              ></textarea>
+            <label>Current Image</label>
+        {updatedProduct.image ? (
+          <img
+            src={URL.createObjectURL(updatedProduct.image)} // Preview selected image
+            alt="Updated Product Preview"
+            className="product-preview"
+          />
+        ) : (
+          <img
+            src={`http://localhost:3000/uploads/products/${selectedProduct.image}`} // Show old image
+            alt="Current Product"
+            className="product-preview"
+          />
+        )}
+
+        <label>Change Image (Optional)</label>
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={(e) => setUpdatedProduct({ ...updatedProduct, image: e.target.files[0] })} 
+        />
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowUpdateModal(false)}>Cancel</button>
                 <button type="submit" className="update-btn">Update</button>
