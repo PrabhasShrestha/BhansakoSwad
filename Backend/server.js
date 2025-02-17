@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const userRouter = require('./routes/userRoute');
 const sellerRouter = require('./routes/sellerRoute');
+const cartRouter = require('./routes/cartRoute.js')
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -23,6 +24,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded data
 // Routes
 app.use('/api', userRouter);
 app.use('/api', sellerRouter);
+app.use('/api', cartRouter);
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

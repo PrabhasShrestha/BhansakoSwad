@@ -35,26 +35,22 @@
   .details-info h1 {
     font-size: 2.5rem;
     color: #2d3436;
-    margin-bottom: 1rem;
   }
   
   .details-info p:first-of-type {
     font-size: 1.8rem;
     color: #e74c3c;
     font-weight: 700;
-    margin-bottom: 1.5rem;
   }
   
   .details-info p:nth-of-type(2) {
     color: #636e72;
     line-height: 1.6;
-    margin-bottom: 2rem;
   }
   
   .quantity-selector {
     display: flex;
     align-items: center;
-    justify-content: center;
     text-align: center;
     gap: 10px;
   }

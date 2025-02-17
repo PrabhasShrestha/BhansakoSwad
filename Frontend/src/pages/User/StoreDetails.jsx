@@ -11,6 +11,8 @@ const StoreDetails = () => {
   const [products, setProducts] = useState([]);
   const [store, setStore] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); 
+  const [cartMessages, setCartMessages] = useState({});
+  const [showMessage, setShowMessage] = useState(false);
 
   useEffect(() => {
     // Fetch store details
@@ -39,6 +41,63 @@ const StoreDetails = () => {
       .catch((err) => console.error("Error fetching products:", err));
   }, [id]);
 
+  
+  const handleQuickAddToCart = (product) => {
+    if (!product || !product.product_id || !product.seller_id) {
+        console.error("❌ Invalid product data:", product);
+        return;
+    }
+
+    const cartItem = {
+        product_id: product.product_id,
+        productdetails_id: product.productdetails_id || product.product_id,
+        seller_id: product.seller_id,
+        quantity: 1,
+    };
+
+    console.log("🛒 Sending to cart:", JSON.stringify(cartItem, null, 2));
+
+    fetch("http://localhost:3000/api/add", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(cartItem),
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        setCartMessages((prevMessages) => ({
+            ...prevMessages,
+            [product.product_id]: data.success || data.message.includes("updated successfully")
+                ? `${product.product_name} added to cart!`
+                : "❌ Failed to add to cart.",
+        }));
+
+        setTimeout(() => {
+            setCartMessages((prevMessages) => ({
+                ...prevMessages,
+                [product.product_id]: "",
+            }));
+        }, 3000);
+    })
+    .catch((error) => {
+        console.error("❌ Error adding to cart:", error);
+        setCartMessages((prevMessages) => ({
+            ...prevMessages,
+            [product.product_id]: "❌ Server error, try again.",
+        }));
+
+        setTimeout(() => {
+            setCartMessages((prevMessages) => ({
+                ...prevMessages,
+                [product.product_id]: "",
+            }));
+        }, 3000);
+    });
+};
+
+
   if (!store) return <p>Loading store details...</p>;
 
   const filteredProducts = products.filter((product) =>
@@ -57,11 +116,11 @@ const StoreDetails = () => {
               placeholder="Search in Store"
               className="search-box"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)} // ✅ Updates searchTerm state
+              onChange={(e) => setSearchTerm(e.target.value)} 
             />
             <button className="search-button">Search</button>
           </div>
-          <button className="cart-button" onClick={() => navigate('/cart')}>
+          <button className="cart-button" onClick={() => navigate('/shoppingcart')}>
             <FaShoppingCart size={24} />
           </button>
         </div>
@@ -82,22 +141,32 @@ const StoreDetails = () => {
                       console.log("🛒 Navigating to product:", product);
                       console.log("🔍 Product ID:", product.product_id);
                       console.log("🔍 Seller ID:", product.seller_id);
-                      navigate(`/product/${product.product_id}?seller_id=${product.seller_id}`);
                     }
                   }}
                   style={{ cursor: "pointer" }}
                 >
-                  <img src={product.image} alt={product.product_name} className="product-image" />
-                  
+                  <img src={product.image} alt={product.product_name} className="product-image" onClick={()=>{navigate(`/product/${product.product_id}?seller_id=${product.seller_id}`)}} />
+                  {cartMessages[product.product_id] && (
+                    <p style={{
+                     
+                      color: cartMessages[product.product_id].includes("❌") ? "red" : "green",
+                        fontSize: "9px",
+                        marginTop: "3px", 
+                        marginLeft: "10px"             
+                    }}>
+                        {cartMessages[product.product_id]}
+                    </p>)}
                   <div className="product-info">
                     <div className="product-details">
                       <h4 className="product-name">{product.product_name}</h4>
                       <p className="product-price">Rs {product.price} per {product.unit || 'kg'}</p>
                     </div>
-                    <button className="add-to-cart-button">
+                    
+                    <button className="add-to-cart-button" onClick={() => handleQuickAddToCart(product)}>
                       <FaShoppingCart size={13} style={{ marginRight: "3px" }} /> Add
                     </button>
                   </div>
+                 
                 </div>
               )
             )

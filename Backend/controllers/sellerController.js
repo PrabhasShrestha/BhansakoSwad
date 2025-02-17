@@ -506,7 +506,7 @@ const getproducts = (req, res) => {
       if (err) return res.status(500).json({ msg: 'Database error', details: err });
       if (!result.length) return res.status(404).json({ msg: 'No products found' });
       
-      res.json(result);
+      res.json({ success: true, products: result }); 
   });
 };
 
@@ -785,7 +785,7 @@ const getProductsByStore = (req, res) => {
 
         // Fetch products linked to the store
         db.query(
-          `SELECT p.id AS product_id, p.name AS product_name, p.category, pd.price, pd.in_stock, pd.image, pd.seller_id 
+          `SELECT pd.id AS productdetails_id,p.id AS product_id, p.name AS product_name, p.category, pd.price, pd.in_stock, pd.image, pd.seller_id 
           FROM products p
           JOIN productdetails pd ON p.id = pd.product_id
           WHERE pd.seller_id = ?`,
@@ -866,7 +866,7 @@ const getProductById = (req, res) => {
   }
 
   db.query(
-    `SELECT p.id AS product_id, p.name AS product_name, p.category, 
+    `SELECT pd.id AS productdetails_id, p.id AS product_id, p.name AS product_name, p.category, 
             pd.description, pd.price, pd.in_stock, pd.image, pd.seller_id AS store_id
      FROM products p
      JOIN productdetails pd ON p.id = pd.product_id
@@ -907,6 +907,7 @@ const getPublicProducts = (req, res) => {
 
   let query = `
   SELECT 
+  pd.id AS productdetails_id,
     p.id AS product_id, 
     p.name AS product_name, 
     p.category, 

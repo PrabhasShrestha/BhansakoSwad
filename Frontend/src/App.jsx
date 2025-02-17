@@ -18,6 +18,7 @@ import ProductPage from "./pages/Vendor/Product";
 import StoreListing from "./pages/User/Store";
 import StoreDetails from "./pages/User/StoreDetails";
 import ProductDetails from "./pages/User/ProductDetails";
+import ShoppingCart from "./pages/User/Carts";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
   <Route path='/store' element ={<StoreListing/>}/>
   <Route path='/store/:id' element ={<StoreDetails/>}/>
   <Route path="/product/:id" element={<ProductDetails />}/>
+  <Route path="/shoppingcart" element={<ShoppingCart />}/>
 </Routes>
   );
 }

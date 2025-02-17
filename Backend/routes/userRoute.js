@@ -7,6 +7,7 @@ const {
     updateProfileValidation,
 } = require('../helpers/validation');
 const userController = require('../controllers/userController');
+const cartController = require('../controllers/cartController')
 const auth = require('../middleware/auth');
 const path = require('path');
 const multer = require('multer');
@@ -77,7 +78,6 @@ router.post('/testimonials', auth.isAuthorize, userController.saveTestimonial);
 router.get('/testimonials', userController.getTestimonial);
 router.post('/logout', auth.isAuthorize, userController.logout);
 router.get('/getstore',userController.getStores)
- // Public route
 
 
 module.exports = router;

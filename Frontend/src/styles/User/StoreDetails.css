@@ -102,6 +102,8 @@
     max-height: 310px;
     overflow: hidden;
     transition: transform 0.2s ease-in-out;
+    padding-bottom: 40px;
+    position: relative;
   }
   
   .product-image {

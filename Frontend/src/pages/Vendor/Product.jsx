@@ -30,17 +30,26 @@ const ProductPage = () => {
         console.error("No authentication token found");
         return;
       }
-
+  
       const response = await axios.get("http://localhost:3000/api/getproducts", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setProducts(response.data);
+  
+      console.log("API Response:", response.data); // Debugging line
+  
+      if (response.data.success && Array.isArray(response.data.products)) {
+        setProducts(response.data.products);
+      } else {
+        console.error("Unexpected API response:", response.data);
+        setProducts([]); // Fallback to empty array
+      }
     } catch (error) {
       console.error("Error fetching products:", error);
+      setProducts([]); // Prevent crash
     }
   };
-
+  
+  
   // Handle Delete Request
   const handleDelete = async () => {
     if (!selectedProduct) return;
@@ -185,7 +194,7 @@ const handleAddProduct = async (e) => {
               </tr>
             </thead>
             <tbody>
-              {products
+              {Array.isArray(products) &&products
                .filter((product) => product.product_name && product.product_name.toLowerCase().includes(searchTerm.toLowerCase()))
                 .slice(0, showing)
                 .map((product) => (

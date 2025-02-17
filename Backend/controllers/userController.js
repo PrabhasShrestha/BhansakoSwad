@@ -769,5 +769,5 @@ module.exports = {
   uploadImage,
   changePassword,
   logout,
-  getStores,
+  getStores
 };
