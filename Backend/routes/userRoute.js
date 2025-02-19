@@ -7,7 +7,6 @@ const {
     updateProfileValidation,
 } = require('../helpers/validation');
 const userController = require('../controllers/userController');
-const cartController = require('../controllers/cartController')
 const auth = require('../middleware/auth');
 const path = require('path');
 const multer = require('multer');

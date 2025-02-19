@@ -19,6 +19,8 @@ import StoreListing from "./pages/User/Store";
 import StoreDetails from "./pages/User/StoreDetails";
 import ProductDetails from "./pages/User/ProductDetails";
 import ShoppingCart from "./pages/User/Carts";
+import CreateNewSellerPassword from "./pages/Vendor/NewPassword";
+import TotalPayement from "./pages/User/Payement";
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
   <Route path="/login" element={<Login />} />
   <Route path="/ForgotPass" element={<ForgotPassword />} />
   <Route path="/NewPass" element={<CreateNewPassword />} />
+  <Route path="/NewSellerPass" element={<CreateNewSellerPassword />} />
   <Route path="/" element={<Index />} />
   <Route path="/home" element={<Home />} />
   <Route path="/aboutus" element={<AboutUs />} />
@@ -42,6 +45,7 @@ function App() {
   <Route path='/store/:id' element ={<StoreDetails/>}/>
   <Route path="/product/:id" element={<ProductDetails />}/>
   <Route path="/shoppingcart" element={<ShoppingCart />}/>
+  <Route path="/orderdetails" element={<TotalPayement />}/>
 </Routes>
   );
 }

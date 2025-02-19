@@ -974,6 +974,120 @@ const getRelatedProducts = (req, res) => {
   }
 };
 
+const forgetSellerPassword = (req, res) => {
+  const { email } = req.body;
+
+  // Check if the email exists in the database
+  db.query("SELECT id FROM sellers WHERE email = ?", [email], (err, results) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    const sellerId = results[0].id;
+
+    // Generate a reset token
+    const resetToken = jwt.sign({ id: sellerId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    // Save reset token to the database
+    db.query("UPDATE sellers SET token = ? WHERE id = ?", [resetToken, sellerId], (err) => {
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
+
+      // Send reset email
+      const resetLink = `http://localhost:5173/NewSellerPass?token=${resetToken}`;
+      const emailContent = `
+      <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9;">
+        <h1 style="color: #4CAF50;">Password Reset Request</h1>
+        <p style="font-size: 16px;">Hello,</p>
+        <p style="font-size: 14px;">We received a request to reset your password. Click the button below to reset it:</p>
+        <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; margin: 20px auto; color: white; background-color: #4CAF50; text-decoration: none; border-radius: 5px; font-size: 16px;">
+          Click Here to Reset Password
+        </a>
+        <p style="font-size: 12px; color: #888;">If you did not request this, please ignore this email.</p>
+      </div>
+    `;
+
+      sendMail(email, "Password Reset Request", emailContent)
+        .then(() => {
+          res.status(200).json({ message: "Reset email sent successfully" });
+        })
+        .catch((err) => {
+          console.error("Email Sending Error:", err);
+          res.status(500).json({ message: "Failed to send reset email" });
+        });
+    });
+  });
+};
+
+const resetSellerPassword = (req, res) => {
+  const { token } = req.query; // Get the token from the query parameters
+  const { newPassword } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required" });
+  }
+
+  // Verify the token
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    const sellerId = decoded.id;
+
+    // Hash the new password
+    bcrypt.hash(newPassword, 10, (err, hashedPassword) => {
+      if (err) {
+        console.error("Hashing Error:", err);
+        return res.status(500).json({ message: "Error hashing the password" });
+      }
+
+      // Update the seller's password in the database
+      db.query("UPDATE sellers SET password = ?, token = NULL WHERE id = ?", [hashedPassword, sellerId], (err) => {
+        if (err) {
+          console.error("Database Update Error:", err);
+          return res.status(500).json({ message: "Internal Server Error" });
+        }
+
+        // Fetch seller email
+        db.query("SELECT email FROM sellers WHERE id = ?", [sellerId], async (err, results) => {
+          if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Error fetching seller email" });
+          }
+
+          const sellerEmail = results[0]?.email;
+          if (sellerEmail) {
+            const mailContent = `
+            <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; text-align: center; border-radius: 8px; max-width: 600px; margin: auto;">
+              <h1 style="color: #4CAF50; margin-bottom: 20px;">Password Reset Successful</h1>
+              <p style="font-size: 16px; color: #333;">Hello,</p>
+              <p style="font-size: 14px; color: #555;">Your password has been successfully reset. You can now use your new password to log in to your seller account.</p>
+              <div style="margin-top: 30px;">
+                <a href="http://localhost:5173/login" style="display: inline-block; padding: 10px 20px; color: white; background-color: #4CAF50; text-decoration: none; border-radius: 5px; font-size: 16px;">
+                  Go to Login
+                </a>
+              </div>
+              <p style="font-size: 12px; color: #888; margin-top: 20px;">If you did not request this password reset, please contact our support team immediately.</p>
+            </div>
+          `;
+            await sendMail(sellerEmail, 'Password Reset Confirmation', mailContent);
+          }
+        });
+
+        res.status(200).json({ message: "Password reset successfully" });
+      });
+    });
+  });
+};
+
 // Add these to module.exports
 module.exports = {
   registerSeller,
@@ -995,5 +1109,7 @@ module.exports = {
   getStoreById,
   getProductById,
   getPublicProducts,
-  getRelatedProducts
+  getRelatedProducts,
+  forgetSellerPassword,
+  resetSellerPassword
 };

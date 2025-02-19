@@ -65,7 +65,14 @@ const StoreDetails = () => {
         },
         body: JSON.stringify(cartItem),
     })
-    .then((res) => res.json())
+    .then((res) => {
+        if (!res.ok) {
+            return res.json().then((data) => {
+                throw { status: res.status, message: data.message };
+            });
+        }
+        return res.json();
+    })
     .then((data) => {
         setCartMessages((prevMessages) => ({
             ...prevMessages,
@@ -82,10 +89,23 @@ const StoreDetails = () => {
         }, 3000);
     })
     .catch((error) => {
-        console.error("❌ Error adding to cart:", error);
+        let errorMessage = "❌ Server error, try again.";
+
+        if (error.status === 400) {
+            errorMessage = "❌ " + (error.message || "Not enough stock available.");
+        } else if (error.status === 401) {
+            errorMessage = "❌ Unauthorized! Please log in.";
+        } else if (error.status === 404) {
+            errorMessage = "❌ Product not found.";
+        } else if (error.status === 500) {
+            errorMessage = "❌ Internal server error.";
+        }
+
+        console.error(`❌ Error (${error.status}):`, error.message || "Unknown error");
+
         setCartMessages((prevMessages) => ({
             ...prevMessages,
-            [product.product_id]: "❌ Server error, try again.",
+            [product.product_id]: errorMessage,
         }));
 
         setTimeout(() => {
@@ -96,7 +116,6 @@ const StoreDetails = () => {
         }, 3000);
     });
 };
-
 
   if (!store) return <p>Loading store details...</p>;
 

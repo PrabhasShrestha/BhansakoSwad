@@ -5,7 +5,8 @@ const {
   loginSellerValidation,
   updateSellerValidation,
   addproductsValidation,
-  updateproductsValidation
+  updateproductsValidation,
+  forgetValidation
 } = require('../helpers/validation');
 const sellerController = require('../controllers/sellerController');
 const { isAuthorize } = require('../middleware/auth');
@@ -76,6 +77,8 @@ router.post('/registerseller', registerSellerValidation, sellerController.regist
 router.post('/loginseller', loginSellerValidation, sellerController.loginSeller);
 router.post('/verifyseller', sellerController.verifySellerCode);
 router.post('/resendseller', sellerController.resendSellerCode);
+router.post('/forgotseller-password', forgetValidation, sellerController.forgetSellerPassword);
+router.post('/resetseller-password', sellerController.resetSellerPassword);
 
 // New vendor profile routes
 router.get('/get-seller', isAuthorize, sellerController.getSeller);

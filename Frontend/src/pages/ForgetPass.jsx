@@ -4,14 +4,22 @@ import "../styles/ForgotPass.css";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!role) {
+      setError("Please select a role before proceeding.");
+      return;
+    }
+
+    const endpoint = role === "seller" ? "/api/forgotseller-password" : "/api/forgot-password";
+
     try {
-      const response = await axios.post("http://localhost:3000/api/forgot-password", { email });
+      const response = await axios.post(`http://localhost:3000${endpoint}`, { email });
       setMessage(response.data.message);
       setError(""); // Clear any previous errors
     } catch (err) {
@@ -29,7 +37,7 @@ const ForgotPassword = () => {
           email you instructions to reset your password.
         </p>
         {message && <p className="success-message">{message}</p>}
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="error-message" style={{ color: "red" }}>{error}</p>}
         <form onSubmit={handleSubmit}>
           <label>Email Address</label>
           <input
@@ -39,6 +47,12 @@ const ForgotPassword = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+          <label>Role</label>
+          <select className="role-select" value={role} onChange={(e) => setRole(e.target.value)}>
+            <option value="" disabled>Select a Role</option>
+            <option value="user">User</option>
+            <option value="seller">Seller</option>
+          </select>
           <button type="submit">Send Email</button>
         </form>
         <p>

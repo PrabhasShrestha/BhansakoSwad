@@ -31,6 +31,9 @@ const Login = () => {
     if (!formData.password) {
       newErrors.password = "Password is required";
     }
+    if (!role) {
+      newErrors.role = "Please select a role";
+    }
     return newErrors;
   };
 
@@ -129,7 +132,8 @@ const Login = () => {
               id="role"
               name="role"
               value={role} // Controlled component to bind the state
-              onChange={(e) => setRole(e.target.value)} // Update the role state
+              onChange={(e) => setRole(e.target.value)}
+              className={errors.role ? "error-input" : ""} // Update the role state
             >
               <option value="" disabled>
                 Select a role
@@ -137,6 +141,7 @@ const Login = () => {
               <option value="user">User</option>
               <option value="seller">Seller</option>
             </select>
+            {errors.role && <span className="error-message">{errors.role}</span>}
           </div>
 
           <a href="/ForgotPass" className="forgot-password">

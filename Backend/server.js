@@ -6,6 +6,7 @@ const cors = require('cors');
 const userRouter = require('./routes/userRoute');
 const sellerRouter = require('./routes/sellerRoute');
 const cartRouter = require('./routes/cartRoute.js')
+const khaltiPaymentRouter = require('./routes/khaltiPayment.js')
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -25,6 +26,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded data
 app.use('/api', userRouter);
 app.use('/api', sellerRouter);
 app.use('/api', cartRouter);
+app.use('/api', khaltiPaymentRouter)
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -42,6 +44,7 @@ app.use((err, req, res, next) => {
         message: err.message,
     });
 });
+
 
 // Start the server
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));

@@ -1,0 +1,116 @@
+.Total-payment-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+    background-color: #f5f5f5;
+    gap: 20PX;
+  }
+  
+  .Total-payment-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 50%;
+    max-width: 400px;
+  }
+  
+  .Total-payment-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  
+  .Total-payment-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .Total-payment-logo {
+    height: 150px;
+  }
+  
+  .Total-payment-text {
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 8px;
+    color: purple;
+  }
+  
+  .Total-payment-instructions {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .Total-payment-instructions ul {
+    list-style-type: decimal;
+    padding-left: 20px;
+    margin-top: 8px;
+  }
+  
+  .Total-payment-note {
+    font-size: 12px;
+    color: #888;
+    margin-top: 10px;
+  }
+  
+  .Total-payment-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .Total-payment-button:hover {
+    background-color: #218838;
+  }
+  
+  .Total-payment-summary {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 30%;
+    max-width: 250px;
+    margin-left: 20px;
+  }
+  
+  .Total-summary-title {
+    font-size: 18px;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .Total-summary-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #555;
+    margin-top: 5px;
+  }
+  
+  .Total-summary-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 8px;
+  }
+  

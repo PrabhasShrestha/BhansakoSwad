@@ -30,7 +30,7 @@ const ShoppingCart = () => {
   // Calculate totals
   const calculateTotal = () => {
     const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const tax = subtotal * 0.07;
+    const tax = subtotal * 0.13;
     const total = subtotal + tax;
     return { subtotal, tax, total };
   };
@@ -143,14 +143,14 @@ const ShoppingCart = () => {
                 <span>Rs {subtotal.toFixed(2)}</span>
               </div>
               <div className="cartPage_summaryRow">
-                <span>Tax (7%):</span>
+                <span>Tax (13%):</span>
                 <span>Rs {tax.toFixed(2)}</span>
               </div>
               <div className="cartPage_summaryRow cartPage_summaryTotal">
                 <span>Total:</span>
                 <span>Rs {total.toFixed(2)}</span>
               </div>
-              <button className="cartPage_checkoutButton">Proceed to Checkout</button>
+              <button className="cartPage_checkoutButton" onClick={()=>{ localStorage.setItem("total", total.toFixed(2)); navigate("/orderdetails")}}>Proceed to Checkout</button>
             </div>
           )}
         </main>

@@ -154,6 +154,10 @@
     cursor: pointer;
     transition: background-color 0.3s;
   }
+
+  .cartPage_removeButton:hover {
+    background-color: #752118;
+  }
   
   /* Order Summary */
   .cartPage_summary {
@@ -199,4 +203,8 @@
     transition: background-color 0.3s;
     margin-top: 1.5rem;
   }
+
+.cartPage_checkoutButton:hover{
+  background-color: #1e7b45;
+}
   

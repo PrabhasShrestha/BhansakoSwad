@@ -181,6 +181,44 @@
     background-color: black;
     color: white;
   }
+
+.search-dropdown {
+    position: absolute;
+    top: 173px;
+    left: 575px;
+    width: 604px;
+    background: #f5f5f5;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-result-item:hover {
+    background: #f5f5f5;
+}
+
+.search-product-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.search-product-name {
+    font-size: 14px;
+    color: #333;
+}
+
   
   @media (max-width: 768px) {
     .details-grid {

@@ -15,9 +15,10 @@ const ProductDetails = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [quantity, setQuantity] = useState(1);
     const [cartMessage, setCartMessage] = useState("");
-    const [cartsMessage, setCartsMessage] = useState("");
     const [showMessage, setShowMessage] = useState(false);
     const [messages, setMessages] = useState({});
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const [showDropdown, setShowDropdown] = useState(false);
 
     const queryParams = new URLSearchParams(location.search);
     const sellerId = queryParams.get("seller_id");
@@ -116,16 +117,17 @@ const ProductDetails = () => {
 
       const handleQuickAddToCart = (item) => {
         if (!item || !item.product_id || !item.store_id) {
+            console.error("❌ Invalid product data:", item);
             return;
         }
-
+    
         const cartItem = {
             product_id: item.product_id,
-            productdetails_id: item.productdetails_id, // Ensure productdetails_id exists
+            productdetails_id: item.productdetails_id || item.product_id, // Ensure productdetails_id exists
             seller_id: item.store_id, // Ensure correct seller/store ID
             quantity: 1, // Always add exactly one unit
         };
-
+    
         fetch("http://localhost:3000/api/add", {
             method: "POST",
             headers: {
@@ -134,18 +136,25 @@ const ProductDetails = () => {
             },
             body: JSON.stringify(cartItem),
         })
-        .then((res) => res.json())
+        .then((res) => {
+            if (!res.ok) {
+                return res.json().then((data) => {
+                    throw { status: res.status, message: data.message };
+                });
+            }
+            return res.json();
+        })
         .then((data) => {
             const successMessage = `"${item.product_name}" added to cart!`;
             const errorMessage = "❌ Failed to add to cart.";
-
-            // Update the message for the clicked product only
+    
             setMessages((prev) => ({
                 ...prev,
-                [item.product_id]: data.success || data.message.includes("updated successfully") ? successMessage : errorMessage
+                [item.product_id]: data.success || data.message.includes("updated successfully")
+                    ? successMessage
+                    : errorMessage
             }));
-
-            // Remove the message after 3 seconds
+    
             setTimeout(() => {
                 setMessages((prev) => ({
                     ...prev,
@@ -154,10 +163,56 @@ const ProductDetails = () => {
             }, 3000);
         })
         .catch((error) => {
-            console.error("❌ Error adding to cart:", error);
-        });
-    };
+            let errorMessage = "❌ Server error, try again.";
     
+            if (error.status === 400) {
+                errorMessage = "❌ Not enough stock available.";
+            } else if (error.status === 401) {
+                errorMessage = "❌ Unauthorized! Please log in.";
+            } else if (error.status === 404) {
+                errorMessage = "❌ Product not found.";
+            } else if (error.status === 500) {
+                errorMessage = "❌ Internal server error.";
+            }
+    
+            console.error(`❌ Error (${error.status}):`, error.message || "Unknown error");
+    
+            setMessages((prev) => ({
+                ...prev,
+                [item.product_id]: errorMessage
+            }));
+    
+            setTimeout(() => {
+                setMessages((prev) => ({
+                    ...prev,
+                    [item.product_id]: null
+                }));
+            }, 3000);
+        });
+    };   
+
+    const handleSearchChange = (e) => {
+      const term = e.target.value.toLowerCase();
+      setSearchTerm(term);
+      if (term.trim() === "") {
+          setFilteredProducts([]);
+          setShowDropdown(false);
+          return;
+      }
+
+      const results = relatedProducts.filter((product) =>
+          product.product_name.toLowerCase().includes(term)
+      );
+
+      setFilteredProducts(results);
+      setShowDropdown(results.length > 0);
+  };
+
+  const handleProductClick = (product) => {
+      navigate(`/product/${product.product_id}?seller_id=${product.store_id}`);
+      setSearchTerm("");
+      setShowDropdown(false);
+  };
     
   if (!product) return <p>Loading product details...</p>;
 
@@ -173,9 +228,29 @@ const ProductDetails = () => {
               placeholder="Search in Store"
               className="search-box"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
             />
-            <button className="search-button">Search</button>
+            <button className="search-button" onClick={handleSearchChange}>Search</button>
+            {showDropdown && (
+                            <div className="search-dropdown">
+                                {filteredProducts.map((product) => (
+                                    <div
+                                        key={product.product_id}
+                                        className="search-result-item"
+                                        onClick={() => handleProductClick(product)}
+                                    >
+                                        <img
+                                            src={product.image}
+                                            alt={product.product_name}
+                                            className="search-product-image"
+                                        />
+                                        <span className="search-product-name">
+                                            {product.product_name}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
           </div>
           <button className="cart-button" onClick={() => navigate('/shoppingcart')}>
             <FaShoppingCart size={24} />

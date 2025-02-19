@@ -1,0 +1,154 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import KhaltiCheckout from "khalti-checkout-web";
+import "../../styles/User/TotalPayment.css";
+import Navigationbar from "../../components/NavBar";
+import Footer from "../../components/Footer";
+import khaltiImage from "../../assets/khalti.png";
+
+
+const TotalPayement = () => {
+  const navigate = useNavigate();
+  const [total, setTotal] = useState(0);
+  const [user, setUser] = useState({ name: "", email: "", phone: "" });
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const storedTotal = localStorage.getItem("total");
+    if (storedTotal) {
+      setTotal(parseFloat(storedTotal));
+    }
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token"); // Ensure token is available
+        if (!token) {
+          console.error("No token found! User must log in.");
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch("http://localhost:3000/api/get-user", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Attach JWT token
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+
+        const result = await response.json();
+        console.log("Fetched User:", result);
+
+        if (result.success) {
+          setUser({
+            name: `${result.data.first_name} ${result.data.last_name}`.trim() || "Unknown User",
+            email: result.data.email || "noemail@example.com",
+            phone: result.data.phone_number || "9800000000", 
+          });
+        } else {
+          console.error("User data fetch failed:", result.message);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const calculateTotalAmount = () => {
+    const shippingAmount = 85;
+    const totalAmount = total + shippingAmount;
+    return { totalAmount};
+  };
+
+  const { totalAmount } = calculateTotalAmount();
+
+  const handlePayment = async () => {
+    if (!user.name || !user.email || !user.phone) {
+      alert("User details are missing! Please log in.");
+      return;
+    }
+    try {
+        const response = await fetch("http://localhost:3000/api/paymentorder", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                totalAmount,
+                orderId: "Order13",
+                customerInfo: {
+                  name: user.name,
+                  email: user.email,
+                  phone: user.phone,
+                }
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            window.location.href = data.paymentUrl; // Redirect user to Khalti payment
+        } else {
+            alert("Payment initiation failed. Try again.");
+        }
+    } catch (error) {
+        console.error("Error initiating payment:", error);
+        alert("Payment request failed. Check console for details.");
+    }
+};
+
+
+
+  return (
+    <div style={{ backgroundColor: "#f5f5f5" }}>
+      <Navigationbar />
+      <div>
+        <header className="cartPage_header">
+          <button className="cartPage_backButton" onClick={() => navigate(-1)}>← Back</button>
+          <h1>Order Summary</h1>
+        </header>
+      </div>
+      <div className="Total-payment-container">
+        <div className="Total-payment-box">
+          <h2 className="Total-payment-title">Select Payment</h2>
+          <div className="Total-payment-option">
+            <img src={khaltiImage} alt="Total" className="Total-payment-logo" />
+            <p className="Total-payment-text">Khalti</p>
+          </div>
+          <div className="Total-payment-instructions">
+            <p>You will be redirected to your Khalti account to complete the payment process:</p>
+            <ul>
+              <li>Log in to your Khalti account using your Khalti ID and password.</li>
+              <li>Ensure your Khalti account is active and has sufficient balance.</li>
+              <li>Enter the OTP (One-Time Password) sent to your registered mobile number.</li>
+            </ul>
+            <p className="Total-payment-note">Note: Use your Khalti mobile number and PASSWORD (not MPin) to log in.</p>
+          </div>
+          <button className="Total-payment-button" onClick={handlePayment}>Pay Now</button>
+        </div>
+        <div className="Total-payment-summary">
+          <h1 className="Total-summary-title">Order Summary</h1>
+          <div className="Total-summary-item">
+            <span>Subtotal</span>
+            <span>Rs {total.toFixed(2)}</span>
+          </div>
+          <div className="Total-summary-item">
+            <span>Shipping</span>
+            <span>Rs 85</span>
+          </div>
+          <div className="Total-summary-total">
+            <span>Total</span>
+            <span>Rs {totalAmount.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default TotalPayement;
