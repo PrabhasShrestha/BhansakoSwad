@@ -101,4 +101,11 @@ router.get("/store/details/:id", sellerController.getStoreById);
 router.get("/product/:id", sellerController.getProductById);
 router.get("/store/:storeId/products", sellerController.getPublicProducts);
 router.get("/related/:sellerId/:productId", sellerController.getRelatedProducts);
+router.post("/create-order", sellerController.createOrder);
+router.post("/save-order-items", sellerController.saveOrderItems);
+router.get("/orders/vendor/:vendorId", sellerController.getOrders);
+router.post("/orders/:id/status", sellerController.updateStatus);
+
+
+
 module.exports = router;

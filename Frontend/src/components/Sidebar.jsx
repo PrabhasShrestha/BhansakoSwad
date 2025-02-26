@@ -14,7 +14,7 @@ const Sidebar = () => {
             <a href="/product">Products</a>
           </li>
           <li className="dashboard-menu-item">
-            <a href="/vendor/orders">Orders</a>
+            <a href="/order">Orders</a>
           </li>
           <li className="dashboard-menu-item">
             <a href="/sellerprofile">Account</a>

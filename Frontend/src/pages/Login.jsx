@@ -63,6 +63,11 @@ const Login = () => {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("role", role);
 
+      if (role === "seller") {
+        localStorage.setItem("vendorId", response.data.seller.id);
+        console.log("Stored Vendor ID:", response.data.seller.id); // Debugging
+      }
+
       // Navigate based on role
       if (role === "user") {
         navigate("/home"); // Redirect to user home page

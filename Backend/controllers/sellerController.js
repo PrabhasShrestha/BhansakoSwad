@@ -1088,7 +1088,118 @@ const resetSellerPassword = (req, res) => {
   });
 };
 
-// Add these to module.exports
+const createOrder = (req, res) => {
+  const { user_id, totalAmount, email } = req.body;
+
+  if (!user_id || !totalAmount) {
+      return res.status(400).json({ message: "User ID and Total Amount are required" });
+  }
+
+  // Insert the order into the database
+  db.query(
+      "INSERT INTO orders (user_id, total_amount, status, order_date) VALUES (?, ?, ?, NOW())",
+      [user_id, totalAmount, "Processing"],
+      (err, result) => {
+          if (err) {
+              console.error("Database Insert Error:", err);
+              return res.status(500).json({ message: "Failed to create order" });
+          }
+
+          const orderId = result.insertId; // Retrieve the new order ID
+
+          // Respond with the created order ID
+          res.status(200).json({ success: true, message: "Order created successfully", orderId });
+      }
+  );
+};
+
+const saveOrderItems = (req, res) => {
+  const { order_id, items } = req.body; // items is an array of products in the order
+
+  if (!order_id || !items || items.length === 0) {
+      return res.status(400).json({ success: false, message: "Order ID and Items are required." });
+  }
+
+  // Loop through the items and insert each one into the order_items table
+  items.forEach(item => {
+      const { productdetails_id, quantity, price } = item;
+
+      if (!productdetails_id || !quantity || !price) {
+          return res.status(400).json({ success: false, message: "Product details, quantity, and price are required." });
+      }
+
+      // Insert item into the order_items table
+      db.query(
+          "INSERT INTO order_items (order_id, productdetails_id, quantity, price) VALUES (?, ?, ?, ?)",
+          [order_id, productdetails_id, quantity, price],
+          (err, result) => {
+              if (err) {
+                  console.error("Error inserting order item:", err);
+                  return res.status(500).json({ success: false, message: "Failed to save order items." });
+              }
+
+              console.log("Order item added with ID:", result.insertId);
+          }
+      );
+  });
+
+  // Respond with success after processing all items
+  res.json({ success: true, message: "Order items added successfully." });
+};
+const getOrders = (req, res) => {
+
+  const { vendorId } = req.params;
+    const query = `
+        SELECT o.order_id, 
+              p.name AS product_name, 
+              u.first_name, u.last_name, 
+              oi.price, oi.quantity, 
+              o.total_amount, 
+              o.order_date, 
+              o.status,
+              pd.image AS product_image,
+              pd.seller_id AS vendor_id
+        FROM orders o
+        JOIN order_items oi ON o.order_id = oi.order_id
+        JOIN productdetails pd ON oi.productdetails_id = pd.id
+        JOIN products p ON pd.product_id = p.id
+        JOIN users u ON o.user_id = u.id
+        WHERE pd.seller_id = ?; 
+   `;
+
+   db.query(query, [vendorId], (err, results) => {  // ✅ Pass vendorId into query
+    if (err) {
+      console.error("Database Error:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+    res.status(200).json({ success: true, orders: results });
+  });
+};
+
+const updateStatus = (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  // Validate status
+  if (!["Processing", "Shipped", "Delivered", "Cancelled"].includes(status)) {
+    return res.status(400).json({ message: "Invalid status update" });
+  }
+
+  const query = "UPDATE orders SET status = ? WHERE order_id = ?";
+  db.query(query, [status, id], (err, result) => {
+    if (err) {
+      console.error("Database Error:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Order status updated successfully", status });
+  });
+};
+
 module.exports = {
   registerSeller,
   loginSeller,
@@ -1111,5 +1222,9 @@ module.exports = {
   getPublicProducts,
   getRelatedProducts,
   forgetSellerPassword,
-  resetSellerPassword
+  resetSellerPassword,
+  createOrder,
+  saveOrderItems,
+  getOrders,
+  updateStatus
 };

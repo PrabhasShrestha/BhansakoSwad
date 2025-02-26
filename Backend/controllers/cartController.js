@@ -143,9 +143,32 @@ const updateCartQuantity = (req, res) => {
     );
 };
 
+
+const deleteCart = (req, res) => {
+    const user_id = req.user.id; // Extract user ID from JWT
+
+    if (!user_id) {
+        return res.status(400).json({ message: "User ID is required." });
+    }
+
+    db.query(
+        `DELETE FROM cart_items WHERE user_id = ?`,
+        [user_id],
+        (err, result) => {
+            if (err) {
+                console.error("Database Error:", err);
+                return res.status(500).json({ message: "Failed to clear cart." });
+            }
+
+            return res.status(200).json({ message: "Cart cleared successfully." });
+        }
+    );
+};
+
 module.exports = {
     addToCart,
     updateCartQuantity,
     removeFromCart,
-    getCart
+    getCart,
+    deleteCart
 };

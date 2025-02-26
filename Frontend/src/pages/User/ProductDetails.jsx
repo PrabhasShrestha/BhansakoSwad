@@ -84,6 +84,8 @@ const ProductDetails = () => {
           seller_id: sellerId,
           quantity: quantity,
         };
+
+        setCartMessage(""); 
     
         // Send data to backend
         fetch("http://localhost:3000/api/add", {
@@ -96,6 +98,7 @@ const ProductDetails = () => {
         })
           .then((res) => res.json())
           .then((data) => {
+            console.log("Response data:", data); // Log the response here
             if (data.success || data.message.includes("updated successfully")) {  
               setCartMessage(" Item added to cart successfully! 🛒");
               setShowMessage(true);

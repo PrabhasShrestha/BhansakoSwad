@@ -1,7 +1,8 @@
 const express = require("express");
 const axios = require("axios");
 require("dotenv").config();
-
+const sendMail = require('../helpers/sendMail');
+const db = require('../config/dbConnection');
 
 
 const router = express.Router();
@@ -10,12 +11,12 @@ router.post("/paymentorder", async (req, res) => {
     try {
         const { totalAmount, orderId, customerInfo } = req.body;
 
-        console.log("Received Payment Request:", req.body); // ✅ Debugging
+    
 
         const response = await axios.post(
             "https://a.khalti.com/api/v2/epayment/initiate/",
             {
-                return_url: "http://localhost:5173/home",
+                return_url: "http://localhost:5173/success",
                 website_url: "http://localhost:5173/",
                 amount: totalAmount * 100, // Convert Rs to Paisa
                 purchase_order_id: orderId,
@@ -41,5 +42,66 @@ router.post("/paymentorder", async (req, res) => {
         res.status(500).json({ error: error.response?.data || "Internal Server Error" });
     }
 });
+
+router.post("/save-payment", (req, res) => {
+    const { user_id, payment_date, amount, order_id, email } = req.body;
+
+    if (!order_id || !user_id || !amount || !payment_date) {
+        return res.status(400).json({ success: false, message: "Order ID, User ID, Amount, and Payment Date are required." });
+    }
+
+    // Step 1: Check if the order exists
+    db.query("SELECT * FROM orders WHERE order_id = ?", [order_id], (err, orderResult) => {
+        if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ success: false, message: "Failed to check order" });
+        }
+
+        if (orderResult.length === 0) {
+            return res.status(400).json({ success: false, message: "Order does not exist" });
+        }
+
+        // Step 2: Insert the payment into the database
+        db.query(
+            "INSERT INTO payments (user_id, payment_date, amount, order_id) VALUES (?, ?, ?, ?)",
+            [user_id, payment_date, amount, order_id],
+            (err, paymentResult) => {
+                if (err) {
+                    console.error("Database Error:", err);
+                    return res.status(500).json({ success: false, message: "Failed to store payment" });
+                }
+
+                const paymentId = paymentResult.insertId;
+
+                // Step 3: Send email confirmation to the user
+                try {
+                    const mailSubject = "Payment Receipt - Bhansako Swad";
+                    const content = `
+                        <div style="font-family: Arial, sans-serif; background-color: #f8f8f8; padding: 20px;">
+                            <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <h2 style="text-align: center; color: #4caf50;">Thank You for Your Payment!</h2>
+                                <p style="font-size: 16px; color: #333;">
+                                    <strong>Amount Paid:</strong> Rs ${amount}<br>
+                                    <strong>Payment Date:</strong> ${new Date(payment_date).toLocaleString()}
+                                </p>
+                                <p style="font-size: 16px; color: #333;">Your payment has been successfully processed.</p>
+                                <p style="font-size: 16px; color: #333;">If you have any questions, feel free to contact us.</p>
+                                <p style="font-size: 16px; color: #333;">Best regards,<br>Bhansako Swad Store Team</p>
+                            </div>
+                        </div>
+                    `;
+                    sendMail(email, mailSubject, content);
+                } catch (emailError) {
+                    console.error("Error sending email:", emailError);
+                    // Proceed even if the email fails
+                }
+
+                res.json({ success: true, message: "Payment stored successfully" });
+            }
+        );
+    });
+});
+
+
 
 module.exports = router;

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import KhaltiCheckout from "khalti-checkout-web";
 import "../../styles/User/TotalPayment.css";
 import Navigationbar from "../../components/NavBar";
 import Footer from "../../components/Footer";
@@ -40,10 +39,10 @@ const TotalPayement = () => {
         }
 
         const result = await response.json();
-        console.log("Fetched User:", result);
-
+    
         if (result.success) {
           setUser({
+            user_id: result.data.id,
             name: `${result.data.first_name} ${result.data.last_name}`.trim() || "Unknown User",
             email: result.data.email || "noemail@example.com",
             phone: result.data.phone_number || "9800000000", 
@@ -71,26 +70,76 @@ const TotalPayement = () => {
 
   const handlePayment = async () => {
     if (!user.name || !user.email || !user.phone) {
-      alert("User details are missing! Please log in.");
-      return;
+        alert("User details are missing! Please log in.");
+        return;
     }
+
     try {
-        const response = await fetch("http://localhost:3000/api/paymentorder", {
+        const orderResponse = await fetch("http://localhost:3000/api/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: user.user_id,
+                totalAmount,
+                email: user.email
+            })
+        });
+
+        const orderData = await orderResponse.json();
+        if (!orderData.success) {
+            alert("Order creation failed. Try again.");
+            return;
+        }
+
+        const orderId = orderData.orderId; 
+
+        const cartItems = JSON.parse(localStorage.getItem("cart")) || []; // Get cart items
+        console.log(localStorage.getItem("cart"));
+        if (cartItems.length === 0) {
+            alert("No items in the cart.");
+            return;
+        }
+
+        const saveOrderItemsResponse = await fetch("http://localhost:3000/api/save-order-items", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                order_id: orderId,
+                items: cartItems // Send all items
+            })
+        });
+
+        const saveOrderItemsData = await saveOrderItemsResponse.json();
+        if (!saveOrderItemsData.success) {
+            alert("Failed to save order items.");
+            return;
+        }
+
+        const paymentResponse = await fetch("http://localhost:3000/api/paymentorder", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 totalAmount,
-                orderId: "Order13",
+                orderId,  // ✅ Use the `order_id` from the database
                 customerInfo: {
-                  name: user.name,
-                  email: user.email,
-                  phone: user.phone,
+                    user_id: user.user_id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
                 }
             })
         });
 
-        const data = await response.json();
+        const data = await paymentResponse.json();
         if (data.success) {
+            localStorage.setItem("paymentData", JSON.stringify({
+                user_id: user.user_id,
+                amount: totalAmount,
+                payment_date: new Date().toISOString(),
+                email: user.email,
+                order_id: orderId  // ✅ Store `order_id` for later use
+            }));
+
             window.location.href = data.paymentUrl; // Redirect user to Khalti payment
         } else {
             alert("Payment initiation failed. Try again.");
@@ -100,8 +149,6 @@ const TotalPayement = () => {
         alert("Payment request failed. Check console for details.");
     }
 };
-
-
 
   return (
     <div style={{ backgroundColor: "#f5f5f5" }}>

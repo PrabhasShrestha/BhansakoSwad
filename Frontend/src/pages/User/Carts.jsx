@@ -20,6 +20,7 @@ const ShoppingCart = () => {
       .then((data) => {
         if (data.success) {
           setCartItems(data.cart);
+          localStorage.setItem("cart", JSON.stringify(data.cart));
         } else {
           console.error("Failed to fetch cart items");
         }
@@ -42,7 +43,7 @@ const ShoppingCart = () => {
     if (newQuantity < 1) return; // Prevent negative quantity
   
     fetch("http://localhost:3000/api/update-quantity", {
-      method: "POST", // Change to PUT if needed
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -51,19 +52,17 @@ const ShoppingCart = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log("Update response:", data);
         if (data.success) {
-          setCartItems((prevCart) =>
-            prevCart.map((item) =>
-              item.productdetails_id === id ? { ...item, quantity: newQuantity } : item
-            )
+          const updatedCart = cartItems.map((item) =>
+            item.productdetails_id === id ? { ...item, quantity: newQuantity } : item
           );
+          setCartItems(updatedCart);
+          localStorage.setItem("cart", JSON.stringify(updatedCart)); // ✅ Update localStorage
         }
       })
       .catch((error) => console.error("Error updating cart quantity:", error));
-  };
+  };  
   
-  // Remove Item
   const removeItem = (id) => {
     fetch("http://localhost:3000/api/remove", {
       method: "POST",
@@ -76,12 +75,14 @@ const ShoppingCart = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setCartItems((prevCart) => prevCart.filter((item) => item.productdetails_id !== id));
+          const updatedCart = cartItems.filter((item) => item.productdetails_id !== id);
+          setCartItems(updatedCart);
+          localStorage.setItem("cart", JSON.stringify(updatedCart)); // ✅ Sync localStorage
         }
       })
       .catch((error) => console.error("Error removing item from cart:", error));
   };
-
+  
   return (
     <div>
       <Navigationbar />
@@ -150,7 +151,13 @@ const ShoppingCart = () => {
                 <span>Total:</span>
                 <span>Rs {total.toFixed(2)}</span>
               </div>
-              <button className="cartPage_checkoutButton" onClick={()=>{ localStorage.setItem("total", total.toFixed(2)); navigate("/orderdetails")}}>Proceed to Checkout</button>
+              <button className="cartPage_checkoutButton" onClick={() => {
+                localStorage.setItem("total", total.toFixed(2));
+                localStorage.setItem("cart", JSON.stringify(cartItems)); // ✅ Store cart items
+                navigate("/orderdetails");
+              }}>
+                Proceed to Checkout
+              </button>
             </div>
           )}
         </main>

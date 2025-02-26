@@ -21,6 +21,8 @@ import ProductDetails from "./pages/User/ProductDetails";
 import ShoppingCart from "./pages/User/Carts";
 import CreateNewSellerPassword from "./pages/Vendor/NewPassword";
 import TotalPayement from "./pages/User/Payement";
+import SuccessPage from "./pages/User/SuccessPage";
+import OrderPage from "./pages/Vendor/Orders";
 
 function App() {
   return (
@@ -41,11 +43,13 @@ function App() {
   <Route path="/dashboard" element={<Dashboard />} />
   <Route path="/sellerprofile" element={<SellerUpdatePage />} />
   <Route path='/product' element ={<ProductPage/>}/>
+  <Route path='/order' element ={<OrderPage/>}/>
   <Route path='/store' element ={<StoreListing/>}/>
   <Route path='/store/:id' element ={<StoreDetails/>}/>
   <Route path="/product/:id" element={<ProductDetails />}/>
   <Route path="/shoppingcart" element={<ShoppingCart />}/>
   <Route path="/orderdetails" element={<TotalPayement />}/>
+  <Route path="/success" element={<SuccessPage />}/>
 </Routes>
   );
 }
