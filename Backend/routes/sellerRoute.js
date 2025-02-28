@@ -80,15 +80,13 @@ router.post('/resendseller', sellerController.resendSellerCode);
 router.post('/forgotseller-password', forgetValidation, sellerController.forgetSellerPassword);
 router.post('/resetseller-password', sellerController.resetSellerPassword);
 
-// New vendor profile routes
 router.get('/get-seller', isAuthorize, sellerController.getSeller);
-// Change from PUT to POST
 
 router.post('/update-seller', isAuthorize, uploadSellerImage.single('image'), updateSellerValidation, sellerController.updateSeller);
 router.post('/upload-seller-image', isAuthorize, uploadSellerImage.single('image'), sellerController.uploadImage);
 router.delete('/remove-seller-image', isAuthorize, sellerController.removeImage);
 
-//AddIngridients
+
 router.post("/addproducts", isAuthorize, upload.single("image"), addproductsValidation, sellerController.addproducts);
 router.get("/getproducts", isAuthorize, sellerController.getproducts);
 router.post("/updateproducts", isAuthorize, upload.single("image"), updateproductsValidation, sellerController.updateproducts);

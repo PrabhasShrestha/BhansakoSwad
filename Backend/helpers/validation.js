@@ -177,3 +177,5 @@ exports.updateproductsValidation = [
     throw new Error("Please upload an image of type JPG or PNG");
   }),
 ];
+
+

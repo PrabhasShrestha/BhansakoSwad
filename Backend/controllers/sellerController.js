@@ -2,7 +2,7 @@ const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const db = require('../config/dbConnection');
 const randomstring = require('randomstring');
-const sendMail = require('../helpers/sendMail');
+const sendMail = require('../helpers/sendMail'); 
 const jwt =require('jsonwebtoken');
 const {JWT_SECRET} = process.env;
 
@@ -957,7 +957,7 @@ const getRelatedProducts = (req, res) => {
            FROM products p
            JOIN productdetails pd ON p.id = pd.product_id
            WHERE pd.seller_id = ? AND p.id != ? 
-           LIMIT 5`,  // ✅ Fetch only 5 products from the same seller
+           LIMIT 5`,  //  Fetch only 5 products from the same seller
           [sellerId, productId],
           (error, results) => {
               if (error) {
@@ -1151,6 +1151,7 @@ const getOrders = (req, res) => {
   const { vendorId } = req.params;
     const query = `
         SELECT o.order_id, 
+              o.user_id,
               p.name AS product_name, 
               u.first_name, u.last_name, 
               oi.price, oi.quantity, 
@@ -1167,7 +1168,7 @@ const getOrders = (req, res) => {
         WHERE pd.seller_id = ?; 
    `;
 
-   db.query(query, [vendorId], (err, results) => {  // ✅ Pass vendorId into query
+   db.query(query, [vendorId], (err, results) => {  //  Pass vendorId into query
     if (err) {
       console.error("Database Error:", err);
       return res.status(500).json({ message: "Internal Server Error" });
@@ -1178,27 +1179,107 @@ const getOrders = (req, res) => {
 
 const updateStatus = (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status } = req.body; 
 
-  // Validate status
+  if (!status) {
+    return res.status(400).json({ message: "Order status is required" });
+  }
+
   if (!["Processing", "Shipped", "Delivered", "Cancelled"].includes(status)) {
     return res.status(400).json({ message: "Invalid status update" });
   }
 
-  const query = "UPDATE orders SET status = ? WHERE order_id = ?";
-  db.query(query, [status, id], (err, result) => {
+  // Fetch user ID & all product names before updating order
+  const getOrderQuery = `
+    SELECT o.user_id, u.email, u.first_name, GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names 
+    FROM orders o
+    JOIN users u ON o.user_id = u.id
+    JOIN order_items oi ON o.order_id = oi.order_id
+    JOIN productdetails pd ON oi.productdetails_id = pd.id
+    JOIN products p ON pd.product_id = p.id
+    WHERE o.order_id = ?
+    GROUP BY o.order_id;
+  `;
+
+  db.query(getOrderQuery, [id], (err, orderResult) => {
     if (err) {
       console.error("Database Error:", err);
       return res.status(500).json({ message: "Internal Server Error" });
     }
 
-    if (result.affectedRows === 0) {
+    if (!orderResult.length) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    res.status(200).json({ success: true, message: "Order status updated successfully", status });
+    const { user_id, email, first_name, product_names } = orderResult[0];
+
+    // Update order status
+    const updateQuery = "UPDATE orders SET status = ? WHERE order_id = ?";
+    db.query(updateQuery, [status, id], (err, result) => {
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      // If order is marked as "Shipped"
+      if (status === "Shipped") {
+        const notificationMessage = `Your order of ${product_names} has been shipped! Please confirm when you receive it.`;
+        const insertNotificationQuery = `
+          INSERT INTO notifications (user_id, message, read_status, order_id) 
+          VALUES (?, ?, false, ?);
+        `;
+
+        db.query(insertNotificationQuery, [user_id, notificationMessage, id], (err) => {
+          if (err) console.error("Error inserting notification:", err);
+        });
+      }
+
+      // If order is marked as "Delivered"
+      if (status === "Delivered") {
+        // Delete the old "shipped" notification
+        db.query("DELETE FROM notifications WHERE order_id = ?", [id], (err) => {
+          if (err) console.error("❌Error deleting old notification:", err);
+        });
+
+        // Insert new "Thank You" notification
+        const thankYouMessage = `You have received your order of ${product_names}. Thank you for shopping with us!`;
+        db.query(
+          "INSERT INTO notifications (user_id, message, read_status, order_id) VALUES (?, ?, false, ?)",
+          [user_id, thankYouMessage, id],
+          (err) => {
+            if (err) console.error("❌ Error inserting thank-you notification:", err);
+          }
+        );
+
+        // Send "Thank You" Email
+        const mailSubject = "Thank You for Your Order!";
+        const mailContent = `
+          <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; text-align: center;">
+            <h1 style="color: #4CAF50;">Thank You, ${first_name}!</h1>
+            <p style="font-size: 16px;">Your order of <strong>${product_names}</strong> has been delivered.</p>
+            <p style="font-size: 14px;">We appreciate your business and hope you enjoy your purchase!</p>
+            <p style="font-size: 12px; color: #888;">Thank you for shopping with us!</p>
+          </div>
+        `;
+
+        sendMail(email, mailSubject, mailContent)
+          .then(() => console.log(`✅ Thank-you email sent to: ${email}`))
+          .catch((error) => console.error("❌ Error sending email:", error));
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `Order marked as ${status}`,
+        status,
+      });
+    });
   });
 };
+
 
 module.exports = {
   registerSeller,
@@ -1226,5 +1307,5 @@ module.exports = {
   createOrder,
   saveOrderItems,
   getOrders,
-  updateStatus
+  updateStatus,
 };

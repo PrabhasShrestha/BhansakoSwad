@@ -67,6 +67,11 @@ const Login = () => {
         localStorage.setItem("vendorId", response.data.seller.id);
         console.log("Stored Vendor ID:", response.data.seller.id); // Debugging
       }
+      if (role === "user") {
+        localStorage.setItem("userId", response.data.user.id);
+        console.log("Stored user ID:", response.data.user.id); // Debugging
+      }
+
 
       // Navigate based on role
       if (role === "user") {

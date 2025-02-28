@@ -78,5 +78,7 @@ router.get('/testimonials', userController.getTestimonial);
 router.post('/logout', auth.isAuthorize, userController.logout);
 router.get('/getstore',userController.getStores)
 
+router.get('/notifications/:userId',userController.getNotification)
+router.delete("/notifications/:userId", userController.deleteNotification);
 
 module.exports = router;

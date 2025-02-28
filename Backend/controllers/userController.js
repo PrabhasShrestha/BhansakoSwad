@@ -753,6 +753,83 @@ const getStores = (req, res) => {
   }
 };
 
+const getNotification = (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ message: "userId is required." });
+  }
+
+  db.query(
+    `SELECT n.id AS notification_id, n.message, n.read_status, n.created_at, n.order_id
+      FROM notifications n
+      WHERE n.user_id = ? 
+      ORDER BY n.created_at DESC;
+      `,
+    [userId],
+    (err, results) => {
+      if (err) {
+        console.error("❌ Database error:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
+      res.status(200).json({ notifications: results });
+    }
+  );
+};
+
+const deleteNotification = (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ message: "❌ userId is required." });
+  }
+
+  // Fetch notifications to check which ones can be deleted
+  db.query(
+    `SELECT id, message FROM notifications WHERE user_id = ?`, 
+    [userId],
+    (err, results) => {
+      if (err) {
+        console.error("❌ Database error:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: "No notifications found." });
+      }
+
+      // Filter out notifications that CANNOT be deleted
+      const deletableIds = results
+        .filter(n => !n.message.includes("Confirm Delivery") && !n.message.includes("shipped"))
+        .map(n => n.id);
+
+      if (deletableIds.length === 0) {
+        return res.status(403).json({ message: "❌ Cannot delete pending confirmations." });
+      }
+
+      // Delete only notifications that are allowed
+      db.query(
+        `DELETE FROM notifications WHERE id IN (?)`, 
+        [deletableIds],
+        (deleteErr, deleteResults) => {
+          if (deleteErr) {
+            console.error("❌ Delete error:", deleteErr);
+            return res.status(500).json({ message: "Error deleting notifications" });
+          }
+
+          res.status(200).json({ 
+            message: "✅ Some notifications deleted successfully.", 
+            deletedIds: deletableIds 
+          });
+        }
+      );
+    }
+  );
+};
+
+
+
+
 
 module.exports = {
   register,
@@ -769,5 +846,7 @@ module.exports = {
   uploadImage,
   changePassword,
   logout,
-  getStores
+  getStores,
+  getNotification,
+  deleteNotification
 };

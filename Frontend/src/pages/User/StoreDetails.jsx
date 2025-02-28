@@ -74,11 +74,16 @@ const StoreDetails = () => {
         return res.json();
     })
     .then((data) => {
+        console.log("🔍 API Response:", data);
+
+        const successMessage = `"${product.product_name}" added to cart! 🛒`;
+        const errorMessage = `❌ Failed to add to cart: ${data.message || "Unknown error"}`;
+
         setCartMessages((prevMessages) => ({
             ...prevMessages,
-            [product.product_id]: data.success || data.message.includes("updated successfully")
-                ? `${product.product_name} added to cart!`
-                : "❌ Failed to add to cart.",
+            [product.product_id]: data.message?.includes("added to cart") || data.message?.includes("updated successfully")
+                ? successMessage
+                : errorMessage,
         }));
 
         setTimeout(() => {

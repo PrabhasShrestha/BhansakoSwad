@@ -74,49 +74,57 @@ const ProductDetails = () => {
       };
 
       const handleAddToCart = () => {
-        if (!product){
-        return;
-        }
-
+        if (!product) return;
+      
         const cartItem = {
           product_id: product.product_id,
-          productdetails_id: product.productdetails_id, 
+          productdetails_id: product.productdetails_id,
           seller_id: sellerId,
           quantity: quantity,
         };
-
+      
         setCartMessage(""); 
-    
-        // Send data to backend
+      
         fetch("http://localhost:3000/api/add", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure user authentication
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify(cartItem),
         })
           .then((res) => res.json())
           .then((data) => {
-            console.log("Response data:", data); // Log the response here
-            if (data.success || data.message.includes("updated successfully")) {  
-              setCartMessage(" Item added to cart successfully! 🛒");
-              setShowMessage(true);
-
-              setTimeout(() => {
-                  setShowMessage(false);
-              }, 3000);
-          } else {
-            setCartMessage(`❌ Failed to add to cart: ${data.message}`);
+            console.log("Response data:", data);
+      
+            if (data.message?.includes("added to cart") || data.message?.includes("updated successfully"))
+              {
+              // ✅ Only show success message
+              setCartMessage("Item added to cart successfully! 🛒");
+            } else {
+              // ❌ Only show failure message
+              setCartMessage(`❌ Failed to add to cart: ${data.message}`);
+            }
+      
             setShowMessage(true);
-
+      
             setTimeout(() => {
-                setShowMessage(false);
+              setShowMessage(false);
+              setCartMessage(""); // Clear the message after timeout
             }, 3000);
-          }
           })
-          .catch((error) => console.error("Error adding to cart:", error));
+          .catch((error) => {
+            console.error("Error adding to cart:", error);
+            setCartMessage("❌ Server error, please try again.");
+            setShowMessage(true);
+            
+            setTimeout(() => {
+              setShowMessage(false);
+              setCartMessage(""); // Clear error message after timeout
+            }, 3000);
+          });
       };
+      
 
       const handleQuickAddToCart = (item) => {
         if (!item || !item.product_id || !item.store_id) {
@@ -126,8 +134,8 @@ const ProductDetails = () => {
     
         const cartItem = {
             product_id: item.product_id,
-            productdetails_id: item.productdetails_id || item.product_id, // Ensure productdetails_id exists
-            seller_id: item.store_id, // Ensure correct seller/store ID
+            productdetails_id: item.productdetails_id || item.product_id,
+            seller_id: item.store_id,
             quantity: 1, // Always add exactly one unit
         };
     
@@ -135,7 +143,7 @@ const ProductDetails = () => {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`, // Ensure authentication
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
             body: JSON.stringify(cartItem),
         })
@@ -148,12 +156,14 @@ const ProductDetails = () => {
             return res.json();
         })
         .then((data) => {
-            const successMessage = `"${item.product_name}" added to cart!`;
-            const errorMessage = "❌ Failed to add to cart.";
+            console.log("🔍 Quick Add API Response:", data);
+    
+            const successMessage = `"${item.product_name}" added to cart! 🛒`;
+            const errorMessage = `❌ Failed to add to cart: ${data.message || "Unknown error"}`;
     
             setMessages((prev) => ({
                 ...prev,
-                [item.product_id]: data.success || data.message.includes("updated successfully")
+                [item.product_id]: data.message?.includes("added to cart") || data.message?.includes("updated successfully")
                     ? successMessage
                     : errorMessage
             }));
@@ -192,7 +202,8 @@ const ProductDetails = () => {
                 }));
             }, 3000);
         });
-    };   
+    };
+    
 
     const handleSearchChange = (e) => {
       const term = e.target.value.toLowerCase();
