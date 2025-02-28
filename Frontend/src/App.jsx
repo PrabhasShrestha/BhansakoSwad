@@ -23,6 +23,7 @@ import CreateNewSellerPassword from "./pages/Vendor/NewPassword";
 import TotalPayement from "./pages/User/Payement";
 import SuccessPage from "./pages/User/SuccessPage";
 import OrderPage from "./pages/Vendor/Orders";
+import ContactSection from "./pages/User/ContactUs";
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
   <Route path="/" element={<Index />} />
   <Route path="/home" element={<Home />} />
   <Route path="/aboutus" element={<AboutUs />} />
+  <Route path="/contact" element={<ContactSection />} />
   <Route path="/userProfile" element={<ProfilePage />} />
   <Route path="/SellerVerificationCode" element={<SellerVerificationCode />} />
   <Route path="/dashboard" element={<Dashboard />} />

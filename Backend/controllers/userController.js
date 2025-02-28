@@ -827,9 +827,39 @@ const deleteNotification = (req, res) => {
   );
 };
 
+const sendContactEmail = async (req, res) => {
+  const { name, email, subject, message } = req.body;
 
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ success: false, message: "All fields are required." });
+  }
 
+  const mailSubject = `New Contact Request: ${subject}`;
+  
+  const mailContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+      <h2 style="color: #333; border-bottom: 2px solid #f4b400; padding-bottom: 10px;">New Contact Request</h2>
+      
+      <p><strong style="color: #f4b400;">Name:</strong> ${name}</p>
+      <p><strong style="color: #f4b400;">Email:</strong> <a href="mailto:${email}" style="color: #1a73e8; text-decoration: none;">${email}</a></p>
+      <p><strong style="color: #f4b400;">Subject:</strong> ${subject}</p>
+      <p><strong style="color: #f4b400;">Message:</strong></p>
+      <div style="background: #f9f9f9; padding: 10px; border-left: 4px solid #f4b400; font-style: italic;">${message}</div>
 
+      <p style="margin-top: 20px; text-align: center;">
+        <a href="mailto:${email}" style="background: #f4b400; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block;">Reply to ${name}</a>
+      </p>
+    </div>
+  `;
+
+  try {
+    await sendMail(process.env.ADMIN_EMAIL || process.env.SMT_EMAIL, mailSubject, mailContent);
+    return res.status(200).json({ success: true, message: "Email sent successfully!" });
+  } catch (error) {
+    console.error("Email sending error:", error);
+    return res.status(500).json({ success: false, message: "Failed to send email.", error });
+  }
+};
 
 module.exports = {
   register,
@@ -848,5 +878,6 @@ module.exports = {
   logout,
   getStores,
   getNotification,
-  deleteNotification
+  deleteNotification,
+  sendContactEmail
 };

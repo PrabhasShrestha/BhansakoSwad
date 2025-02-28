@@ -1,101 +1,199 @@
-about-us-page {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f8f8f8;
-    color: #333;
-  }
+.about-us-container .header::before {
+  content: "";                  
+  position: absolute;
+  top: -20px; left: 0;           
+  width: 100%; height: 20px;     
+  background-color: #E8DCDC;   
+  z-index: -1;                   
+}
+
+
+.about-us-container  .header {
+  background-color: #E8DCDC;
+  position: relative;
+}
+
+.about-us-container {
+  text-align: center;
+  padding: 0;
+}
+
+.about-header {
+  background: #E8DCDC;
+  color: black;
+  padding: 70px 60px;
+  padding-bottom: 200px;
+  position: relative; 
+}
+
+.about-header p {
+  font-weight: 400;
+  font-size: 1.2rem;
+  max-width: 600px;
+  line-height: 1.5;
+  color: black;
+  margin: 0 auto;
+}
+
+.about-header h1 {
+  font-size: 2.7rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: black;
+}
+
+
+/* About Images */
+.about-images {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: -150px auto 0px; /* Negative margin to pull images up into the black section */
+  position: relative;
+  z-index: 2; /* Ensures images appear above the black section */
+}
+
+.about-images img {
+  border-radius: 15px;
+  object-fit: cover;
+  transition: transform 0.3s ease-in-out;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2); /* Adds depth for better visual effect */
+}
+
+.about-images img:hover {
+  transform: scale(1.05);
+}
+
+.about-images img:nth-child(1) {
+  width: 300px;
+  height: 310px;
+
+}
+.about-images img:nth-child(2) {
+  margin-top: 40px;
+  width: 379px;
+  height: 200px;
+
+}
+.about-images img:nth-child(3) {
+  width: 300px;
+  height: 310px;
+
+}.about-images img:nth-child(4) {
+  margin-top: 40px;
+  width: 309px;
+  height: 200px;
+}
+
+.about-content {
+  padding: 30px;
   
-  .main-content {
-    padding: 20px;
-    text-align: center;
-  }
-  
-  .about-section h1 {
-    font-size: 2.5em;
-    color: #7a2f87;
-    margin-bottom: 10px;
-  }
-  
-  .about-section p {
-    font-size: 1.2em;
-    color: #666;
-    margin-bottom: 20px;
-  }
-  
-  .image-gallery {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 40px;
-  }
-  
-  .image-gallery img {
-    width: 200px;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .mission-section {
-    background-color: #fff;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 20px auto;
-    max-width: 800px;
-  }
-  
-  .mission-section h2 {
-    font-size: 1.8em;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  .mission-content {
-    display: flex;
-    justify-content: space-around;
-    gap: 20px;
+}
+
+.about-content h2 {
+  align-items: center;
+  max-width: 900px;
+  margin-top: 50px;
+  margin-left: 400px;
+  font-size: 2.7rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.highlight {
+  color: #e67e22;
+  font-weight: bold;
+}
+
+.about-text {
+  display: flex;
+  margin-left: 140px;
+  gap: 105px;
+  text-align: left;
+}
+
+.about-text p {
+  font-size: 1.5rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+.about-empower {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  background: #fcfcfc;
+  padding: 30px;
+  border-radius: 10px;
+  margin-top: 40px;
+  margin-left: 340px;
+  max-width: 1000px;
+}
+
+.about-empower img {
+  width: 300px;
+  height: 200px;
+  border-radius: 15px;
+}
+
+.empower-content {
+  text-align: left;
+}
+
+.empower-content h3 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.empower-content p {
+  font-size: 1.1rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+/* Footer */
+.about-footer {
+  color: white;
+  padding: 20px;
+  margin-top: 10px;
+  border-radius: 10px;
+  max-width: 1300px;
+}
+
+.about-footer h3 {
+  font-size: 2.4rem;
+  margin-left: 440px;
+  margin-bottom: 0px;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .about-images {
     flex-wrap: wrap;
   }
   
-  .mission-text {
-    flex: 1;
-    font-size: 1.1em;
-    color: #666;
-    margin: 10px;
+  .about-images img {
+    width: calc(50% - 10px);
   }
   
-  .empower-section {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 40px;
-    background-color: #fdf3f9;
-    margin: 20px auto;
-    max-width: 800px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  .about-text {
+    flex-direction: column;
+    gap: 15px;
   }
   
-  .empower-content img {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  .about-empower {
+    flex-direction: column;
+    text-align: center;
   }
   
-  .empower-text {
-    flex: 1;
-    font-size: 1.1em;
-    color: #666;
+  .empower-content {
+    text-align: center;
   }
-  
-  .empower-section h2 {
-    font-size: 1.8em;
-    color: #333;
-    margin-bottom: 10px;
-  }
+}
 
+@media (max-width: 480px) {
+  .about-images img {
+    width: 100%;
+  }
+}

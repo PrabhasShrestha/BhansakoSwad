@@ -81,4 +81,5 @@ router.get('/getstore',userController.getStores)
 router.get('/notifications/:userId',userController.getNotification)
 router.delete("/notifications/:userId", userController.deleteNotification);
 
+router.post('/contact',userController.sendContactEmail)
 module.exports = router;

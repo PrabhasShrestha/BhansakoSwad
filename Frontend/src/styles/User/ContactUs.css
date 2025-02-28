@@ -1,123 +1,183 @@
-/* General styles for the Contact Us page */
-.contact-us-page {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    color: #333;
-    line-height: 1.6;
+.contact-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: 'Be Vietnam Pro', Arial, sans-serif;
+}
+
+.contact-title {
+  text-align: center;
+  font-size: 42px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.contact-description {
+  text-align: center;
+  max-width: 840px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+  font-size: 16px;
+  color: #555;
+}
+
+.contact-card {
+  display: flex;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border: solid 2px;
+  margin-left: 115px;
+  max-width: 900px;
+}
+
+.contact-info {
+  width: 40%;
+  background-color: #2EC4B6;
+  color: white;
+  padding: 40px 30px;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+}
+
+.contact-info h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  
+}
+
+.contact-info p {
+  line-height: 1.6;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.contact-details {
+  margin-top: 40px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.contact-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 15px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.phone-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z'/%3E%3C/svg%3E");
+}
+
+.email-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z'/%3E%3C/svg%3E");
+}
+
+.location-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E");
+}
+
+.contact-text p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.contact-form {
+  width: 60%;
+  padding: 40px 30px;
+}
+
+.form-group {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group.single {
+  display: block;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  outline: none;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.form-control:focus {
+  border-bottom-color: #25c4a9;
+}
+
+.message-label {
+  color: #25c4a9;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.message-area {
+  height: 100px;
+  padding-left: 10px;
+  resize: none;
+  margin-top: 5px;
+  border: solid 2px #2EC4B6;
+}
+
+.contactsubmit-button {
+  background: linear-gradient(135deg, #21c0a8, #1d9e83);
+  margin-top: 20px;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  padding: 12px 20px;
+  width: 100%;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.contactsubmit-button:hover {
+  background: linear-gradient(135deg, #1d9e83, #21c0a8);
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.25);
+}
+
+.contactsubmit-button:active {
+  transform: translateY(1px);
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .contact-card {
+    flex-direction: column;
   }
   
-  /* Header Section */
-  .contact-header {
-    text-align: center;
-    padding: 30px 20px;
+  .contact-info, .contact-form {
+    width: 100%;
   }
   
-  .contact-header h1 {
-    font-size: 2.5rem;
-    color: #333;
-  }
-  
-  .contact-header p {
-    max-width: 800px;
-    margin: 10px auto;
-    font-size: 1rem;
-    color: #666;
-  }
-  
-  /* Container for Contact Info and Form */
-  .contact-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px;
-    padding: 20px;
-  }
-  
-  /* Contact Information Section */
   .contact-info {
-    flex: 1 1 300px;
-    max-width: 400px;
-    background-color: #e0f7f4;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 20px 20px 0 0;
   }
   
-  .contact-info h2 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    color: #007bff;
-  }
-  
-  .contact-info p {
-    margin-bottom: 10px;
-    color: #444;
-  }
-  
-  .info-details p {
-    margin: 5px 0;
-    font-size: 1rem;
-  }
-  
-  /* Contact Form Section */
-  .contact-form {
-    flex: 1 1 400px;
-    max-width: 600px;
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .contact-form h2 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    color: #333;
-  }
-  
-  .contact-form .form-group {
-    display: flex;
-    justify-content: space-between;
+  .form-group {
+    flex-direction: column;
     gap: 10px;
   }
-  
-  .contact-form .form-group div {
-    flex: 1;
-  }
-  
-  .contact-form label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-  }
-  
-  .contact-form input,
-  .contact-form textarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 1rem;
-  }
-  
-  .contact-form textarea {
-    resize: vertical;
-  }
-  
-  .contact-form button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .contact-form button:hover {
-    background-color: #0056b3;
-  }
-  
+}
