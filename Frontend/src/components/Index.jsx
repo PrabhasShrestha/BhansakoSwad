@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FooterBefore from './FooterBefore';
 import Navbar from './Header';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -20,6 +21,7 @@ import Cusine4Image from '../assets/HomePage/indian.jpg';
 
 
 const Home = () => {
+  const navigate = useNavigate();
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,7 +68,7 @@ const Home = () => {
             packed with flavor, and simple to follow – cooking has never been
             this easy!
           </p>
-          <button className="explore-button">Explore more Recipes</button>
+          <button className="explore-button" onClick={() =>{navigate("/recipes")}}>Explore more Recipes</button>
         </div>
         <div className="hero-image">
           <img src={IndexpageImage} alt="Healthy food" />

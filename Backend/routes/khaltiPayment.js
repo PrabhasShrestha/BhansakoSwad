@@ -18,7 +18,7 @@ router.post("/paymentorder", async (req, res) => {
             {
                 return_url: "http://localhost:5173/success",
                 website_url: "http://localhost:5173/",
-                amount: totalAmount * 100, // Convert Rs to Paisa
+                amount: totalAmount * 100, 
                 purchase_order_id: orderId,
                 purchase_order_name: "Product Purchase",
                 customer_info: customerInfo

@@ -7,6 +7,7 @@ const userRouter = require('./routes/userRoute');
 const sellerRouter = require('./routes/sellerRoute');
 const cartRouter = require('./routes/cartRoute.js')
 const khaltiPaymentRouter = require('./routes/khaltiPayment.js')
+const recipeRouter = require('./routes/recipeRoute.js')
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -27,9 +28,12 @@ app.use('/api', userRouter);
 app.use('/api', sellerRouter);
 app.use('/api', cartRouter);
 app.use('/api', khaltiPaymentRouter)
+app.use('/api/recipe', recipeRouter)
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 
 // Handle 404 errors
 app.use((req, res, next) => {

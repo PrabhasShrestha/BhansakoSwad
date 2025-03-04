@@ -114,12 +114,12 @@ const ContactSection = () => {
         </div>
         
         <form className="contact-form" onSubmit={handleSubmit}>
-        <div className="form-group">
+        <div className="contactform-group">
               <input
                 type="text"
                 name="name"
                 placeholder="Your Name"
-                className="form-control"
+                className="contactform-control"
                 value={formData.name}
                 onChange={handleChange}
                 required
@@ -128,31 +128,31 @@ const ContactSection = () => {
                 type="email"
                 name="email"
                 placeholder="Your Email"
-                className="form-control"
+                className="contactform-control"
                 value={formData.email}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className="form-group single">
+            <div className="contactform-group single">
               <input
                 type="text"
                 name="subject"
                 placeholder="Your Subject"
-                className="form-control"
+                className="contactform-control"
                 value={formData.subject}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className="form-group single">
+            <div className="contactform-group single">
               <div className="message-label">MESSAGE</div>
               <textarea
                 name="message"
                 placeholder="Write Your Message Here"
-                className="form-control message-area"
+                className="contactform-control message-area"
                 value={formData.message}
                 onChange={handleChange}
                 required

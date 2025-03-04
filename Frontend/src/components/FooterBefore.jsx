@@ -31,12 +31,12 @@ const FooterBefore = () => {
             <p>214 Kathmandu, Nepal</p>
             <p>+977 9812345678</p>
           </div>
-          <div className="footer-section navigation" style={{ marginLeft: '200px' }}>
+          <div className="footer-section navigation" style={{ marginLeft: '200px', top: '0' }}>
             <h3 style={{ color: 'white' }}>Navigation</h3>
             <ul>
               <li><a href="/">Home</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#recipe">Recipe</a></li>
+              <li><a href="/aboutus">About</a></li>
+              <li><a href="/recipes">Recipe</a></li>
               <li>
                 <a
                   href="#"

@@ -96,17 +96,17 @@
   padding: 40px 30px;
 }
 
-.form-group {
+.contactform-group {
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
 }
 
-.form-group.single {
+.contactform-group.single {
   display: block;
 }
 
-.form-control {
+.contactform-control {
   width: 100%;
   padding: 12px 0;
   border: none;
@@ -116,7 +116,7 @@
   transition: border-color 0.3s;
 }
 
-.form-control:focus {
+.contactform-control:focus {
   border-bottom-color: #25c4a9;
 }
 
@@ -176,7 +176,7 @@
     border-radius: 20px 20px 0 0;
   }
   
-  .form-group {
+  .contactform-group {
     flex-direction: column;
     gap: 10px;
   }

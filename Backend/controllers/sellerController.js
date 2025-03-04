@@ -1267,8 +1267,8 @@ const updateStatus = (req, res) => {
         `;
 
         sendMail(email, mailSubject, mailContent)
-          .then(() => console.log(`✅ Thank-you email sent to: ${email}`))
-          .catch((error) => console.error("❌ Error sending email:", error));
+          .then(() => console.log(`Thank-you email sent to: ${email}`))
+          .catch((error) => console.error("Error sending email:", error));
       }
 
       res.status(200).json({

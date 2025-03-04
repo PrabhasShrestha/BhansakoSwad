@@ -467,7 +467,8 @@ const ProfilePage = () => {
         </div>
       </div>
       <p className="logout-text" onClick={() => {
-                    localStorage.removeItem("token"); // Clear the token
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("userId"); // Clear the token
                     window.location.href = "/login"; // Redirect to the login page
                   }}
                 >

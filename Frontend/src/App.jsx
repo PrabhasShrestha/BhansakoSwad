@@ -24,6 +24,10 @@ import TotalPayement from "./pages/User/Payement";
 import SuccessPage from "./pages/User/SuccessPage";
 import OrderPage from "./pages/Vendor/Orders";
 import ContactSection from "./pages/User/ContactUs";
+import MainRecipe from "./pages/User/Recipe";
+import RecipeDetails from "./pages/User/RecipeDetails";
+
+
 
 function App() {
   return (
@@ -40,6 +44,8 @@ function App() {
   <Route path="/home" element={<Home />} />
   <Route path="/aboutus" element={<AboutUs />} />
   <Route path="/contact" element={<ContactSection />} />
+  <Route path="/recipes" element={<MainRecipe/>} />
+  <Route path="/recipedetails/:id" element={<RecipeDetails />}/>
   <Route path="/userProfile" element={<ProfilePage />} />
   <Route path="/SellerVerificationCode" element={<SellerVerificationCode />} />
   <Route path="/dashboard" element={<Dashboard />} />
@@ -52,6 +58,7 @@ function App() {
   <Route path="/shoppingcart" element={<ShoppingCart />}/>
   <Route path="/orderdetails" element={<TotalPayement />}/>
   <Route path="/success" element={<SuccessPage />}/>
+
 </Routes>
   );
 }

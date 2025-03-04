@@ -77,7 +77,7 @@ const StoreDetails = () => {
         console.log("🔍 API Response:", data);
 
         const successMessage = `"${product.product_name}" added to cart! 🛒`;
-        const errorMessage = `❌ Failed to add to cart: ${data.message || "Unknown error"}`;
+        const errorMessage = `Failed to add to cart: ${data.message || "Unknown error"}`;
 
         setCartMessages((prevMessages) => ({
             ...prevMessages,

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 import Navigationbar from '../components/NavBar';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -21,6 +22,7 @@ import userImage from '../assets/user.png';
 const Home = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
 
   // Fetch testimonials from the backend
   useEffect(() => {
@@ -64,7 +66,7 @@ const Home = () => {
             packed with flavor, and simple to follow – cooking has never been
             this easy!
           </p>
-          <button className="explore-button">Explore more Recipes</button>
+          <button className="explore-button" onClick={()=>{navigate("/recipes")}}>Explore more Recipes</button>
         </div>
         <div className="hero-image">
           <img src={IndexpageImage} alt="Healthy food" />
