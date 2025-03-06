@@ -46,4 +46,5 @@ router.post("/filterRecipes", recipeController.filterRecipes);
 router.post("/rate",recipeController.giveratings)
 router.get("/ingredients", recipeController.getIngridients);    
 router.post("/ingredients/create",recipeController.addIngridients)
+router.get("/creator/:id",recipeController.getRecipeById)
 module.exports = router;

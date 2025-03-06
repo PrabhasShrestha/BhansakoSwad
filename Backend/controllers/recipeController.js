@@ -25,40 +25,48 @@ const getAllRecipes = (req, res) => {
 
 
 const getRecipeById = (req, res) => {
-  const { id } = req.params;
-
-  const recipeQuery = `SELECT * FROM recipes WHERE id = ?`;
-  const ingredientsQuery = `
-      SELECT i.name, ri.amount 
-      FROM ingredients i 
-      JOIN recipe_ingredients ri ON i.id = ri.ingredient_id 
-      WHERE ri.recipe_id = ?`;
-  const methodsQuery = `SELECT step_number, description FROM methods WHERE recipe_id = ? ORDER BY step_number`;
-  const nutritionQuery = `SELECT nutrient, value FROM nutrition WHERE recipe_id = ?`;
-  const ratingQuery = `SELECT IFNULL(AVG(rating), 0) AS average_rating FROM ratings WHERE recipe_id = ?`;
-
-  db.query(recipeQuery, [id], (err, recipeResult) => {
-    if (err || recipeResult.length === 0) {
-      return res.status(404).json({ message: "Recipe not found" });
-    }
-
-    db.query(ingredientsQuery, [id], (err, ingredients) => {
-      db.query(methodsQuery, [id], (err, methods) => {
-        db.query(nutritionQuery, [id], (err, nutrition) => {
-          db.query(ratingQuery, [id], (err, ratingResult) => {
-            res.status(200).json({
-              ...recipeResult[0],
-              ingredients,
-              methods,
-              nutrition,
-              average_rating: ratingResult[0].average_rating,
+    const { id } = req.params;
+  
+    const recipeQuery = `
+        SELECT r.*, 
+               COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Bhansako Swad Team') AS creator_name
+        FROM recipes r
+        LEFT JOIN users u ON r.user_id = u.id
+        WHERE r.id = ?`;
+    
+    const ingredientsQuery = `
+        SELECT i.name, ri.amount 
+        FROM ingredients i 
+        JOIN recipe_ingredients ri ON i.id = ri.ingredient_id 
+        WHERE ri.recipe_id = ?`;
+    
+    const methodsQuery = `SELECT step_number, description FROM methods WHERE recipe_id = ? ORDER BY step_number`;
+    const nutritionQuery = `SELECT nutrient, value FROM nutrition WHERE recipe_id = ?`;
+    const ratingQuery = `SELECT IFNULL(AVG(rating), 0) AS average_rating FROM ratings WHERE recipe_id = ?`;
+  
+    db.query(recipeQuery, [id], (err, recipeResult) => {
+      if (err || recipeResult.length === 0) {
+        return res.status(404).json({ message: "Recipe not found" });
+      }
+  
+      db.query(ingredientsQuery, [id], (err, ingredients) => {
+        db.query(methodsQuery, [id], (err, methods) => {
+          db.query(nutritionQuery, [id], (err, nutrition) => {
+            db.query(ratingQuery, [id], (err, ratingResult) => {
+              res.status(200).json({
+                ...recipeResult[0],  // ✅ Now includes creator_name
+                ingredients,
+                methods,
+                nutrition,
+                average_rating: ratingResult[0].average_rating,
+              });
             });
           });
         });
       });
     });
-  });
-};
+  };
+  
 
 const updateRecipe = (req, res) => {
   const { id } = req.params;
@@ -354,6 +362,40 @@ const addIngridients = (req, res) => {
       res.status(201).json({ message: "Ingredient created", name });
   });
 };
+
+const getRecipeByUser = async (req, res) => {
+    try {
+        const recipeId = req.params.id;
+        const query = `
+            SELECT r.*, 
+                   COALESCE(CONCAT(u.first_name, ' ', u.last_name), 'Bhansako Swad Team') AS creator_name
+            FROM recipes r
+            LEFT JOIN users u ON r.user_id = u.id
+            WHERE r.id = ?;  -- Fetch recipe by its ID
+        `;
+
+        db.query(query, [recipeId], (err, result) => {
+            if (err) {
+                console.error("Error fetching recipe creator:", err);
+                return res.status(500).json({ success: false, message: "Server error" });
+            }
+
+            if (result.length === 0) {
+                return res.status(404).json({ success: false, message: "Recipe not found" });
+            }
+
+            console.log("Fetched Creator Name:", result[0]); // Debugging log
+            res.json(result[0]);  // Send recipe details including creator_name
+        });
+    } catch (error) {
+        console.error("Error fetching recipe creator:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+
+
 module.exports = {
   getAllRecipes,
   getRecipeById,
@@ -364,5 +406,6 @@ module.exports = {
   giveratings,
   createRecipe,
   getIngridients,
-  addIngridients
+  addIngridients,
+  getRecipeByUser
 };

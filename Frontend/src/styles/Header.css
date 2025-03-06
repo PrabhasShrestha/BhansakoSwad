@@ -202,12 +202,15 @@
   margin-right: 12px;
   display: flex;
   align-items: center;
+  max-width: 200px;
 }
 
 .toast-message {
   flex-grow: 1;
   font-size: 0.95rem;
   line-height: 1.4;
+  max-width: 600px;
+
 }
 
 .toast-close {

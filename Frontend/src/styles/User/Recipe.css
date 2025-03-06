@@ -74,7 +74,7 @@
     border-radius: 8px;
     max-width: 1100px;
     margin: -65px ;
-    margin-left: 230px;
+    margin-left: 290px;
     margin-bottom: 20px; /* Negative margin to pull images up into the black section */
      position: relative;
     z-index: 2;
@@ -235,7 +235,8 @@
 .icon {
     font-size: 38px;
     color: white;
-    margin: 0 10px;
+    margin-left: 10px;
+    margin-right: 10px;
     cursor: pointer;
     transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
 }
@@ -245,7 +246,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-right: 12px; /* Ensures spacing */
 }
 
 /* Add border only to icons except the last one */
@@ -337,3 +337,128 @@
     color: gray;
 }
 
+/* PremiumModal.css - Save this in src/styles/User/PremiumModal.css */
+.premium-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(3px);
+  }
+  
+  .premium-modal-container {
+    background-color: #f4f0ff;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    overflow: hidden;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  }
+  
+  .premium-modal-content {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .premium-modal-title {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    color: #000;
+    text-align: center;
+  }
+  
+  .premium-modal-description {
+    font-size: 16px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    max-width: 90%;
+  }
+  
+  .premium-modal-price {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: #000;
+  }
+  
+  .premium-modal-button {
+    background-color: #111;
+    color: white;
+    border: none;
+    padding: 14px 0;
+    width: 100%;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 25px;
+    transition: background-color 0.2s;
+  }
+  
+  .premium-modal-button:hover {
+    background-color: #333;
+  }
+  
+  .premium-modal-features {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    padding: 15px 20px;
+  }
+  
+  .premium-modal-features-title {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  .premium-modal-feature {
+    display: flex;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+  
+  .premium-modal-check {
+    color: #9370DB;
+    font-size: 18px;
+    font-weight: bold;
+    margin-right: 10px;
+    min-width: 20px;
+  }
+  
+  .premium-modal-feature p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #333;
+  }
+
+  .back-modal-button{
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 14px 0;
+    width: 70%;
+    margin-left: 60px;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 25px;
+    transition: background-color 0.2s;
+  }
+
+  .back-modal-button:hover{
+    background-color: rgb(239, 125, 125);
+  }

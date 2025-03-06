@@ -5,6 +5,7 @@ const randomstring = require('randomstring');
 const sendMail = require('../helpers/sendMail');
 const jwt =require('jsonwebtoken');
 const {JWT_SECRET} = process.env;
+const axios = require("axios");
 
 const register = (req, res) => {
     const errors = validationResult(req);
@@ -861,6 +862,159 @@ const sendContactEmail = async (req, res) => {
   }
 };
 
+const initiatePremiumPayment = async (req, res) => {
+    try {
+        const { totalAmount, userId, customerInfo } = req.body;
+
+        // Step 1: Insert a pending subscription entry before payment
+        db.query(
+            "INSERT INTO premium_subscriptions (user_id, amount, status) VALUES (?, ?, 'pending')",
+            [userId, totalAmount],
+            async (err, result) => {
+                if (err) {
+                    console.error("Database Error:", err);
+                    return res.status(500).json({ success: false, message: "Failed to insert pending subscription" });
+                }
+
+                // Step 2: Initiate Khalti Payment
+                const response = await axios.post(
+                    "https://a.khalti.com/api/v2/epayment/initiate/",
+                    {
+                        return_url: "http://localhost:5173/premiumsuccess",
+                        website_url: "http://localhost:5173/",
+                        amount: totalAmount * 100,
+                        purchase_order_id: userId,  // Using user ID as reference
+                        purchase_order_name: "Premium Subscription",
+                        customer_info: customerInfo
+                    },
+                    {
+                        headers: {
+                            "Authorization": `Key ${process.env.KHALTI_SECRET_KEY}`,
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+
+                if (response.data.payment_url) {
+                    res.json({ success: true, paymentUrl: response.data.payment_url });
+                } else {
+                    res.status(400).json({ success: false, message: "Payment initiation failed", error: response.data });
+                }
+            }
+        );
+    } catch (error) {
+        console.error("Khalti Payment Error:", error.response?.data || error.message);
+        res.status(500).json({ error: error.response?.data || "Internal Server Error" });
+    }
+};
+
+// 🔹 Confirm Premium Payment & Activate Subscription
+const confirmPremiumPayment = (req, res) => {
+  console.log("Received Payment Confirmation Data:", req.body); // ✅ Log Request Data
+
+  const { user_id, payment_date, amount, email } = req.body;
+
+  if (!user_id || !amount || !payment_date) {
+      return res.status(400).json({ success: false, message: "User ID, Amount, and Payment Date are required." });
+  }
+
+  if (!email) { 
+      console.error("Error: Email is missing for user ID", user_id);
+      return res.status(400).json({ success: false, message: "User email is required." });
+  }
+
+  const startDate = new Date(payment_date);
+  const endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + 1);  // 1-month premium subscription
+
+  db.query(
+      "UPDATE premium_subscriptions SET start_date = ?, end_date = ?, status = 'active' WHERE user_id = ? AND status = 'pending'",
+      [startDate, endDate, user_id],
+      (err, result) => {
+          if (err) {
+              console.error("Database Error:", err);
+              return res.status(500).json({ success: false, message: "Failed to activate premium subscription" });
+          }
+
+          try {
+              const mailSubject = "Premium Subscription Activated - Bhansako Swad";
+              const content = `
+                  <div style="font-family: Arial, sans-serif; background-color: #f8f8f8; padding: 20px;">
+                      <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                          <h2 style="text-align: center; color: #4caf50;">Welcome to Premium Membership!</h2>
+                          <p style="font-size: 16px; color: #333;">
+                              <strong>Plan:</strong> Monthly<br>
+                              <strong>Amount Paid:</strong> Rs ${amount}<br>
+                              <strong>Start Date:</strong> ${startDate.toLocaleString()}<br>
+                              <strong>End Date:</strong> ${endDate.toLocaleString()}
+                          </p>
+                          <p style="font-size: 16px; color: #333;">Enjoy exclusive premium content & features!</p>
+                          <p style="font-size: 16px; color: #333;">Best regards,<br>Bhansako Swad Team</p>
+                      </div>
+                  </div>
+              `;
+
+              sendMail(email, mailSubject, content);
+          } catch (emailError) {
+              console.error("Error sending email:", emailError);
+          }
+
+          res.json({ success: true, message: "Premium subscription activated successfully" });
+      }
+  );
+};
+
+
+
+const expireSubscriptions = () => {
+  db.query(
+      "UPDATE premium_subscriptions SET status = 'expired' WHERE end_date < NOW() AND status = 'active'",
+      (err, result) => {
+          if (err) {
+              console.error("Error expiring subscriptions:", err);
+          } else {
+              console.log(`Expired ${result.affectedRows} subscriptions.`);
+          }
+      }
+  );
+};
+const PremiumStatus = async (req, res) => {
+  try {
+      const userId = req.user?.id; // Ensure user ID exists
+
+      if (!userId) {
+          return res.status(400).json({ success: false, message: "User ID is required" });
+      }
+
+      console.log(`Checking premium status for user: ${userId}`);
+
+      db.query(
+          "SELECT status FROM premium_subscriptions WHERE user_id = ? AND status = 'active' LIMIT 1",
+          [userId],
+          (error, results) => {
+              if (error) {
+                  console.error("Database query error:", error);
+                  return res.status(500).json({ success: false, message: "Server error" });
+              }
+
+              if (results.length > 0) {
+                  console.log(`User ${userId} is Premium`);
+                  return res.json({ success: true, isPremium: true });
+              } else {
+                  console.log(`User ${userId} is NOT Premium`);
+                  return res.json({ success: true, isPremium: false });
+              }
+          }
+      );
+  } catch (error) {
+      console.error("Error checking premium status:", error);
+      return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
+
 module.exports = {
   register,
   verifyCode,
@@ -879,5 +1033,9 @@ module.exports = {
   getStores,
   getNotification,
   deleteNotification,
-  sendContactEmail
+  sendContactEmail,
+  initiatePremiumPayment,
+  confirmPremiumPayment,
+  expireSubscriptions,
+  PremiumStatus,
 };

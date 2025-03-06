@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import '../../styles/User/Recipe.css'
+// Import the CSS for premium modal
 import { IoFastFoodSharp } from "react-icons/io5";
-import { FaSearch, FaTrash, FaFish, FaDrumstickBite, FaBreadSlice, FaCarrot, FaLeaf, FaHeart, FaPlus, FaUtensils } from "react-icons/fa";
+import { FaSearch, FaTrash, FaFish, FaDrumstickBite, FaBreadSlice, FaCarrot, FaLeaf, FaHeart, FaPlus, FaUtensils, FaPizzaSlice  } from "react-icons/fa";
+import { GiChefToque, GiCookingPot } from "react-icons/gi";
 import Navigationbar from "../../components/NavBar";
 import Navbar from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -32,6 +34,7 @@ const MainRecipe = () => {
     const isLoggedIn = localStorage.getItem("token") !== null;
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
+    const [showPremiumModal, setShowPremiumModal] = useState(false); // State for premium modal
     const [recipes, setRecipes] = useState([])
     const [selectedCategory, setSelectedCategory] = useState("All")
     const [searchTerm, setSearchTerm] = useState(""); 
@@ -39,8 +42,33 @@ const MainRecipe = () => {
     const [selectedIngredients, setSelectedIngredients] = useState([]);
     const [filteredRecipes, setFilteredRecipes] = useState([]); 
     const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [isPremium, setIsPremium] = useState(false);
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        const fetchPremiumStatus = async () => {
+            try {
+                const userResponse = await axios.get("http://localhost:3000/api/get-user", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+    
+                if (userResponse.data.success) {
+                    console.log("User Data:", userResponse.data.data);
+                    setIsPremium(userResponse.data.data.is_premium);
+                }
+    
+                const premiumResponse = await axios.get("http://localhost:3000/api/check-premium-status", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+    
+                if (premiumResponse.data.success) {
+                    console.log("Premium Status:", premiumResponse.data.isPremium);
+                    setIsPremium(premiumResponse.data.isPremium);
+                }
+            } catch (error) {
+                console.error("Error fetching premium status:", error);
+            }
+        };
         // Fetch search results
         axios.get(`http://localhost:3000/api/recipe/search?query=${searchTerm}`)
         .then((response) => {
@@ -58,6 +86,7 @@ const MainRecipe = () => {
             .catch((error) => {
                 console.error("Error fetching recipes:", error);
             });
+            fetchPremiumStatus();
     }, [searchTerm]);
 
     const addIngredient = (ingredient) => {
@@ -103,6 +132,29 @@ const MainRecipe = () => {
             .catch((error) => {
                 console.error("Error refreshing recipes:", error);
             });
+    };
+
+    const handleCategoryClick = (category) => {
+        if (category === "Chef Recipes" && !isPremium) {
+            // Show premium modal instead of alert
+            if (isLoggedIn) {
+                console.log("User is NOT premium, showing upgrade modal.");
+                setShowPremiumModal(true);
+            } else {
+                alert("You must be logged in to access Chef Recipes.");
+            }
+        } else {
+            setSelectedCategory(category);
+        }
+    };
+
+    const handleGoPremium = () => {
+        localStorage.setItem("premium_plan", JSON.stringify({
+            plan: "Monthly Premium",
+            price: 1500
+        }));
+    
+        navigate("/paymentdetails");
     };
 
     return(
@@ -196,6 +248,22 @@ const MainRecipe = () => {
                             <div className="icon-wrapper" data-tooltip="Vegan" onClick={() => setSelectedCategory("Vegan")}>
                                 <FaLeaf className="icon" />
                             </div>
+                            <div className="icon-wrapper" data-tooltip="Cuisine" onClick={() => setSelectedCategory("Cuisine")}>
+                                <GiCookingPot className="icon" />
+                            </div>
+                            <div
+                                className="icon-wrapper"
+                                data-tooltip="Chef Recipes"
+                                onClick={() => {
+                                    if (!isLoggedIn) {
+                                        alert("You must be logged in to access Chef Recipes.");
+                                        return;
+                                    }
+                                    handleCategoryClick("Chef Recipes");
+                                }}
+                                >
+                                <GiChefToque  className="icon" />
+                            </div>
                             <div className="icon-wrapper" data-tooltip="Favorites" onClick={() => setSelectedCategory("Favorites")}>
                                 <FaHeart className="icon" />
                             </div>
@@ -244,16 +312,71 @@ const MainRecipe = () => {
                 </div>
             </div>
             
-            
+            {/* Recipe Modal */}
             <RecipeModal 
                 isOpen={showModal} 
                 onClose={() => setShowModal(false)}
                 onSubmit={handleRecipeSubmit}
             />
             
+            {/* Premium Modal */}
+            {showPremiumModal && (
+                <div className="premium-modal-overlay">
+                    <div className="premium-modal-container">
+                        <div className="premium-modal-content">
+                            <h2 className="premium-modal-title">Premium</h2>
+                            <p className="premium-modal-description">
+                                Unlock the full potential of your culinary journey with our
+                                Premium Membership!
+                            </p>
+                            
+                            <div className="premium-modal-price">
+                                <span>Rs 1500/month</span>
+                            </div>
+                            
+                            <button className="premium-modal-button" onClick={handleGoPremium}>
+                                Go Premium
+                            </button>
+                            
+                            <div className="premium-modal-features">
+                                <h3 className="premium-modal-features-title">Exclusive Chef Access</h3>
+                                
+                                <div className="premium-modal-feature">
+                                    <div className="premium-modal-check">✓</div>
+                                    <p>Access exclusive, chef-crafted recipes tailored to your tastes and dietary needs</p>
+                                </div>
+                                
+                                <div className="premium-modal-feature">
+                                    <div className="premium-modal-check">✓</div>
+                                    <p>Be the first to try new features and seasonal recipe collection</p>
+                                </div>
+                                
+                                <div className="premium-modal-feature">
+                                    <div className="premium-modal-check">✓</div>
+                                    <p>Unlock all these benefits for just Rs1500/month, with no hidden fees.</p>
+                                </div>
+                                
+                                <div className="premium-modal-feature">
+                                    <div className="premium-modal-check">✓</div>
+                                    <p>Explore a growing library of chef-exclusive recipes designed to inspire your cooking.</p>
+                                </div>
+                                
+                                <div className="premium-modal-feature">
+                                    <div className="premium-modal-check">✓</div>
+                                    <p>Discover secret ingredients and methods used by professional chefs in their recipes.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button className="back-modal-button" onClick={() => setShowPremiumModal(false)}>
+                            Back
+                        </button>
+                    </div>
+                </div>
+            )}
+            
             {isLoggedIn ? <Footer/> : <FooterBefore />}
         </div>
-    )
-}
+    );
+};
 
 export default MainRecipe;

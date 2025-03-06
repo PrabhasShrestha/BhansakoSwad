@@ -82,4 +82,9 @@ router.get('/notifications/:userId',userController.getNotification)
 router.delete("/notifications/:userId", userController.deleteNotification);
 
 router.post('/contact',userController.sendContactEmail)
+
+router.get("/check-premium-status", auth.isAuthorize,userController.PremiumStatus)
+router.post("/initiate-premium", userController.initiatePremiumPayment);
+router.post("/confirm-premium", userController.confirmPremiumPayment);
+router.get("/confirm-premium", userController.confirmPremiumPayment);
 module.exports = router;

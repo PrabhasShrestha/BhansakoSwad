@@ -18,7 +18,7 @@ const RecipeDetails = () => {
     const [hover, setHover] = useState(0)
     const isLoggedIn = localStorage.getItem("token") !== null;
     const [toast, setToast] = useState(null);
-
+    const [creatorName, setCreatorName] = useState("Bhansako Swad Team");
     useEffect(() => {
         const fetchRecipeDetails = async () => {
             try {
@@ -31,8 +31,23 @@ const RecipeDetails = () => {
                 setLoading(false);
             }
         };
+    
+        const fetchRecipeCreator = async () => {
+            try {
+                const response = await axios.get(`http://localhost:3000/api/recipe/creator/${id}`);
+                if (response.data.creator_name) {
+                    setCreatorName(response.data.creator_name);  // ✅ Correctly store creator name
+                }
+            } catch (err) {
+                console.error("Error fetching creator:", err);
+            }
+        };
+    
         fetchRecipeDetails();
+        fetchRecipeCreator(); // Fetch creator name separately
+    
     }, [id]);
+    
 
     const handleRatingSubmit = async () => {
         const userId = localStorage.getItem("userId");
@@ -144,42 +159,46 @@ const RecipeDetails = () => {
                                     
                                 ))}
                                 <div className="recipebottom">
-                               <button className="translate-btn">Translate to Nepali</button>
+                                <div className="translation-container">
+                                    <button className="translate-btn">Translate to Nepali</button>
+                                    <p className="translated-text"><strong>Created by:</strong> {creatorName}</p>
+
+                               </div>
                                <div className="rating-section">            
-                <h3>Rate this Recipe:</h3>
-                <div className="star-ratings">
-                {[...Array(5)].map((_, index) => {
-                    const currentRating = index + 1;
-                    return (
-                        <FaStar
-                            key={index}
-                            className="star"
-                            size={24}
-                            onMouseEnter={() => setHover(currentRating)}
-                            onMouseLeave={() => setHover(0)}
-                            onClick={() => setRating(currentRating)}
-                            color={currentRating <= (hover || rating) ? "#FFD700" : "#ccc"}
-                        />
-                    );
-                })}
-            </div>
+                                <h3>Rate this Recipe:</h3>
+                                <div className="star-ratings">
+                                {[...Array(5)].map((_, index) => {
+                                    const currentRating = index + 1;
+                                    return (
+                                        <FaStar
+                                            key={index}
+                                            className="star"
+                                            size={24}
+                                            onMouseEnter={() => setHover(currentRating)}
+                                            onMouseLeave={() => setHover(0)}
+                                            onClick={() => setRating(currentRating)}
+                                            color={currentRating <= (hover || rating) ? "#FFD700" : "#ccc"}
+                                        />
+                                    );
+                                })}
+                            </div>
 
-            <button onClick={handleRatingSubmit} className="submit-review-btn">Submit Rating</button>
-            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-            </div>
-            </div>
-                                </>
-                            ) : (
-                                <p>No cooking steps available.</p>
-                            )}
+                        <button onClick={handleRatingSubmit} className="submit-review-btn">Submit Rating</button>
+                        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
                         </div>
+                        </div>
+                                            </>
+                                        ) : (
+                                            <p>No cooking steps available.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {isLoggedIn ? <Footer /> : <FooterBefore />}
                     </div>
-                </div>
-            </div>
+                );
+            };
 
-            {isLoggedIn ? <Footer /> : <FooterBefore />}
-        </div>
-    );
-};
-
-export default RecipeDetails;
+            export default RecipeDetails;

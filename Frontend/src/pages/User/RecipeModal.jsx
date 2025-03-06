@@ -249,7 +249,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                                 amount: e.target.value
                             })}
                         />
-                        <button onClick={addIngredient}>
+                        <button className='add-recipe-ingridients' onClick={addIngredient}>
                             <FaPlus /> Add Ingredient
                         </button>
                     </div>
@@ -262,7 +262,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                             value={newIngredientName} 
                             onChange={(e) => setNewIngredientName(e.target.value)} 
                         />
-                        <button onClick={addNewIngredient}>
+                        <button className='create-recipe-ingridient' onClick={addNewIngredient}>
                             <FaPlus /> Create Ingredient
                         </button>
                     </div>

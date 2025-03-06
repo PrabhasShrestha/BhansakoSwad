@@ -9,6 +9,7 @@ const cartRouter = require('./routes/cartRoute.js')
 const khaltiPaymentRouter = require('./routes/khaltiPayment.js')
 const recipeRouter = require('./routes/recipeRoute.js')
 const bodyParser = require('body-parser');
+const {expireSubscriptions} = require('./controllers/userController.js')
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/recipe', recipeRouter)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/images', express.static(path.join(__dirname, 'images')));
 
+setInterval(expireSubscriptions, 24 * 60 * 60 * 1000);
 
 // Handle 404 errors
 app.use((req, res, next) => {

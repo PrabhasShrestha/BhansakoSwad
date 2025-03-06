@@ -2,6 +2,7 @@
   "dependencies": {
     "chart.js": "^4.4.7",
     "khalti-checkout-web": "^2.2.0",
+    "lucide-react": "^0.477.0",
     "multer": "^1.4.5-lts.1",
     "nodemon": "^3.1.9",
     "react-chartjs-2": "^5.3.0"

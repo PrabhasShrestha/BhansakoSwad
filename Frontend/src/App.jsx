@@ -26,6 +26,8 @@ import OrderPage from "./pages/Vendor/Orders";
 import ContactSection from "./pages/User/ContactUs";
 import MainRecipe from "./pages/User/Recipe";
 import RecipeDetails from "./pages/User/RecipeDetails";
+import PremiumPayment from "./pages/User/PremiumPayment";
+import PremiumSuccessPage from "./pages/User/PremiumSuccessPage";
 
 
 
@@ -57,7 +59,9 @@ function App() {
   <Route path="/product/:id" element={<ProductDetails />}/>
   <Route path="/shoppingcart" element={<ShoppingCart />}/>
   <Route path="/orderdetails" element={<TotalPayement />}/>
+  <Route path="/paymentdetails" element={<PremiumPayment/>}/>
   <Route path="/success" element={<SuccessPage />}/>
+  <Route path="/premiumsuccess" element={<PremiumSuccessPage />}/>
 
 </Routes>
   );
