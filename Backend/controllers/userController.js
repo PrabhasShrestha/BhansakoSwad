@@ -466,9 +466,9 @@ const resetPassword = (req, res) => {
   
         const userName = results[0].user_name;
   
-        // Insert the review into the testimonials table
-        const query = 'INSERT INTO testimonials (user_id, user_name, text) VALUES (?, ?, ?)';
-        db.query(query, [userId, userName, text], (err) => {
+        // Insert the review into the testimonials table with a default status of 'pending'
+        const query = 'INSERT INTO testimonials (user_id, user_name, text, status) VALUES (?, ?, ?, ?)';
+        db.query(query, [userId, userName, text, 'pending'], (err) => {
           if (err) {
             console.error('Error saving review:', err);
             return res.status(500).json({ message: 'Internal Server Error' });
@@ -479,12 +479,12 @@ const resetPassword = (req, res) => {
       }
     );
   };
-
-  const getTestimonial = async (req, res) => {
+  
+  const getAllTestimonials = async (req, res) => {
     try {
       db.query(
         `
-        SELECT t.id, t.text, u.first_name, u.last_name, u.image
+        SELECT t.id, t.text, t.status, u.first_name, u.last_name, u.image
         FROM testimonials t
         JOIN users u ON t.user_id = u.id
         `,
@@ -493,15 +493,39 @@ const resetPassword = (req, res) => {
             console.error('Database query error:', error);
             return res.status(500).json({ message: 'Failed to fetch testimonials' });
           }
-
   
-          // Ensure testimonials is an array
-          if (!Array.isArray(testimonials)) {
-            console.error('Unexpected database result:', testimonials);
-            return res.status(500).json({ message: 'Invalid data format from database' });
+          res.status(200).json({
+            testimonials: testimonials.map((testimonial) => ({
+              id: testimonial.id,
+              text: testimonial.text,
+              status: testimonial.status,
+              user_name: `${testimonial.first_name} ${testimonial.last_name}`,
+              user_image: testimonial.image,
+            })),
+          });
+        }
+      );
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
+  };
+
+  const getApprovedTestimonials = async (req, res) => {
+    try {
+      db.query(
+        `
+        SELECT t.id, t.text, u.first_name, u.last_name, u.image
+        FROM testimonials t
+        JOIN users u ON t.user_id = u.id
+        WHERE t.status = 'approved'
+        `,
+        (error, testimonials) => {
+          if (error) {
+            console.error('Database query error:', error);
+            return res.status(500).json({ message: 'Failed to fetch testimonials' });
           }
   
-          // Transform and send response
           res.status(200).json({
             testimonials: testimonials.map((testimonial) => ({
               id: testimonial.id,
@@ -517,6 +541,38 @@ const resetPassword = (req, res) => {
       res.status(500).json({ message: 'Failed to fetch testimonials' });
     }
   };
+  
+  const updateTestimonialStatus = (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+  
+    // Validate that the status is one of the accepted values
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status.' });
+    }
+  
+    const query = 'UPDATE testimonials SET status = ? WHERE id = ?';
+    db.query(query, [status, id], (err, result) => {
+      if (err) {
+        console.error('Error updating testimonial status:', err);
+        return res.status(500).json({ message: 'Internal Server Error' });
+      }
+      res.status(200).json({ message: 'Testimonial status updated successfully.' });
+    });
+  };
+
+  const deleteTestimonial = (req, res) => {
+    const { id } = req.params;
+    const query = 'DELETE FROM testimonials WHERE id = ?';
+    db.query(query, [id], (err, result) => {
+      if (err) {
+        console.error('Error deleting testimonial:', err);
+        return res.status(500).json({ message: 'Internal Server Error' });
+      }
+      res.status(200).json({ message: 'Testimonial deleted successfully.' });
+    });
+  };
+  
   
   const updateProfile = (req, res) => {
     const errors = validationResult(req);
@@ -1024,7 +1080,10 @@ module.exports = {
   resendCode,
   saveTestimonial,
   resetPassword,
-  getTestimonial,
+  getAllTestimonials,
+  getApprovedTestimonials,
+  updateTestimonialStatus,
+  deleteTestimonial,
   updateProfile,
   removeImage,
   uploadImage,

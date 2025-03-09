@@ -1,18 +1,32 @@
 import React, { useEffect, useState } from "react";
 import '../styles/Header.css';
-import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes } from "react-icons/fa";
+import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle } from "react-icons/fa";
 
 const Toast = ({ type, message, onClose, duration = 3000 }) => {
   const [isVisible, setIsVisible] = useState(true);
+  const [progress, setProgress] = useState(100);
 
   useEffect(() => {
+    // Handle the progress bar animation
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        const newProgress = prev - (100 / (duration / 100));
+        return newProgress <= 0 ? 0 : newProgress;
+      });
+    }, 100);
+
+    // Handle the toast visibility
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(() => {
+        onClose();
       }, 300); // Allow time for exit animation
     }, duration);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(progressInterval);
+    };
   }, [duration, onClose]);
 
   const getIcon = () => {
@@ -22,7 +36,6 @@ const Toast = ({ type, message, onClose, duration = 3000 }) => {
       case "error":
         return <FaExclamationTriangle />;
       case "info":
-        return <FaInfoCircle />;
       default:
         return <FaInfoCircle />;
     }
@@ -30,14 +43,11 @@ const Toast = ({ type, message, onClose, duration = 3000 }) => {
 
   return (
     <div className={`toast ${type} ${isVisible ? "show" : "hide"}`}>
-      <div className="toast-icon">{getIcon()}</div>
-      <div className="toast-message">{message}</div>
-      <button className="toast-close" onClick={() => {
-        setIsVisible(false);
-        setTimeout(onClose, 300);
-      }}>
-        <FaTimes />
-      </button>
+      <div className="toast-content">
+        <div className="toast-icon">{getIcon()}</div>
+        <div className="toast-message">{message}</div>
+      </div>
+      <div className="toast-progress" style={{ width: `${progress}%` }}></div>
     </div>
   );
 };

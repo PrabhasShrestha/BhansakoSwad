@@ -28,6 +28,13 @@ import MainRecipe from "./pages/User/Recipe";
 import RecipeDetails from "./pages/User/RecipeDetails";
 import PremiumPayment from "./pages/User/PremiumPayment";
 import PremiumSuccessPage from "./pages/User/PremiumSuccessPage";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import AdminOrders from "./pages/Admin/AdminOrder";
+import AdminTestimonials from "./pages/Admin/AdminTestimonial";
+import AdminProducts from "./pages/Admin/AdminProducts";
+import AdminUserPanel from "./pages/Admin/AdminUser";
+import AdminRecipePanel from "./pages/Admin/AdminRecipe";
+import ChefApproval from "./pages/Admin/AdminChef";
 
 
 
@@ -62,7 +69,13 @@ function App() {
   <Route path="/paymentdetails" element={<PremiumPayment/>}/>
   <Route path="/success" element={<SuccessPage />}/>
   <Route path="/premiumsuccess" element={<PremiumSuccessPage />}/>
-
+  <Route path="/admindashboard" element={<AdminDashboard />}/>
+  <Route path="/adminorder" element={<AdminOrders />}/>
+  <Route path="/admintestimonials" element={<AdminTestimonials />}/>
+  <Route path="/adminproducts" element={<AdminProducts />}/>
+  <Route path="/adminuserpanel" element={<AdminUserPanel/>}/>
+  <Route path="/adminrecipes" element={<AdminRecipePanel/>}/>
+  <Route path="/adminchef" element={<ChefApproval/>}/>
 </Routes>
   );
 }

@@ -5,7 +5,7 @@
   align-items: center;
   margin-top: 20px;
   padding: 10px 40px;
-  background-color: #fff; /* White background */
+  background-color: #fff !important; /* White background */
   top: 0; /* Ensures it stays at the top */
   z-index: 1000; /* Keeps it above other elements */
   width: 100%; /* Ensures it spans the full width of the screen */
@@ -142,147 +142,126 @@
   margin-top: 5px;
 }
 
-/* Toast.css */
-.toast-container {
+/* Toast Container Styles */
+.toast {
   position: fixed;
   top: 20px;
-  right: 20px;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.toast {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  border-radius: 8px;
-  min-width: 280px;
-  max-width: 400px;
+  margin-left: 1200px;
+  max-width: 450px;
+  max-height: 70px;
+  background-color: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  font-family: 'Poppins', sans-serif;
-  animation: slideIn 0.3s ease-out forwards;
-  opacity: 0;
-  transform: translateX(50px);
+  border-radius: 6px;
+  z-index: 9999;
+  overflow: hidden;
+  transform: translateX(110%);
+  transition: transform 0.3s ease-in-out;
 }
 
 .toast.show {
-  animation: slideIn 0.3s ease-out forwards;
+  transform: translateX(0);
 }
 
 .toast.hide {
-  animation: slideOut 0.3s ease-in forwards;
+  transform: translateX(110%);
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideOut {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(50px);
-  }
+/* Toast Content Styles */
+.toast-content {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 10px;
+ 
 }
 
 .toast-icon {
-  font-size: 1.2rem;
   margin-right: 12px;
-  display: flex;
-  align-items: center;
-  max-width: 200px;
-}
-
-.toast-message {
-  flex-grow: 1;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  max-width: 600px;
-
-}
-
-.toast-close {
-  background: none;
-  border: none;
-  cursor: pointer;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  padding: 0;
-  margin-left: 10px;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  color: inherit;
 }
 
-.toast-close:hover {
-  opacity: 1;
+.toast-message {
+  flex: 1;
+  font-size: 14px;
 }
 
-/* Toast types */
+/* Toast Types */
 .toast.success {
-  background-color: #eefaf1;
-  border-left: 4px solid #28a745;
-  color: #175928;
+  border-left: 4px solid #4caf50;
 }
 
 .toast.success .toast-icon {
-  color: #28a745;
+  color: #4caf50;
 }
 
 .toast.error {
-  background-color: #feecef;
-  border-left: 4px solid #dc3545;
-  color: #921925;
+  border-left: 4px solid #f44336;
 }
 
 .toast.error .toast-icon {
-  color: #dc3545;
+  color: #f44336;
 }
 
 .toast.info {
-  background-color: #e6f3ff;
-  border-left: 4px solid #17a2b8;
-  color: #0c525d;
+  border-left: 4px solid #2196f3;
 }
 
 .toast.info .toast-icon {
-  color: #17a2b8;
+  color: #2196f3;
 }
 
-.toast.warning {
-  background-color: #fff8e6;
-  border-left: 4px solid #ffc107;
-  color: #856404;
+/* Progress Bar */
+.toast-progress {
+  height: 3px;
+  background-color: currentColor;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  opacity: 0.7;
+  transition: width 0.1s linear;
 }
 
-.toast.warning .toast-icon {
-  color: #ffc107;
+.toast.success .toast-progress {
+  background-color: #4caf50;
 }
 
-/* Responsive adjustments */
-@media (max-width: 480px) {
-  .toast {
-    min-width: auto;
-    max-width: 90vw;
-    width: 90vw;
-    right: 5vw;
-  }
-  
-  .toast-message {
-    font-size: 0.85rem;
-  }
+.toast.error .toast-progress {
+  background-color: #f44336;
+}
+
+.toast.info .toast-progress {
+  background-color: #2196f3;
+}
+
+/* Example: position your dropdown absolutely under the icon */
+.user-dropdown-container {
+  position: relative;
+}
+
+.user-dropdown-menu {
+  position: absolute;
+  top: 48px; /* adjust to your liking */
+  right: 0;  /* align to right if you prefer */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 170px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  z-index: 999;
+}
+
+/* Each item’s style */
+.user-dropdown-menu .dropdown-item {
+  display: block;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #333;
+  transition: background 0.2s;
+}
+.user-dropdown-menu .dropdown-item:hover {
+  background-color: #f2f2f2;
 }

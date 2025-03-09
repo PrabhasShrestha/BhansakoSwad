@@ -474,6 +474,7 @@ const ProfilePage = () => {
                 >
               <FiLogOut className="logout-icon" /> Logout
               </p>
+      
       </div>
       <Footer/>
     </div>

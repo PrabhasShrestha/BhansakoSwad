@@ -73,8 +73,12 @@ router.post(
 router.post("/upload-image", auth.isAuthorize, upload.single('image'), userController.uploadImage);
 router.delete("/remove-image", auth.isAuthorize, userController.removeImage);
 router.get('/get-user', auth.isAuthorize, userController.getUser);
+
 router.post('/testimonials', auth.isAuthorize, userController.saveTestimonial);
-router.get('/testimonials', userController.getTestimonial);
+router.get('/gettestimonials', userController.getAllTestimonials);
+router.post('/testimonials/:id',userController.updateTestimonialStatus)
+router.get('/getapprovedtestimonials',userController.getApprovedTestimonials)
+
 router.post('/logout', auth.isAuthorize, userController.logout);
 router.get('/getstore',userController.getStores)
 

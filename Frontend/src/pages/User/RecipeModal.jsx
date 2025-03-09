@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Toast from "../../components/ToastNoti"; // Adjust the path if needed
+import Toast from "../../components/ToastNoti";
 import { FaPlus, FaTrash } from 'react-icons/fa';
 
 const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
@@ -9,7 +9,8 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     const [cookingTime, setCookingTime] = useState('');
     const [category, setCategory] = useState('');
     const [image, setImage] = useState(null);
-    const [toast, setToast] = useState({ show: false, message: "", type: "" });
+    const [cuisine, setCuisine] = useState('');
+    const [toast, setToast] = useState(null); // Changed to match the Toast component's expected props
     const [ingredients, setIngredients] = useState([]);
     const [availableIngredients, setAvailableIngredients] = useState([]);
     const [currentIngredient, setCurrentIngredient] = useState({
@@ -30,20 +31,34 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
 
     // Fetch available ingredients on component mount
     useEffect(() => {
-        axios.get("http://localhost:3000/api/recipe/ingredients")
-            .then(response => {
-                setAvailableIngredients(response.data);
-            })
-            .catch(error => {
-                console.error("Error fetching ingredients:", error);
-            });
-    }, []);
+        if (isOpen) { // Only fetch when modal is open
+            axios.get("http://localhost:3000/api/recipe/ingredients")
+                .then(response => {
+                    setAvailableIngredients(response.data);
+                })
+                .catch(error => {
+                    console.error("Error fetching ingredients:", error);
+                    showToast("Failed to load ingredients", "error");
+                });
+        }
+    }, [isOpen]);
+
+    // Toast helper function
+    const showToast = (message, type) => {
+        setToast({ message, type });
+        // Auto clear toast after duration
+        setTimeout(() => {
+            setToast(null);
+        }, 3000);
+    };
 
     // Add a new ingredient to the list
     const addIngredient = () => {
         if (currentIngredient.name && currentIngredient.amount) {
             setIngredients([...ingredients, currentIngredient]);
             setCurrentIngredient({ name: '', amount: '' });
+        } else {
+            showToast("Please select an ingredient and specify amount", "info");
         }
     };
 
@@ -61,10 +76,14 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                 .then(response => {
                     setAvailableIngredients([...availableIngredients, { name: newIngredientName }]);
                     setNewIngredientName('');
+                    showToast(`Ingredient "${newIngredientName}" added successfully`, "success");
                 })
                 .catch(error => {
                     console.error("Error adding new ingredient:", error);
+                    showToast("Failed to add new ingredient", "error");
                 });
+        } else {
+            showToast("Please enter an ingredient name", "info");
         }
     };
 
@@ -105,24 +124,22 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
 
     // Submit recipe
     const handleSubmitRecipe = () => {
-
-        const token = localStorage.getItem("token");
         // Validate required fields
         if (!recipeName || !difficulty || !cookingTime || !category) {
-            setToast({ show: true, message: "Please fill in all required fields", type: "error" });
+            showToast("Please fill in all required fields", "error");
             return;
         }
     
         // Validate ingredients
         if (ingredients.length === 0) {
-            setToast({ show: true, message: "Please add at least one ingredient", type: "error"});
+            showToast("Please add at least one ingredient", "error");
             return;
         }
     
         // Validate methods
         const validMethods = methods.filter(method => method.description.trim() !== '');
         if (validMethods.length === 0) {
-            setToast({ show: true, message: "Please add at least one cooking method step", type: "error"});
+            showToast("Please add at least one cooking method step", "error");
             return;
         }
     
@@ -132,6 +149,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
             cooking_time: cookingTime,
             category: category,
             ingredients: ingredients,
+            cuisine: cuisine,
             methods: validMethods,
             nutrition: nutrition.filter(n => n.nutrient && n.value)
         };
@@ -155,18 +173,20 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${localStorage.getItem("token")}`,
-                
             }
         })
         .then(response => {
             console.log("Recipe added successfully", response.data);
             resetForm();
-            onClose();
-            onSubmit(); // Call the onSubmit callback to refresh recipes
+            showToast("Recipe added successfully!", "success");
+            setTimeout(() => {
+                onClose();
+                onSubmit(); // Call the onSubmit callback to refresh recipes
+            }, 1000); // Small delay to let user see the success message
         })
         .catch(error => {
             console.error("Error adding recipe:", error.response?.data || error);
-            setToast({ show: true, message: "Failed to add recipe. Please check your inputs.", type: "error"});
+            showToast("Failed to add recipe. Please check your inputs.", "error");
         });
     };
 
@@ -185,9 +205,18 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
 
     return (
         <div className="recipemodal-overlay">
+            {/* Toast should be at the top level for visibility */}
+            {toast && (
+                <Toast
+                    type={toast.type}
+                    message={toast.message}
+                    onClose={() => setToast(null)}
+                />
+            )}
+            
             <div className="recipemodal-content">
                 <h2>Add New Recipe</h2>
-                    <div className="recipe-form-section">
+                <div className="recipe-form-section">
                     <h3>Recipe Basics</h3>
                     <input 
                         type="text" 
@@ -216,9 +245,24 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                     >
                         <option value="">Select Category</option>
                         <option value="Vegetarian">Vegetarian</option>
+                        <option value="Pescatarian">Pescatarian</option>
                         <option value="Non-Vegetarian">Non-Vegetarian</option>
                         <option value="Vegan">Vegan</option>
                         <option value="Gluten-Free">Gluten-Free</option>
+                    </select>
+                    <select 
+                        value={cuisine} 
+                        onChange={(e) => setCuisine(e.target.value)}
+                    >
+                        <option value="">(Optional) Select Cuisine</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Mexican">Mexican</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Indian">Indian</option>
+                        <option value="Nepali">Nepali</option>
+                        <option value="Thai">Thai</option>
+                        <option value="Turkish">Turkish</option>
+                        <option value="Chinese">Chinese</option>
                     </select>
                 </div>
 
@@ -343,14 +387,6 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                     </button>
                 </div>
             </div>
-            {toast.show && (
-    <Toast
-        type={toast.type}
-        message={toast.message}
-        onClose={() => setToast({ show: false, message: "", type: "" })}
-    />
-)}
-
         </div>
     );
 };

@@ -10,7 +10,9 @@ const Navigationbar = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const userId = localStorage.getItem("userId"); // Assuming user ID is stored in localStorage
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const userId = localStorage.getItem("userId"); 
 
   useEffect(() => {
     console.log("📢 Fetching user profile data...");
@@ -22,6 +24,11 @@ const Navigationbar = () => {
       .then((response) => {
         console.log("User data response:", response.data);
 
+        const userData = response.data?.data;
+        if (userData?.is_admin === 1) {
+          setIsAdmin(true);
+        }
+        
         const userImage = response.data?.data?.image;
         if (userImage) {
           const fullImageUrl = userImage.startsWith("http")
@@ -125,7 +132,9 @@ const Navigationbar = () => {
       }
     }
   };
-  
+  const handleUserIconClick = () => {
+    setShowUserDropdown((prev) => !prev);
+  };
   
   return (
     <header className="header">
@@ -204,20 +213,59 @@ const Navigationbar = () => {
         </div>
 
         {/* Profile Icon */}
-        {profileImage ? (
-          <img
-            src={profileImage}
-            alt="User Profile"
-            className="profile-image"
-            title="User Profile"
-            style={{ cursor: "pointer" }}
-            onClick={() => (window.location.href = "/userProfile")}
-          />
-        ) : (
-          <NavLink to="/userProfile" className="sign-up-link">
-            <img src={userImage} className="sign-up-link" />
-          </NavLink>
-        )}
+        <div className="user-dropdown-container" style={{ position: "relative" }}>
+          {profileImage ? (
+            <img
+              src={profileImage}
+              alt="User Profile"
+              className="profile-image"
+              title="User Profile"
+              style={{ cursor: "pointer" }}
+              onClick={handleUserIconClick}
+            />
+          ) : (
+            <img
+              src={userImage}
+              alt="Default User"
+              className="profile-image"
+              style={{ cursor: "pointer" }}
+              onClick={handleUserIconClick}
+            />
+          )}
+
+          {/* The actual dropdown */}
+          {showUserDropdown && (
+            <div className="user-dropdown-menu">
+              {isAdmin && (
+                <NavLink 
+                  to="/admindashboard" 
+                  className="dropdown-item"
+                  onClick={() => setShowUserDropdown(false)}
+                >
+                  View Admin Panel
+                </NavLink>
+              )}
+              <NavLink 
+                to="/userProfile" 
+                className="dropdown-item"
+                onClick={() => setShowUserDropdown(false)}
+              >
+                My Profile
+              </NavLink>
+              <NavLink
+              className="dropdown-item"
+              onClick={() => {
+                setShowUserDropdown(false);
+                localStorage.removeItem("token");
+                localStorage.removeItem("userId");
+                window.location.href = "/login";
+              }}
+            >
+              Logout
+            </NavLink>
+          </div>
+          )}
+        </div>
       </div>
     </header>
   );

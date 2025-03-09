@@ -1,0 +1,251 @@
+/* AdminTestimonials.css */
+.admin-testimonials {
+    width: 100%;
+  }
+  
+  .admin-header {
+    margin-bottom: 1.5rem;
+  }
+  
+  .admin-title {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    margin: 0;
+  }
+  
+  .admin-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .admin-filters {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .admin-filter-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .admin-filter-label {
+    margin-right: 0.5rem;
+    font-weight: 500;
+    color: #2c3e50;
+  }
+  
+  .admin-filter-select {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #dcdfe6;
+    background-color: white;
+    color: #2c3e50;
+    font-size: 0.9rem;
+  }
+  
+  .admin-search-group {
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  
+  .admin-search-input {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: 1px solid #dcdfe6;
+    font-size: 0.9rem;
+  }
+  
+  .admin-testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .admin-testimonial-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    border-top: 4px solid #95a5a6;
+  }
+  
+  .admin-testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .admin-testimonial-pending {
+    border-top-color: #f39c12;
+  }
+  
+  .admin-testimonial-approved {
+    border-top-color: #2ecc71;
+  }
+  
+  .admin-testimonial-rejected {
+    border-top-color: #e74c3c;
+  }
+  
+  .admin-testimonial-header {
+    display: flex;
+    padding: 1.2rem;
+    border-bottom: 1px solid #ecf0f1;
+    position: relative;
+  }
+  
+  .admin-testimonial-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 1rem;
+  }
+  
+  .admin-testimonial-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .admin-testimonial-info {
+    flex: 1;
+  }
+  
+  .admin-testimonial-name {
+    margin: 0 0 0.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .admin-testimonial-role {
+    margin: 0 0 0.2rem;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+  }
+  
+  .admin-testimonial-rating {
+    font-size: 1rem;
+  }
+  
+  .admin-star {
+    color: #bdc3c7;
+  }
+  
+  .admin-star-filled {
+    color: #f1c40f;
+  }
+  
+  .admin-testimonial-date {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+  }
+  
+  .admin-testimonial-content {
+    padding: 1.2rem;
+    flex: 1;
+  }
+  
+  .admin-testimonial-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #2c3e50;
+    line-height: 1.4;
+  }
+  
+  .admin-testimonial-footer {
+    padding: 1.2rem;
+    border-top: 1px solid #ecf0f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .admin-testimonial-status {
+    display: flex;
+    align-items: center;
+  }
+  
+  .admin-status {
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  
+  .admin-status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  .admin-status-approved {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .admin-status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  .admin-testimonial-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .admin-action-button {
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+  }
+  
+  .admin-approve-button {
+    background-color: #2ecc71;
+    color: white;
+  }
+  
+  .admin-approve-button:hover {
+    background-color: #27ae60;
+  }
+  
+  .admin-reject-button {
+    background-color: #e74c3c;
+    color: white;
+  }
+  
+  .admin-reject-button:hover {
+    background-color: #c0392b;
+  }
+  
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .admin-filters {
+      flex-direction: column;
+    }
+    
+    .admin-search-group {
+      max-width: 100%;
+    }
+    
+    .admin-testimonials-grid {
+      grid-template-columns: 1fr;
+    }
+  }

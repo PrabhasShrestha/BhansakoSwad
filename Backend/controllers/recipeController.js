@@ -195,6 +195,7 @@ const createRecipe = (req, res) => {
     const title = JSON.parse(req.body.title);
     const difficulty = JSON.parse(req.body.difficulty);
     const cooking_time = JSON.parse(req.body.cooking_time);
+    const cuisine = JSON.parse(req.body.cuisine);
     const category = JSON.parse(req.body.category);
     const ingredients = JSON.parse(req.body.ingredients);
     const methods = JSON.parse(req.body.methods);
@@ -213,11 +214,11 @@ const createRecipe = (req, res) => {
     // Insert recipe first, include user_id in the query
     const recipeQuery = `
         INSERT INTO recipes 
-        (title, difficulty, cooking_time, category, image_url, user_id) 
-        VALUES (?, ?, ?, ?, ?, ?)
+        (title, difficulty, cooking_time, category, cuisine, image_url, user_id) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(recipeQuery, [title, difficulty, cooking_time, category, image_url, user_id], (err, recipeResult) => {
+    db.query(recipeQuery, [title, difficulty, cooking_time, category, cuisine || null, image_url, user_id], (err, recipeResult) => {
         if (err) {
             console.error("Recipe insertion error:", err);
             return res.status(500).json({ message: "Error inserting recipe", error: err });
@@ -393,8 +394,190 @@ const getRecipeByUser = async (req, res) => {
     }
 };
 
-
-
+const addFavorite = (req, res) => {
+    const { userId, recipeId } = req.body;
+  
+    // Basic validation
+    if (!userId || !recipeId) {
+      return res.status(400).json({ message: "userId and recipeId are required." });
+    }
+  
+    // 1) Check if the user exists
+    const checkUserQuery = "SELECT * FROM users WHERE id = ?";
+    db.query(checkUserQuery, [userId], (err, userRows) => {
+      if (err) {
+        console.error("Error checking user:", err);
+        return res.status(500).json({ message: "Database error." });
+      }
+  
+      if (userRows.length === 0) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      // 2) Check if the recipe exists
+      const checkRecipeQuery = "SELECT * FROM recipes WHERE id = ?";
+      db.query(checkRecipeQuery, [recipeId], (err, recipeRows) => {
+        if (err) {
+          console.error("Error checking recipe:", err);
+          return res.status(500).json({ message: "Database error." });
+        }
+  
+        if (recipeRows.length === 0) {
+          return res.status(404).json({ message: "Recipe not found." });
+        }
+  
+        // 3) Retrieve the user's current favorites (JSON column)
+        const getFavoritesQuery = "SELECT favorites FROM users WHERE id = ?";
+        db.query(getFavoritesQuery, [userId], (err, results) => {
+          if (err) {
+            console.error("Error retrieving favorites:", err);
+            return res.status(500).json({ message: "Database error." });
+          }
+  
+          let currentFavorites = [];
+          if (results[0].favorites) {
+            try {
+              currentFavorites = JSON.parse(results[0].favorites);
+              if (!Array.isArray(currentFavorites)) {
+                // If somehow the JSON isn't an array, reset to an empty array
+                currentFavorites = [];
+              }
+            } catch (parseErr) {
+              // If JSON parse fails, reset to an empty array
+              currentFavorites = [];
+            }
+          }
+  
+          // 4) Check if the recipe is already a favorite
+          if (currentFavorites.includes(recipeId)) {
+            // If so, send back a message that it's already in favorites
+            return res.status(200).json({
+              message: "Recipe is already in your favorites.",
+              favorites: currentFavorites,
+            });
+          }
+  
+          // 5) Otherwise, add the new recipeId
+          currentFavorites.push(recipeId);
+  
+          // 6) Update the favorites column in the database
+          const updateFavoritesQuery = "UPDATE users SET favorites = ? WHERE id = ?";
+          db.query(updateFavoritesQuery, [JSON.stringify(currentFavorites), userId], (err) => {
+            if (err) {
+              console.error("Error updating favorites:", err);
+              return res.status(500).json({ message: "Failed to add to favorites." });
+            }
+  
+            return res.status(200).json({
+              message: "Recipe added to favorites successfully.",
+              favorites: currentFavorites,
+            });
+          });
+        });
+      });
+    });
+  };
+  
+const getFavorite = async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      // 1) Fetch the user's favorites JSON
+      const getUserQuery = `SELECT favorites FROM users WHERE id = ?`;
+      db.query(getUserQuery, [userId], (err, userRows) => {
+        if (err) {
+          console.error("Error fetching user favorites:", err);
+          return res.status(500).json({ message: "Database error." });
+        }
+        if (userRows.length === 0) {
+          return res.status(404).json({ message: "User not found." });
+        }
+  
+        let favoritesArray = [];
+        if (userRows[0].favorites) {
+          try {
+            favoritesArray = JSON.parse(userRows[0].favorites); // parse JSON column
+          } catch (parseErr) {
+            console.error("Error parsing favorites JSON:", parseErr);
+          }
+        }
+  
+        // If no favorites or empty array, return empty array
+        if (!Array.isArray(favoritesArray) || favoritesArray.length === 0) {
+          return res.status(200).json([]);
+        }
+  
+        // 2) Fetch all recipes whose IDs are in favoritesArray
+        const placeholders = favoritesArray.map(() => "?").join(","); 
+        const recipeQuery = `SELECT r.*,
+            IFNULL(AVG(rt.rating), 0) AS average_rating
+          FROM recipes r
+          LEFT JOIN ratings rt ON r.id = rt.recipe_id
+          WHERE r.id IN (${placeholders})
+          GROUP BY r.id`;
+  
+        db.query(recipeQuery, favoritesArray, (err, recipeRows) => {
+          if (err) {
+            console.error("Error fetching favorite recipes:", err);
+            return res.status(500).json({ message: "Database error." });
+          }
+          return res.status(200).json(recipeRows);
+        });
+      });
+    } catch (err) {
+      console.error("Error in /favorites route:", err);
+      return res.status(500).json({ message: "Internal server error." });
+    }
+  };
+  
+  const removeFavorite = (req, res) => {
+    const { userId, recipeId } = req.body;
+  
+    if (!userId || !recipeId) {
+      return res.status(400).json({ message: "userId and recipeId are required." });
+    }
+  
+    // 1) Get the user's current favorites
+    const checkUserQuery = `SELECT favorites FROM users WHERE id = ?`;
+    db.query(checkUserQuery, [userId], (err, userRows) => {
+      if (err) {
+        console.error("Error finding user:", err);
+        return res.status(500).json({ message: "Database error." });
+      }
+      if (userRows.length === 0) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      let favoritesArray = [];
+      if (userRows[0].favorites) {
+        try {
+          favoritesArray = JSON.parse(userRows[0].favorites);
+        } catch (parseErr) {
+          console.error("Error parsing favorites JSON:", parseErr);
+          return res.status(500).json({ message: "Favorites data corrupted." });
+        }
+      }
+  
+      // Convert everything to **strings** for a proper match
+      const recipeIdString = recipeId.toString();
+      const updatedFavorites = favoritesArray.filter(id => id !== recipeIdString);
+  
+      if (updatedFavorites.length === favoritesArray.length) {
+        return res.status(404).json({ message: "Recipe was not in favorites." });
+      }
+  
+      // 3) Update the favorites column in users table
+      const updateQuery = `UPDATE users SET favorites = ? WHERE id = ?`;
+      db.query(updateQuery, [JSON.stringify(updatedFavorites), userId], (updateErr) => {
+        if (updateErr) {
+          console.error("Error updating favorites JSON:", updateErr);
+          return res.status(500).json({ message: "Database error updating favorites." });
+        }
+        return res.status(200).json({ message: "Recipe removed from favorites.", updatedFavorites });
+      });
+    });
+  };
+  
 
 module.exports = {
   getAllRecipes,
@@ -407,5 +590,8 @@ module.exports = {
   createRecipe,
   getIngridients,
   addIngridients,
-  getRecipeByUser
+  getRecipeByUser,
+  addFavorite,
+  getFavorite,
+  removeFavorite
 };

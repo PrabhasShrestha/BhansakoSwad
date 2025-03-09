@@ -51,7 +51,7 @@ const Footer = ({ addTestimonial }) => {
         }
       );
 
-      setSuccess('Testimonial submitted successfully!'); // Set success message
+      setSuccess('Testimonial submitted successfully! Your testimonial is pending approval.');
       setTestimonial('');
        // Clear the testimonial input
     } catch (error) {

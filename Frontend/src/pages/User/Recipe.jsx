@@ -30,10 +30,32 @@ const categoryImages = {
     "Favorites": RecipeImage
 };
 
+import ItalianImg from "../../assets/cuisines/italian.jpg";
+import ChineseImg from "../../assets/cuisines/chinese.jpg";
+import IndianImg from "../../assets/cuisines/indian.jpg";
+import MexicanImg from "../../assets/cuisines/mexican.jpg";
+import NepaliImg from "../../assets/cuisines/nepali.jpg";
+import ThaiImg from "../../assets/cuisines/thai.jpg";
+import JapaneseImg from "../../assets/cuisines/japanese.jpg";
+import TurkishImg from "../../assets/cuisines/turkish.jpg";
+
+const cuisineOptions = [
+    { name: "Italian", image: ItalianImg },
+    { name: "Chinese", image: ChineseImg },
+    { name: "Indian", image: IndianImg },
+    { name: "Mexican", image: MexicanImg },
+    { name: "Nepali", image: NepaliImg },
+    { name: "Thai", image: ThaiImg },
+    { name: "Japanese", image: JapaneseImg },
+    { name: "Turkish", image: TurkishImg },
+];
+
+
 const MainRecipe = () => {
     const isLoggedIn = localStorage.getItem("token") !== null;
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
+    const [showCuisineModal, setShowCuisineModal] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false); // State for premium modal
     const [recipes, setRecipes] = useState([])
     const [selectedCategory, setSelectedCategory] = useState("All")
@@ -43,7 +65,9 @@ const MainRecipe = () => {
     const [filteredRecipes, setFilteredRecipes] = useState([]); 
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [isPremium, setIsPremium] = useState(false);
-
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [favoriteRecipes, setFavoriteRecipes] = useState([]);
+    const cuisineList = ["Italian", "Chinese", "Indian", "Mexican", "Nepali", "Thai", "Japanese", "Turkish"];
     useEffect(() => {
         const token = localStorage.getItem("token");
         const fetchPremiumStatus = async () => {
@@ -51,6 +75,15 @@ const MainRecipe = () => {
                 const userResponse = await axios.get("http://localhost:3000/api/get-user", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+
+                if (userResponse.data.success) {
+                    const userData = userResponse.data.data;
+                    console.log("User Data:", userData);
+          
+                    // If your backend returns `is_admin = 1` or `true` for admins:
+                    setIsAdmin(userData.is_admin === 1 || userData.is_admin === true);
+                    setIsPremium(userData.is_premium);
+                  }
     
                 if (userResponse.data.success) {
                     console.log("User Data:", userResponse.data.data);
@@ -89,6 +122,13 @@ const MainRecipe = () => {
             fetchPremiumStatus();
     }, [searchTerm]);
 
+    const handleCusineClick = (category) => {
+        if (category === "Cuisine") {
+            setShowCuisineModal(true); // Show the cuisine modal
+        } else {
+            setSelectedCategory(category);
+        }
+    };
     const addIngredient = (ingredient) => {
         if (!selectedIngredients.includes(ingredient)) {
             const updatedIngredients = [...selectedIngredients, ingredient];
@@ -118,9 +158,18 @@ const MainRecipe = () => {
             });
     };
 
-    const finalrecipe = selectedCategory === "All"
-        ? recipes
-        : recipes.filter(recipe => recipe.category === selectedCategory);
+    const finalrecipe = (() => {
+        if (selectedCategory === "All") {
+          // Show all recipes
+          return recipes;
+        } else if (cuisineList.includes(selectedCategory)) {
+          // If it's a cuisine name, filter on the `cuisine` column
+          return recipes.filter((recipe) => recipe.cuisine === selectedCategory);
+        } else {
+          // Otherwise, treat it like a category (e.g., "Vegan", "Gluten-Free")
+          return recipes.filter((recipe) => recipe.category === selectedCategory);
+        }
+      })();
 
     const handleRecipeSubmit = () => {
         // Optional: Refresh recipes after adding a new recipe
@@ -135,19 +184,19 @@ const MainRecipe = () => {
     };
 
     const handleCategoryClick = (category) => {
-        if (category === "Chef Recipes" && !isPremium) {
-            // Show premium modal instead of alert
-            if (isLoggedIn) {
-                console.log("User is NOT premium, showing upgrade modal.");
-                setShowPremiumModal(true);
-            } else {
-                alert("You must be logged in to access Chef Recipes.");
-            }
+        // Check for "Chef" instead:
+        if (category === "Chef" && !isPremium && !isAdmin) {
+          if (isLoggedIn) {
+            console.log("User is NOT premium, showing upgrade modal.");
+            setShowPremiumModal(true);
+          } else {
+            alert("You must be logged in to access Chef Recipes.");
+          }
         } else {
-            setSelectedCategory(category);
+          setSelectedCategory(category);
         }
-    };
-
+      };
+      
     const handleGoPremium = () => {
         localStorage.setItem("premium_plan", JSON.stringify({
             plan: "Monthly Premium",
@@ -157,6 +206,47 @@ const MainRecipe = () => {
         navigate("/paymentdetails");
     };
 
+    const fetchFavorites = async () => {
+        try {
+          const userId = localStorage.getItem("userId");
+          if (!userId) {
+            alert("User ID not found. Please log in again.");
+            return;
+          }
+          const res = await axios.get(`http://localhost:3000/api/recipe/favorites/${userId}`);
+          setFavoriteRecipes(res.data); // An array of recipe objects
+        } catch (error) {
+          console.error("Error fetching favorites:", error);
+        }
+      };
+
+      const handleRemoveFavorite = async (recipeId) => {
+        try {
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                alert("No userId found. Please log in again.");
+                return;
+            }
+    
+            await axios.delete("http://localhost:3000/api/recipe/removefavorite", {
+                data: { userId: userId, recipeId: recipeId }
+            });
+    
+            // 2) Update local state so the recipe disappears immediately
+            setFavoriteRecipes((prevFavorites) =>
+                prevFavorites.filter((recipe) => recipe.id !== recipeId)
+            );
+    
+            // 3) Show a success alert
+            alert("Recipe successfully removed from favorites!");
+        } catch (error) {
+            console.error("Error removing from favorites:", error);
+            alert("Failed to remove from favorites.");
+        }
+    };
+    
+      
+      
     return(
         <div className="recipe">
             {isLoggedIn ? <Navigationbar/> : <Navbar />}
@@ -248,24 +338,34 @@ const MainRecipe = () => {
                             <div className="icon-wrapper" data-tooltip="Vegan" onClick={() => setSelectedCategory("Vegan")}>
                                 <FaLeaf className="icon" />
                             </div>
-                            <div className="icon-wrapper" data-tooltip="Cuisine" onClick={() => setSelectedCategory("Cuisine")}>
+                            <div className="icon-wrapper" data-tooltip="Cuisine" onClick={() => handleCusineClick("Cuisine")}>
                                 <GiCookingPot className="icon" />
                             </div>
                             <div
                                 className="icon-wrapper"
-                                data-tooltip="Chef Recipes"
+                                data-tooltip="Chef"
                                 onClick={() => {
                                     if (!isLoggedIn) {
                                         alert("You must be logged in to access Chef Recipes.");
                                         return;
                                     }
-                                    handleCategoryClick("Chef Recipes");
+                                    handleCategoryClick("Chef");
                                 }}
                                 >
                                 <GiChefToque  className="icon" />
                             </div>
-                            <div className="icon-wrapper" data-tooltip="Favorites" onClick={() => setSelectedCategory("Favorites")}>
-                                <FaHeart className="icon" />
+                            <div className="icon-wrapper"
+                                data-tooltip="Favorites"
+                                onClick={() => {
+                                if (!isLoggedIn) {
+                                    alert("You must be logged in to view Favorites.");
+                                    return;
+                                }
+                                fetchFavorites();
+                                setSelectedCategory("Favorites");
+                                }}
+                            >
+                            <FaHeart className="icon" />
                             </div>
                             <div className="icon-wrapper" data-tooltip="Add Recipe" onClick={() => {
                                     
@@ -284,33 +384,68 @@ const MainRecipe = () => {
                 </div>
                 
                 <div className="recipe-details">
-                    <h1>{selectedCategory === "All" ? "Crowd-Pleasing Recipes" : selectedCategory} Recipes</h1>
-                    <div className="recipe-grid">
-                        {(filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).length > 0 ? (
-                            (filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).map((recipe) => (
-                                <div className="recipe-card" key={recipe.id}>
-                                    <img 
-                                        src={recipe.image_url || RecipeImage} 
-                                        alt={recipe.title} 
-                                        className="recipe-card-image" 
-                                        onClick={() => navigate(`/recipedetails/${recipe.id}`)} 
-                                    />
-                                    <div className="recipe-card-content">
-                                        <h2>{recipe.title}</h2>
-                                        <div className="recipe-info">
-                                            <span>⏱ {recipe.cooking_time}</span>
-                                            <span>⚡ {recipe.difficulty}</span>
-                                            <span>⭐ {parseFloat(recipe.average_rating).toFixed(1)}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p>No recipes found in {selectedCategory} category.</p>
-                        )}
+          <h1>
+            {selectedCategory === "All" ? "Crowd-Pleasing Recipes" : selectedCategory} Recipes
+          </h1>
+          <div className="recipe-grid">
+            {/* If Favorites is selected, show favoriteRecipes instead of normal logic */}
+            {selectedCategory === "Favorites" ? (
+              favoriteRecipes.length > 0 ? (
+                favoriteRecipes.map((recipe) => (
+                  <div className="recipe-card" key={recipe.id}>
+                    <img
+                      src={recipe.image_url || RecipeImage}
+                      alt={recipe.title}
+                      className="recipe-card-image"
+                      onClick={() => navigate(`/recipedetails/${recipe.id}`)}
+                    />
+                    <div className="recipe-card-content">
+                      <h2>{recipe.title}</h2>
+                      <div className="recipe-info">
+                        <span>⏱ {recipe.cooking_time}</span>
+                        <span>⚡ {recipe.difficulty}</span>
+                        <span>⭐ {parseFloat(recipe.average_rating).toFixed(1)}</span>
+                      </div>
+                      <button
+              className="remove-fav-btn"
+              onClick={() => handleRemoveFavorite(recipe.id)}
+            >
+              Remove
+            </button>
                     </div>
-                </div>
-            </div>
+                  </div>
+                ))
+              ) : (
+                <p>No favorite recipes yet.</p>
+              )
+            ) : (
+              // Otherwise show either filteredRecipes or finalrecipe
+              (filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).length > 0 ? (
+                (filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).map((recipe) => (
+                  <div className="recipe-card" key={recipe.id}>
+                    <img
+                      src={recipe.image_url || RecipeImage}
+                      alt={recipe.title}
+                      className="recipe-card-image"
+                      onClick={() => navigate(`/recipedetails/${recipe.id}`)}
+                    />
+                    <div className="recipe-card-content">
+                      <h2>{recipe.title}</h2>
+                      <div className="recipe-info">
+                        <span>⏱ {recipe.cooking_time}</span>
+                        <span>⚡ {recipe.difficulty}</span>
+                        <span>⭐ {parseFloat(recipe.average_rating).toFixed(1)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No recipes found in {selectedCategory} category.</p>
+              )
+            )}
+          </div>
+        </div>
+      </div>
             
             {/* Recipe Modal */}
             <RecipeModal 
@@ -318,8 +453,30 @@ const MainRecipe = () => {
                 onClose={() => setShowModal(false)}
                 onSubmit={handleRecipeSubmit}
             />
+                    {showCuisineModal && (
+                    <div className="cuisinemodal-overlay">
+                        <div className="cuisinemodal-container">
+                            <h2>Select Cuisine</h2>
+                            <div className="cuisinemodal-content">
+                           
+                                {cuisineOptions.map((cuisine, index) => (
+                                    <button  className="cuisine-option"
+                                    onClick={() => {
+                                      setSelectedCategory(cuisine.name); 
+                                      setShowCuisineModal(false);
+                                    }}
+                                  >
+                                    <img src={cuisine.image} alt={cuisine.name} className="cuisine-image"/>
+                                    <span>{cuisine.name}</span>
+                                  </button>
+                                  
+                                ))}
+                            </div>
+                            <button className="cuisinemodal-close" onClick={() => setShowCuisineModal(false)}>Close</button>
+                        </div>
+                    </div>
+                )}
             
-            {/* Premium Modal */}
             {showPremiumModal && (
                 <div className="premium-modal-overlay">
                     <div className="premium-modal-container">

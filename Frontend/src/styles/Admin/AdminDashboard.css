@@ -1,0 +1,241 @@
+/* AdminDashboard.css */
+.admin-dashboard {
+    width: 100%;
+    margin-right: 200px;
+  }
+  
+  .admin-layout {
+    display: flex;
+  }
+  
+  .admin-main {
+    flex: 1;
+    margin-left: 250px;  
+    padding: 2rem;
+    background-color: #f5f7fa;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+  }
+  
+  /* Handle collapsed state: if the sidebar shrinks to 60px, shift main content left */
+  .admin-sidebar-collapsed + .admin-main {
+    margin-left: 60px;
+  }
+  
+ 
+  .admin-main {
+    flex: 1;
+    margin-left: 250px;
+    padding: 2rem;
+    background-color: #f5f7fa;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+  }
+  
+  .admin-sidebar-collapsed + .admin-main {
+    margin-left: 60px;
+  }
+  
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .admin-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+  }
+  
+  .admin-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .admin-dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .admin-stat-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .admin-stat-icon {
+    font-size: 2rem;
+    margin-right: 1rem;
+    color: #3498db;
+    background-color: rgba(52, 152, 219, 0.1);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .admin-stat-content {
+    flex: 1;
+  }
+  
+  .admin-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    color: #2c3e50;
+  }
+  
+  .admin-stat-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin: 0;
+  }
+  
+  .admin-dashboard-alerts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .admin-alert-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .admin-alert-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .admin-alert-warning {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: #f39c12;
+  }
+  
+  .admin-alert-info {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+  }
+  
+  .admin-alert-content {
+    flex: 1;
+  }
+  
+  .admin-alert-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    color: #2c3e50;
+  }
+  
+  .admin-alert-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin: 0;
+  }
+  
+  .admin-dashboard-recent {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .admin-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ecf0f1;
+  }
+  
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+  }
+  
+  .admin-table th {
+    font-weight: 600;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+  }
+  
+  .admin-status,
+  .admin-role {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  
+  .admin-status-delivered {
+    background-color: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+  }
+  
+  .admin-status-processing {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+  }
+  
+  .admin-status-pending {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: #f39c12;
+  }
+  
+  .admin-status-shipped {
+    background-color: rgba(155, 89, 182, 0.1);
+    color: #8e44ad;
+  }
+  
+  .admin-role-customer {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+  }
+  
+  .admin-role-seller {
+    background-color: rgba(230, 126, 34, 0.1);
+    color: #d35400;
+  }
+  
+  .admin-role-chef {
+    background-color: rgba(155, 89, 182, 0.1);
+    color: #8e44ad;
+  }
+  
+  @media (min-width: 992px) {
+    .admin-dashboard-recent {
+      grid-template-columns: 3fr 2fr;
+    }
+  }

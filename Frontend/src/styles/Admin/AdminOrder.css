@@ -1,0 +1,130 @@
+/* AdminOrders.css */
+.admin-orders {
+    width: 100%;
+  }
+  
+  .admin-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    justify-content: space-between;
+  }
+  
+  .admin-filter-group {
+    display: flex;
+    align-items: center;
+  }
+  
+  .admin-filter-label {
+    margin-right: 0.5rem;
+    font-weight: 500;
+    color: #2c3e50;
+  }
+  
+  .admin-filter-select {
+    padding: 0.5rem;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background-color: #fff;
+    color: #2c3e50;
+  }
+  
+  .admin-search-group {
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  
+  .admin-search-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background-color: #fff;
+  }
+  
+  .admin-table-container {
+    overflow-x: auto;
+  }
+  
+  .admin-email {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+  }
+  
+  .admin-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .admin-status-select {
+    padding: 0.25rem;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  
+  .admin-action-button {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 4;
+  }
+
+  /* Pagination styling */
+.admin-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  
+  .admin-pagination-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #dcdfe6;
+    background-color: white;
+    color: #2c3e50;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+  
+  .admin-pagination-button:hover:not(:disabled) {
+    background-color: #f2f6fc;
+  }
+  
+  .admin-pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .admin-pagination-number {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dcdfe6;
+    background-color: white;
+    color: #2c3e50;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+  }
+  
+  .admin-pagination-number:hover {
+    background-color: #f2f6fc;
+  }
+  
+  .admin-pagination-active {
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+  }
+  
+  .admin-pagination-active:hover {
+    background-color: #2980b9;
+  }
+  

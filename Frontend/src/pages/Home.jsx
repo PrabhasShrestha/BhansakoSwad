@@ -28,7 +28,7 @@ const Home = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/testimonials'); // Adjust URL as necessary
+        const response = await fetch('http://localhost:3000/api/getapprovedtestimonials'); // Adjust URL as necessary
         if (response.ok) {
           const data = await response.json();
           setTestimonials(data.testimonials);

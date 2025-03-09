@@ -1,0 +1,240 @@
+
+  
+  /* Dashboard Layout */
+  .admin-dashboard {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  /* Header Styles */
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e0e5ec;
+  }
+  
+  .admin-user-info {
+    display: flex;
+    align-items: center;
+  }
+  
+  .admin-user-name {
+    margin-right: 10px;
+    font-weight: 500;
+  }
+  
+  .admin-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #756de9;
+  }
+  
+  /* Table Container */
+  .admin-table-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+  }
+  
+  /* Table Header with Search and Filter */
+  .admin-table-header {
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  
+  .admin-search-input {
+    padding: 8px 12px;
+    border: 1px solid #e0e5ec;
+    border-radius: 4px 0 0 4px;
+    width: 250px;
+  }
+  
+  .admin-search-button {
+    background-color: #756de9;
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  
+  .admin-filter-select {
+    padding: 8px 12px;
+    border: 1px solid #e0e5ec;
+    border-radius: 4px;
+    min-width: 150px;
+  }
+  
+  /* Table Styles */
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .admin-table th, 
+  .admin-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e5ec;
+  }
+  
+  .admin-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+  
+  .admin-row-pending {
+    background-color: #fff8e9;
+  }
+  
+  .admin-row-approved {
+    background-color: #f0fff4;
+  }
+  
+  .admin-row-rejected {
+    background-color: #fff5f5;
+  }
+  
+  /* Status Labels */
+  .admin-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .admin-status-pending {
+    background-color: #fff0c2;
+    color: #b78105;
+  }
+  
+  .admin-status-approved {
+    background-color: #d4f5e2;
+    color: #0a7b3f;
+  }
+  
+  .admin-status-rejected {
+    background-color: #ffe9e9;
+    color: #d32f2f;
+  }
+  
+  /* Document Status */
+  .admin-document-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-right: 8px;
+  }
+  
+  .admin-document-verified {
+    background-color: #d4f5e2;
+    color: #0a7b3f;
+  }
+  
+  .admin-document-pending {
+    background-color: #fff0c2;
+    color: #b78105;
+  }
+  
+  .admin-document-verify {
+    font-size: 11px;
+    padding: 2px 6px;
+    margin-left: 5px;
+  }
+  
+  /* Action Buttons */
+  .admin-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .admin-button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  
+  .admin-approve {
+    background-color: #d4f5e2;
+    color: #0a7b3f;
+  }
+  
+  .admin-approve:hover {
+    background-color: #a7e9c3;
+  }
+  
+  .admin-reject {
+    background-color: #ffe9e9;
+    color: #d32f2f;
+  }
+  
+  .admin-reject:hover {
+    background-color: #ffcccc;
+  }
+  
+  .admin-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Pagination */
+  .admin-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+  }
+  
+  .admin-pagination-button {
+    padding: 6px 12px;
+    border: 1px solid #e0e5ec;
+    background-color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .admin-pagination-button:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .admin-pagination-info {
+    color: #6b7280;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .admin-table-header {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .admin-search {
+      width: 100%;
+    }
+    
+    .admin-search-input {
+      flex: 1;
+    }
+    
+    .admin-filter-select {
+      width: 100%;
+    }
+    
+    .admin-table {
+      display: block;
+      overflow-x: auto;
+    }
+  }

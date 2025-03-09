@@ -9,7 +9,7 @@
 
 
 .about-us-container  .header {
-  background-color: #E8DCDC;
+  background-color: #E8DCDC !important;
   position: relative;
 }
 

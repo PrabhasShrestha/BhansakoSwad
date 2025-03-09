@@ -18,6 +18,7 @@ const RecipeDetails = () => {
     const [hover, setHover] = useState(0)
     const isLoggedIn = localStorage.getItem("token") !== null;
     const [toast, setToast] = useState(null);
+    const [favoriteMessage, setFavoriteMessage] = useState("");
     const [creatorName, setCreatorName] = useState("Bhansako Swad Team");
     useEffect(() => {
         const fetchRecipeDetails = async () => {
@@ -72,14 +73,45 @@ const RecipeDetails = () => {
             }
         }
     };
-    
 
+    const handleAddFavorite = async () => {
+        // 1) Get userId from localStorage (or your auth context)
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          setToast({ message: "You must be logged in to add to favorites.", type: "error" });
+          return;
+        }
+    
+        try {
+          // 2) POST to your /favorite endpoint
+          const response = await axios.post("http://localhost:3000/api/recipe/favorite", {
+            userId: userId,
+            recipeId: id, // `id` comes from useParams()
+          });
+    
+          // 3) Check response and display a suitable message
+          if (response?.data?.message === "Recipe is already in your favorites.") {
+            setToast({ message: response.data.message, type: "info" });
+          } else {
+            // You might get a success message like "Recipe added to favorites successfully."
+            setToast({ message: response.data.message, type: "success" });
+          }
+        } catch (error) {
+          console.error("Error setting favorite recipe:", error);
+          // If the server sent back a specific error message, use it
+          const errorMsg = error?.response?.data?.message || "Failed to set favorite recipe.";
+          setToast({ message: errorMsg, type: "error" });
+        }
+      };
+    
+      
     if (loading) return <p className="loading-text">Loading recipe...</p>;
     if (error) return <p className="error-text">{error}</p>;
 
     return (
         <div className="recipe">
             {isLoggedIn ? <Navigationbar /> : <Navbar />}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             <div className="recipe-page">
                 <div className="recipe-page-hero">
                     <div className="recipe-page-hero-overlay"></div>
@@ -142,7 +174,7 @@ const RecipeDetails = () => {
                                     <p>No ingredients available.</p>
                                 )}
                             </ul>
-                            <button className="favorite-btn">Add to Favorites</button>
+                            <button className="favorite-btn" onClick={handleAddFavorite}>Add to Favorites</button>
                         </div>
 
                         <div className="methods-section">
@@ -184,7 +216,7 @@ const RecipeDetails = () => {
                             </div>
 
                         <button onClick={handleRatingSubmit} className="submit-review-btn">Submit Rating</button>
-                        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+                       
                         </div>
                         </div>
                                             </>

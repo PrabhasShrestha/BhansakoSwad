@@ -1,0 +1,346 @@
+/* AdminRecipePanel.css */
+
+/* Main container styles */
+.admin-container {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  min-height: 100vh;
+}
+
+.admin-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Header section */
+.admin-panel-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-panel-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.admin-panel-subtitle {
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Form container */
+.admin-form-container {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-form-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 1.5rem 0;
+}
+
+.admin-recipe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.admin-form-input,
+.admin-form-select,
+.admin-form-textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+
+.admin-form-input:focus,
+.admin-form-select:focus,
+.admin-form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.admin-form-checkbox-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-form-checkbox {
+  width: 1rem;
+  height: 1rem;
+}
+
+.admin-form-checkbox-label {
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+
+.admin-form-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Search section */
+.admin-search-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-search-container {
+  display: flex;
+  align-items: center;
+}
+
+.admin-search-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.admin-search-input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  padding-right: 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.admin-search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.admin-search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Button styles */
+.admin-btn {
+  max-width: 250px;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.admin-btn-primary {
+  margin-left: 1rem;
+  background-color: #2563eb;
+  color: white;
+}
+
+.admin-btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.admin-btn-secondary {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.admin-btn-secondary:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.admin-btn-text {
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.admin-btn-edit {
+  color: #2563eb;
+}
+
+.admin-btn-edit:hover {
+  color: #1d4ed8;
+}
+
+.admin-btn-remove {
+  color: #dc2626;
+}
+
+.admin-btn-remove:hover {
+  color: #b91c1c;
+}
+
+/* Table styles */
+.admin-table-container {
+  overflow-x: auto;
+}
+
+.admin-recipe-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table-header {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  background-color: #f9fafb;
+}
+
+.admin-recipe-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-recipe-row:hover {
+  background-color: #f9fafb;
+}
+
+.admin-table-cell {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.admin-recipe-title-cell {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.admin-actions-column {
+  text-align: right;
+}
+
+.admin-actions-cell {
+  text-align: right;
+}
+
+.admin-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.admin-date-cell {
+  color: #6b7280;
+}
+
+/* Badge styles */
+.admin-badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  display: inline-flex;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.admin-badge-green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.admin-badge-green:hover {
+  background-color: #a7f3d0;
+}
+
+.admin-badge-blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.admin-badge-blue:hover {
+  background-color: #bfdbfe;
+}
+
+.admin-badge-gray {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.admin-badge-gray:hover {
+  background-color: #e5e7eb;
+}
+
+.admin-badge-orange {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.admin-badge-orange:hover {
+  background-color: #fed7aa;
+}
+
+.admin-badge-red {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-badge-red:hover {
+  background-color: #fecaca;
+}
+
+/* Empty results */
+.admin-empty-results {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .admin-action-buttons {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+}
