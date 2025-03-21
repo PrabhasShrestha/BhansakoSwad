@@ -496,7 +496,7 @@ const getFavorite = async (req, res) => {
         let favoritesArray = [];
         if (userRows[0].favorites) {
           try {
-            favoritesArray = JSON.parse(userRows[0].favorites); // parse JSON column
+            favoritesArray = JSON.parse(userRows[0].favorites); 
           } catch (parseErr) {
             console.error("Error parsing favorites JSON:", parseErr);
           }

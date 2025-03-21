@@ -61,19 +61,19 @@ function SellerSignUp() {
         });
         setErrors({});
         navigate("/SellerVerificationCode"); // Redirect to seller verification
-      } catch (error) {
-        if (error.response?.status === 409) {
-          setErrors({ email: "This email is already registered" });
+      }  catch (error) {
+        if (error.response) {
+            if (error.response.status === 400) {
+                setErrors({ password: error.response.data.msg }); // Show password mismatch error
+            } else if (error.response.status === 409) {
+                setErrors({ email: "This email is already registered as a seller." });
+            } else {
+                setErrors({ api: "Registration failed. Please try again." });
+            }
         } else {
-          console.error(
-            "Error during registration:",
-            error.response?.data?.message || error.message
-          );
-          setErrors({
-            api: error.response?.data?.message || "Registration failed",
-          });
+            setErrors({ api: "Unable to connect to server. Try again later." });
         }
-      }
+    }
     }
   };  
 

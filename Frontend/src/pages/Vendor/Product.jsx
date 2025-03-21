@@ -25,29 +25,33 @@ const ProductPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No authentication token found");
-        return;
-      }
-  
-      const response = await axios.get("http://localhost:3000/api/getproducts", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      console.log("API Response:", response.data); // Debugging line
-  
-      if (response.data.success && Array.isArray(response.data.products)) {
-        setProducts(response.data.products);
-      } else {
-        console.error("Unexpected API response:", response.data);
-        setProducts([]); // Fallback to empty array
-      }
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("No token found in localStorage.");
+            return;
+        }
+
+        const response = await axios.get("http://localhost:3000/api/getproducts", {
+            headers: {
+                Authorization: `Bearer ${token}`, // Ensure token is included
+            },
+        });
+
+        console.log("Fetched Products:", response.data);
+
+        if (response.data.success && Array.isArray(response.data.products)) {
+            setProducts(response.data.products); // ✅ Correctly update the state
+        } else {
+            console.error("Unexpected API response:", response.data);
+            setProducts([]); // Fallback to empty array if response is incorrect
+        }
     } catch (error) {
-      console.error("Error fetching products:", error);
-      setProducts([]); // Prevent crash
+        console.error("Error fetching products:", error.response?.data || error.message);
+        setProducts([]); // Prevent UI crash by ensuring `products` is always an array
     }
-  };
+};
+
+
   
   
   // Handle Delete Request
@@ -201,7 +205,12 @@ const handleAddProduct = async (e) => {
                   <tr key={product.product_id}>
                     <td>
                       <div className="product-info">
-                        <img src={`http://localhost:3000/uploads/products/${product.image}`} alt={product.name} className="products-image" />
+                      <img 
+                          src={product.image.startsWith("http") ? product.image : `http://localhost:3000/${product.image}`} 
+                          alt={product.product_name} 
+                          className="products-image" 
+                          onError={(e) => e.target.src = "http://localhost:3000/uploads/products/default-image.jpg"} 
+                        />
                         <span className="products-name">{product.product_name}</span>
                       </div>
                     </td>

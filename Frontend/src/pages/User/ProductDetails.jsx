@@ -85,7 +85,7 @@ const ProductDetails = () => {
       
         setCartMessage(""); 
       
-        fetch("http://localhost:3000/api/add", {
+        fetch("http://localhost:3000/api/cart/add", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -139,7 +139,7 @@ const ProductDetails = () => {
             quantity: 1, // Always add exactly one unit
         };
     
-        fetch("http://localhost:3000/api/add", {
+        fetch("http://localhost:3000/api/cart/add", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

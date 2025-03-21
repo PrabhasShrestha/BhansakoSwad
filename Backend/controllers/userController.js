@@ -184,74 +184,77 @@ const resendCode = (req, res) => {
 };
 
 const login = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
+  try {
+    const { email, password } = req.body;
 
-  db.query(
-      `SELECT * FROM users WHERE email = ${db.escape(req.body.email)};`,
-      (err, result) => {
-          if (err) {
-              return res.status(400).send({
-                  msg: err
-              });
-          }
-
-          if (!result.length) {
-              return res.status(404).send({
-                  msg: 'Email not found. Please check the email or sign up.'
-              });
-          }
-
-          // Check if the user is verified
-          if (result[0].isVerified === 0) {
-              return res.status(403).send({
-                  msg: 'Your email is not verified. Please check your inbox for the verification code.'
-              });
-          }
-
-          bcrypt.compare(
-              req.body.password,
-              result[0]['password'],
-              (bErr, Bresult) => {
-                  if (bErr) {
-                      return res.status(400).send({
-                          msg: bErr
-                      });
-                  }
-                  if (Bresult) {
-                      // Generate a token
-                      const token = jwt.sign({ id: result[0]['id'] }, JWT_SECRET);
-
-                      // Save the token to the database
-                      db.query(
-                          `UPDATE users SET token = ${db.escape(token)} WHERE id = ${db.escape(result[0].id)};`,
-                          (updateErr) => {
-                              if (updateErr) {
-                                  return res.status(500).send({
-                                      msg: 'Failed to update token in the database.',
-                                      error: updateErr
-                                  });
-                              }
-
-                              return res.status(200).send({
-                                  msg: 'Logged In',
-                                  token,
-                                  user: result[0]
-                              });
-                          }
-                      );
-                  } else {
-                      return res.status(401).send({
-                          msg: 'Incorrect password. Please try again.'
-                      });
-                  }
-              }
-          );
+    // Check if the user exists in the `users` table
+    const userQuery = `SELECT * FROM users WHERE email = ?`;
+    db.query(userQuery, [email], async (err, userResult) => {
+      if (err) {
+        console.error("Database Error:", err);
+        return res.status(500).json({ message: "Internal server error" });
       }
-  );
+
+      if (userResult.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const user = userResult[0];
+
+      // Check if the user is also a seller
+      const sellerQuery = `SELECT id AS seller_id FROM sellers WHERE email = ?`;
+      db.query(sellerQuery, [email], async (err, sellerResult) => {
+        if (err) {
+          console.error("Database Error:", err);
+          return res.status(500).json({ message: "Internal server error" });
+        }
+
+        const sellerId = sellerResult.length > 0 ? sellerResult[0].seller_id : null;
+
+        // Check if the user is also a chef
+        const chefQuery = `SELECT id AS chef_id FROM chefs WHERE email = ?`;
+        db.query(chefQuery, [email], async (err, chefResult) => {
+          if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ message: "Internal server error" });
+          }
+
+          const chefId = chefResult.length > 0 ? chefResult[0].chef_id : null;
+
+          // Generate JWT Token with all roles
+          const token = jwt.sign(
+            {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+              seller_id: sellerId, // Include seller ID if available
+              chef_id: chefId, // Include chef ID if available
+            },
+            JWT_SECRET
+          );
+
+          res.status(200).json({
+            msg: "Login successful",
+            token,
+            user: {
+              id: user.id,
+              email: user.email,
+              role: user.role,
+              seller_id: sellerId, // Return seller ID if user is a seller
+              chef_id: chefId, // Return chef ID if user is a chef
+            },
+          });
+        });
+      });
+    });
+  } catch (error) {
+    console.error("Unexpected Error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
+
+
+
 
 const logout = async (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
@@ -279,45 +282,68 @@ const logout = async (req, res) => {
   );
 };
 
+
 const getUser = (req, res) => {
   try {
+    // Check for Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      return res.status(401).send({ message: 'Unauthorized: Missing or malformed token.' });
+      return res.status(401).send({ message: "Unauthorized: Missing or malformed token." });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    db.query('SELECT * FROM users WHERE id = ?', [decoded.id], (error, result) => {
+    // Query user details
+    db.query("SELECT * FROM users WHERE id = ?", [decoded.id], (error, userResult) => {
       if (error) {
-        console.error('Database Error:', error);
-        return res.status(500).send({ message: 'Internal server error.' });
+        console.error("Database Error:", error);
+        return res.status(500).send({ message: "Internal server error." });
       }
 
-      if (result.length === 0) {
-        return res.status(404).send({ message: 'User not found.' });
+      if (userResult.length === 0) {
+        return res.status(404).send({ message: "User not found." });
       }
 
-      const user = { ...result[0] };
+      const user = userResult[0];
 
       // Correct the `image` URL construction
       if (user.image) {
-        user.image = `http://localhost:3000/uploads/users/${user.image.split('/').pop()}`; // Extract the file name
+        user.image = `http://localhost:3000/uploads/users/${user.image.split("/").pop()}`;
       }
 
-      return res.status(200).send({
-        success: true,
-        data: user,
-        message: 'Fetch Successful!',
-      });
+      // Check if the user is also a seller
+      db.query(
+        "SELECT id AS seller_id FROM sellers WHERE email = ?",
+        [user.email], // Match by email
+        (err, sellerResult) => {
+          if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).send({ message: "Internal server error." });
+          }
+
+          // Determine if user is a seller
+          const isSeller = sellerResult.length > 0;
+          const sellerId = isSeller ? sellerResult[0].seller_id : null;
+
+          return res.status(200).send({
+            success: true,
+            data: {
+              ...user,
+              is_seller: isSeller,
+              seller_id: sellerId,
+            },
+            message: "Fetch Successful!",
+          });
+        }
+      );
     });
   } catch (err) {
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(401).send({ message: 'Unauthorized: Invalid token.' });
+    if (err.name === "JsonWebTokenError") {
+      return res.status(401).send({ message: "Unauthorized: Invalid token." });
     }
-    console.error('Unexpected Error:', err);
-    return res.status(500).send({ message: 'Internal server error.' });
+    console.error("Unexpected Error:", err);
+    return res.status(500).send({ message: "Internal server error." });
   }
 };
 

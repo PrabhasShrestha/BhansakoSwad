@@ -74,7 +74,6 @@ const uploadSellerImage = multer({
 
 // Existing routes
 router.post('/registerseller', registerSellerValidation, sellerController.registerSeller);
-router.post('/loginseller', loginSellerValidation, sellerController.loginSeller);
 router.post('/verifyseller', sellerController.verifySellerCode);
 router.post('/resendseller', sellerController.resendSellerCode);
 router.post('/forgotseller-password', forgetValidation, sellerController.forgetSellerPassword);

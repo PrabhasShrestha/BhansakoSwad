@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [netEarnings, setNetEarnings] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [weeklySales, setWeeklySales] = useState([]);
-  const vendorId = localStorage.getItem("vendorId"); // Get vendor ID
+  const vendorId = localStorage.getItem("sellerId"); // Get vendor ID
 
   useEffect(() => {
     const fetchOrders = async () => {

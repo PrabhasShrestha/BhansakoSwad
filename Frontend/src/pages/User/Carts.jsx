@@ -9,7 +9,7 @@ const ShoppingCart = () => {
   const [cartItems, setCartItems] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/cart", {
+    fetch("http://localhost:3000/api/cart/cart", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -42,7 +42,7 @@ const ShoppingCart = () => {
   const updateQuantity = (id, newQuantity) => {
     if (newQuantity < 1) return; // Prevent negative quantity
   
-    fetch("http://localhost:3000/api/update-quantity", {
+    fetch("http://localhost:3000/api/cart/update-quantity", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +64,7 @@ const ShoppingCart = () => {
   };  
   
   const removeItem = (id) => {
-    fetch("http://localhost:3000/api/remove", {
+    fetch("http://localhost:3000/api/cart/remove", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

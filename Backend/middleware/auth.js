@@ -1,34 +1,26 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = process.env;
 
-const isAuthorize = (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Unauthorized: Token required.' });
+const isAuthorize = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ message: "Unauthorized: Missing token" });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    }
 
-    // Verify the token
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-      if (err) {
-        const message =
-          err.name === 'TokenExpiredError'
-            ? 'Unauthorized: Token has expired.'
-            : 'Unauthorized: Invalid token.';
-        return res.status(401).json({ message });
-      }
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ message: "Forbidden: Invalid or expired token" });
+        }
 
-      // Attach user info to the request object
-      req.user = { id: decoded.id };
-      next(); // Proceed to the next middleware or route handler
+        req.user = decoded; // Attach user info to request
+        next();
     });
-  } catch (error) {
-    console.error('Authorization error:', error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
 };
 
 

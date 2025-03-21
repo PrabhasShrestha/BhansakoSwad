@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import axios from "axios";
 import "../styles/Header.css";
-import userImage from '../assets/user.png';
+import userImage from "../assets/user.png";
 import { FaBell } from "react-icons/fa";
 
 const Navigationbar = () => {
@@ -11,8 +11,10 @@ const Navigationbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSeller, setIsSeller] = useState(false);
+  const [isChef, setIsChef] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const userId = localStorage.getItem("userId"); 
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
     console.log("📢 Fetching user profile data...");
@@ -24,12 +26,21 @@ const Navigationbar = () => {
       .then((response) => {
         console.log("User data response:", response.data);
 
+       
         const userData = response.data?.data;
-        if (userData?.is_admin === 1) {
+        if (userData?.role === "admin") {
           setIsAdmin(true);
         }
-        
-        const userImage = response.data?.data?.image;
+        if (userData?.seller_id) {
+          setIsSeller(true);
+          localStorage.setItem("sellerId", userData.seller_id);
+        }
+        if (userData?.chef_id) {
+          setIsChef(true);
+          localStorage.setItem("chefId", userData.chef_id);
+        }
+
+        const userImage = userData?.image;
         if (userImage) {
           const fullImageUrl = userImage.startsWith("http")
             ? userImage
@@ -45,32 +56,26 @@ const Navigationbar = () => {
         setProfileImage(null);
       });
 
-    // Fetch Notifications
     if (userId) {
       fetchNotifications();
     }
-  }, [userId]); // Fetch notifications when userId changes
+  }, [userId]);
 
-  // ✅ Confirm Order Delivery
   const confirmDelivery = async (orderId) => {
     try {
       console.log(`Confirming delivery for order: ${orderId}`);
-      
+
       await axios.post(`http://localhost:3000/api/orders/${orderId}/status`, {
-        status: "Delivered"
+        status: "Delivered",
       });
 
       console.log("Order marked as Delivered.");
-      
-     
       fetchNotifications();
-      
     } catch (error) {
       console.error("Error confirming delivery:", error.response?.data || error.message);
     }
   };
 
-  // Fetch Notifications from API
   const fetchNotifications = async () => {
     const storedUserId = localStorage.getItem("userId");
 
@@ -94,48 +99,47 @@ const Navigationbar = () => {
     setShowNotifications((prev) => !prev);
     fetchNotifications();
   };
+
   const clearNotifications = async () => {
     try {
       const response = await axios.delete(`http://localhost:3000/api/notifications/${userId}`);
-  
       console.log("API Response from clearNotifications:", response.data);
-  
-      setNotifications(prevNotifications => {
+
+      setNotifications((prevNotifications) => {
         if (response.data.deletedIds) {
-          return prevNotifications.filter(n => !response.data.deletedIds.includes(n.id));
+          return prevNotifications.filter((n) => !response.data.deletedIds.includes(n.id));
         }
         return []; // Clear all notifications if no specific IDs are returned
       });
-  
-      // Fetch fresh notifications to sync with the backend
+
       fetchNotifications();
     } catch (error) {
       console.error("❌ Error clearing notifications:", error.response?.data || error.message);
-  
+
       if (error.response?.status === 403) {
-        setErrorMessages(prevErrors => {
+        setErrorMessages((prevErrors) => {
           const newErrors = { ...prevErrors };
-  
-          notifications.forEach(n => {
+
+          notifications.forEach((n) => {
             if (n.message.includes("Confirm Delivery") || n.message.includes("shipped")) {
               newErrors[n.id] = "❌ This notification cannot be deleted!";
             }
           });
-  
+
           return newErrors;
         });
-  
-        // Remove error messages after 3 seconds
+
         setTimeout(() => {
           setErrorMessages({});
         }, 3000);
       }
     }
   };
+
   const handleUserIconClick = () => {
     setShowUserDropdown((prev) => !prev);
   };
-  
+
   return (
     <header className="header">
       {/* Logo */}
@@ -166,19 +170,19 @@ const Navigationbar = () => {
       <div className="user-icon">
         {/* Notification Bell */}
         <div className="notification-container">
-        <FaBell
-          size={23}
-          color="#d580ff"
-          style={{ 
-            marginRight: "18px", 
-            cursor: "pointer", 
-            transition: "color 0.3s ease-in-out" 
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#d580ff")} // Darker purple on hover
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#a64dff")} // Restore original color
-          onClick={toggleNotifications} // ✅ Fetch notifications on bell click
-        />
-          {/* Dropdown Menu */}
+          <FaBell
+            size={23}
+            color="#d580ff"
+            style={{
+              marginRight: "18px",
+              cursor: "pointer",
+              transition: "color 0.3s ease-in-out",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#d580ff")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#a64dff")}
+            onClick={toggleNotifications}
+          />
+
           {showNotifications && (
             <div className="notification-dropdown">
               <h4>Notifications</h4>
@@ -188,7 +192,7 @@ const Navigationbar = () => {
                 </span>
               )}
               {notifications.length > 0 ? (
-                notifications.map((notification,index) => (
+                notifications.map((notification, index) => (
                   <div key={notification.id || index} className="notification-item">
                     {notification.message}
 
@@ -196,7 +200,7 @@ const Navigationbar = () => {
                       <p className="notification-error">{errorMessages[notification.id]}</p>
                     )}
                     {notification.message.includes("shipped") && (
-                      <button 
+                      <button
                         className="noticonfirm-btn"
                         onClick={() => confirmDelivery(notification.order_id)}
                       >
@@ -233,37 +237,40 @@ const Navigationbar = () => {
             />
           )}
 
-          {/* The actual dropdown */}
+          {/* Dropdown Menu */}
           {showUserDropdown && (
             <div className="user-dropdown-menu">
               {isAdmin && (
-                <NavLink 
-                  to="/admindashboard" 
+                <NavLink
+                  to="/admindashboard"
                   className="dropdown-item"
                   onClick={() => setShowUserDropdown(false)}
                 >
                   View Admin Panel
                 </NavLink>
               )}
-              <NavLink 
-                to="/userProfile" 
-                className="dropdown-item"
-                onClick={() => setShowUserDropdown(false)}
-              >
+              {isSeller && (
+                <NavLink
+                  to="/dashboard"
+                  className="dropdown-item"
+                  onClick={() => setShowUserDropdown(false)}
+                >
+                  View Seller Dashboard
+                </NavLink>
+              )}
+              <NavLink to="/userProfile" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
                 My Profile
               </NavLink>
               <NavLink
-              className="dropdown-item"
-              onClick={() => {
-                setShowUserDropdown(false);
-                localStorage.removeItem("token");
-                localStorage.removeItem("userId");
-                window.location.href = "/login";
-              }}
-            >
-              Logout
-            </NavLink>
-          </div>
+                className="dropdown-item"
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.href = "/login";
+                }}
+              >
+                Logout
+              </NavLink>
+            </div>
           )}
         </div>
       </div>

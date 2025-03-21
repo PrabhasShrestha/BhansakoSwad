@@ -9,7 +9,7 @@ const OrderPage = () => {
   const [showing, setShowing] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const vendorId = localStorage.getItem("vendorId");
+  const vendorId = localStorage.getItem("sellerId");
 
   // Fetch Orders from API
   useEffect(() => {

@@ -12,34 +12,72 @@ const registerSeller = (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { shop_name, owner_name, store_address, email, phone_number, password } = req.body;
-
-    // Check if email already exists
-    db.query(
-        `SELECT * FROM sellers WHERE LOWER(email) = LOWER(${db.escape(email)});`,
-        (err, result) => {
-            if (result && result.length) {
-                return res.status(409).send({ msg: 'This email is already in use!' });
+        const { shop_name, owner_name, store_address, email, phone_number, password } = req.body;
+        console.log("Incoming request data:", req.body);
+        // Check if email already exists
+        const nameParts = owner_name.split(" ");
+        const first_name = nameParts[0];
+        const last_name = nameParts.slice(1).join(" ") || "";
+        db.query(
+          `SELECT * FROM users WHERE LOWER(email) = LOWER(?)`,
+          [email],
+          async (err, userResult) => {
+            if (err) return res.status(500).json({ msg: "DB error on users check" });
+      
+            let hashedPassword;
+      
+            if (userResult.length > 0) {
+              const user = userResult[0];
+              const isMatch = await bcrypt.compare(password, user.password);
+              if (!isMatch) {
+                return res.status(400).json({
+                  msg: "Password does not match your existing user account",
+                });
+              }
+              hashedPassword = user.password;
             } else {
-                // Hash the password
-                bcrypt.hash(password, 10, (err, hash) => {
-                    if (err) {
-                        return res.status(500).send({ msg: 'Error hashing password' });
-                    } else {
-                        // Generate verification code
-                        const verificationCode = randomstring.generate({ length: 6, charset: 'numeric' });
-                        const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000); // Expires in 10 mins
+              hashedPassword = await bcrypt.hash(password, 10);
+              const insertUserQuery = `INSERT INTO users (first_name, last_name, address, email, phone_number, password, isVerified, activity_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+              db.query(
+                insertUserQuery,
+                [first_name, last_name, store_address, email, phone_number, hashedPassword, 1, "active"],
+                (err) => {
+                  if (err)
+                    return res.status(500).json({ msg: "Error inserting into users table" });
+                }
+              );
+            }
+      
+            // Check if seller already exists
+            db.query(
+              `SELECT * FROM sellers WHERE LOWER(email) = LOWER(?)`,
+              [email],
+              (err, result) => {
+                if (result && result.length) {
+                  return res.status(409).send({ msg: "This email is already in use!" });
+                }
+      
+                const verificationCode = randomstring.generate({ length: 6, charset: "numeric" });
+                const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000);
 
-                        // Insert seller into the database
-                        db.query(
-                            `INSERT INTO sellers (shop_name, owner_name, store_address, email, phone_number, password, verificationCode, verificationCodeExpiryAT) 
-                             VALUES (${db.escape(shop_name)}, ${db.escape(owner_name)}, ${db.escape(store_address)}, 
-                                     ${db.escape(email)}, ${db.escape(phone_number)}, ${db.escape(hash)}, 
-                                     ${db.escape(verificationCode)}, ${db.escape(verificationCodeExpiryAT)});`,
-                            (err) => {
-                                if (err) {
-                                    return res.status(500).send({ msg: 'Error saving seller to database' });
-                                }
+                            // Insert seller into the database
+                            // Insert seller
+              db.query(
+                `INSERT INTO sellers (shop_name, owner_name, store_address, email, phone_number, password, verificationCode, verificationCodeExpiryAT) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  shop_name,
+                  owner_name,
+                  store_address,
+                  email,
+                  phone_number,
+                  hashedPassword,
+                  verificationCode,
+                  verificationCodeExpiryAT,
+                ],
+                (err) => {
+                  if (err)
+                    return res.status(500).send({ msg: "Error saving seller to database" });
 
                                 // Send verification email
                                 const mailSubject = 'Verify Your Seller Account';
@@ -60,73 +98,8 @@ const registerSeller = (req, res) => {
                             }
                         );
                     }
-                });
-            }
-        }
-    );
-};
-
-
-const loginSeller = (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, password } = req.body;
-
-    // Check if the seller exists
-    db.query(
-        `SELECT * FROM sellers WHERE email = ${db.escape(email)};`,
-        (err, result) => {
-            if (err) {
-                return res.status(500).send({ msg: 'Database error' });
-            }
-
-            if (!result.length) {
-                return res.status(404).send({ msg: 'Seller not found. Please check the email or register.' });
-            }
-
-            const seller = result[0];
-
-            // Check if the seller is verified
-            if (!seller.isVerified) {
-                return res.status(403).send({ msg: 'Email is not verified. Please verify your email first.' });
-            }
-
-            // Compare password
-            bcrypt.compare(password, seller.password, (err, isMatch) => {
-                if (err || !isMatch) {
-                    return res.status(401).send({ msg: 'Invalid password' });
-                }
-
-                // Generate JWT token
-                const token = jwt.sign({ id: seller.id }, JWT_SECRET, { expiresIn: '1d' });
-
-                // Save token in the database
-                db.query(
-                    `UPDATE sellers SET token = ${db.escape(token)} WHERE id = ${db.escape(seller.id)};`,
-                    (err) => {
-                        if (err) {
-                            return res.status(500).send({ msg: 'Failed to save token' });
-                        }
-
-                        return res.status(200).send({
-                            msg: 'Logged in successfully',
-                            token,
-                            seller: {
-                                id: seller.id,
-                                shop_name: seller.shop_name,
-                                owner_name: seller.owner_name,
-                                email: seller.email,
-                                store_address: seller.store_address,
-                                phone_number: seller.phone_number
-                            },
-                        });
-                    }
                 );
-            });
-        }
+            }
     );
 };
 
@@ -271,7 +244,11 @@ const resendSellerCode = (req, res) => {
 
 const getSeller = (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user.seller_id; // Ensure we use seller_id, not user.id
+
+    if (!sellerId) {
+      return res.status(404).send({ message: "Seller profile not found." });
+    }
 
     db.query(
       `SELECT shop_name, owner_name, store_address, email, phone_number, image 
@@ -279,12 +256,12 @@ const getSeller = (req, res) => {
       [sellerId],
       (error, result) => {
         if (error) {
-          console.error('Database Error:', error);
-          return res.status(500).send({ message: 'Internal server error.' });
+          console.error("Database Error:", error);
+          return res.status(500).send({ message: "Internal server error." });
         }
 
         if (result.length === 0) {
-          return res.status(404).send({ message: 'Seller not found.' });
+          return res.status(404).send({ message: "Seller not found." });
         }
 
         const seller = result[0];
@@ -295,81 +272,112 @@ const getSeller = (req, res) => {
         res.status(200).json({
           success: true,
           data: seller,
-          message: 'Seller data fetched successfully'
+          message: "Seller data fetched successfully",
         });
       }
     );
   } catch (err) {
-    console.error('Unexpected Error:', err);
-    res.status(500).send({ message: 'Internal server error.' });
+    console.error("Unexpected Error:", err);
+    res.status(500).send({ message: "Internal server error." });
   }
 };
+
 const updateSeller = (req, res) => {
-  const sellerId = req.user.id;
-  const { shop_name, owner_name, store_address, email, phone_number } = req.body;
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Unauthorized: Missing or malformed token." });
+    }
 
-  // Add validation check
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const { shop_name, owner_name, store_address, email, phone_number } = req.body;
 
-  // Check if an image is uploaded
-  let imagePath = null;
-  if (req.file) {
-    imagePath = `uploads/sellers/${req.file.filename}`; // Ensure correct path
-  }
+    // Add validation check
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  // Check if the email is already used by another seller
-  db.query(
-    `SELECT id FROM sellers WHERE email = ? AND id != ?`,
-    [email, sellerId],
-    (err, results) => {
-      if (err) {
-        console.error("Database Error:", err);
-        return res.status(500).json({ message: "Internal server error" });
-      }
+    // Check if an image is uploaded
+    let imagePath = null;
+    if (req.file) {
+      imagePath = `uploads/sellers/${req.file.filename}`; // Ensure correct path
+    }
 
-      if (results.length > 0) {
-        return res.status(409).json({ message: "Email already in use" });
-      }
-
-      // Dynamically update SQL query to include image if provided
-      let query = `
-        UPDATE sellers 
-        SET shop_name = ?, owner_name = ?, store_address = ?, email = ?, phone_number = ?
-      `;
-      let data = [shop_name, owner_name, store_address, email, phone_number];
-
-      if (imagePath) {
-        query += `, image = ?`;
-        data.push(imagePath);
-      }
-
-      query += ` WHERE id = ?`;
-      data.push(sellerId);
-
-      db.query(query, data, (error) => {
-        if (error) {
-          console.error("Update Error:", error);
-          return res.status(500).json({ message: "Failed to update profile" });
+    // Find the seller's ID using email
+    db.query(
+      `SELECT id FROM sellers WHERE email = (SELECT email FROM users WHERE id = ?)`,
+      [decoded.id],
+      (err, sellerResults) => {
+        if (err) {
+          console.error("Database Error:", err);
+          return res.status(500).json({ message: "Internal server error" });
         }
 
-        res.status(200).json({
-          success: true,
-          message: "Profile updated successfully",
-          data: {
-            shop_name,
-            owner_name,
-            store_address,
-            email,
-            phone_number,
-            image: imagePath ? `http://localhost:3000/${imagePath}` : null, // Return full URL
-          },
-        });
-      });
-    }
-  );
+        if (sellerResults.length === 0) {
+          return res.status(404).json({ message: "Seller not found." });
+        }
+
+        const sellerId = sellerResults[0].id;
+
+        // Check if the email is already used by another seller
+        db.query(
+          `SELECT id FROM sellers WHERE email = ? AND id != ?`,
+          [email, sellerId],
+          (err, results) => {
+            if (err) {
+              console.error("Database Error:", err);
+              return res.status(500).json({ message: "Internal server error" });
+            }
+
+            if (results.length > 0) {
+              return res.status(409).json({ message: "Email already in use" });
+            }
+
+            // Dynamically update SQL query to include image if provided
+            let query = `
+              UPDATE sellers 
+              SET shop_name = ?, owner_name = ?, store_address = ?, email = ?, phone_number = ?
+            `;
+            let data = [shop_name, owner_name, store_address, email, phone_number];
+
+            if (imagePath) {
+              query += `, image = ?`;
+              data.push(imagePath);
+            }
+
+            query += ` WHERE id = ?`;
+            data.push(sellerId);
+
+            db.query(query, data, (error) => {
+              if (error) {
+                console.error("Update Error:", error);
+                return res.status(500).json({ message: "Failed to update profile" });
+              }
+
+              res.status(200).json({
+                success: true,
+                message: "Profile updated successfully",
+                data: {
+                  shop_name,
+                  owner_name,
+                  store_address,
+                  email,
+                  phone_number,
+                  image: imagePath ? `http://localhost:3000/${imagePath}` : null,
+                },
+              });
+            });
+          }
+        );
+      }
+    );
+  } catch (err) {
+    console.error("Unexpected Error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const uploadImage = (req, res) => {
@@ -378,241 +386,307 @@ const uploadImage = (req, res) => {
       return res.status(400).json({ message: "No file uploaded." });
     }
 
-    const sellerId = req.user.id;
-    const imagePath = `uploads/sellers/${req.file.filename}`; // Store only relative path
-    const fullImageUrl = `http://localhost:3000/${imagePath}`; // Convert to full URL
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Unauthorized: Missing or malformed token." });
+    }
 
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const imagePath = `uploads/sellers/${req.file.filename}`;
+    const fullImageUrl = `http://localhost:3000/${imagePath}`;
+
+    // Find seller ID by user's email
     db.query(
-      `UPDATE sellers SET image = ? WHERE id = ?`,
-      [imagePath, sellerId], // Store only relative path
-      (err) => {
+      `SELECT id FROM sellers WHERE email = (SELECT email FROM users WHERE id = ?)`,
+      [decoded.id],
+      (err, sellerResults) => {
         if (err) {
-          console.error("Error updating database:", err.message);
-          return res.status(500).json({ message: "Failed to save image in database." });
+          console.error("Database Error:", err);
+          return res.status(500).json({ message: "Internal server error" });
         }
 
-        return res.status(200).json({
-          message: "Image uploaded successfully.",
-          image: fullImageUrl, // Send full URL to frontend
-        });
+        if (sellerResults.length === 0) {
+          return res.status(404).json({ message: "Seller not found." });
+        }
+
+        const sellerId = sellerResults[0].id;
+
+        // Update seller image
+        db.query(
+          `UPDATE sellers SET image = ? WHERE id = ?`,
+          [imagePath, sellerId],
+          (err) => {
+            if (err) {
+              console.error("Error updating database:", err.message);
+              return res.status(500).json({ message: "Failed to save image in database." });
+            }
+
+            return res.status(200).json({
+              message: "Image uploaded successfully.",
+              image: fullImageUrl, // Send full URL to frontend
+            });
+          }
+        );
       }
     );
   } catch (err) {
     console.error("Error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const removeImage = (req, res) => {
-  const sellerId = req.user.id;
-
-  db.query(
-    `UPDATE sellers SET image = NULL WHERE id = ?`,
-    [sellerId],
-    (err) => {
-      if (err) {
-        console.error("Database Error:", err);
-        return res.status(500).json({ message: "Failed to remove image" });
-      }
-
-      res.status(200).json({
-        success: true,
-        message: "Image removed successfully"
-      });
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "Unauthorized: Missing or malformed token." });
     }
-  );
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find seller ID by user's email
+    db.query(
+      `SELECT id FROM sellers WHERE email = (SELECT email FROM users WHERE id = ?)`,
+      [decoded.id],
+      (err, sellerResults) => {
+        if (err) {
+          console.error("Database Error:", err);
+          return res.status(500).json({ message: "Internal server error" });
+        }
+
+        if (sellerResults.length === 0) {
+          return res.status(404).json({ message: "Seller not found." });
+        }
+
+        const sellerId = sellerResults[0].id;
+
+        db.query(
+          `UPDATE sellers SET image = NULL WHERE id = ?`,
+          [sellerId],
+          (err) => {
+            if (err) {
+              console.error("Database Error:", err);
+              return res.status(500).json({ message: "Failed to remove image" });
+            }
+
+            res.status(200).json({
+              success: true,
+              message: "Image removed successfully",
+            });
+          }
+        );
+      }
+    );
+  } catch (err) {
+    console.error("Error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
+
 // Add New products
+
 const addproducts = (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-  }
+    // ✅ 1. Validate input fields
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
 
-  const { name, category, price, in_stock, description } = req.body;
-  const image = req.file ? req.file.filename : null;
-  const sellerId = req.user.id;
+    // ✅ 2. Extract product details from request
+    const { name, category, price, in_stock, description } = req.body;
+    const image = req.file ? `uploads/products/${req.file.filename}` : null;
 
-  db.query(`SELECT * FROM products WHERE LOWER(name) = LOWER(?)`, [name], (err, result) => {
-      if (err) return res.status(500).send({ msg: 'Database error' });
+    // ✅ 3. Extract and verify the token
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ msg: "Unauthorized: No token provided" });
+    }
 
-      if (result.length > 0) {
-          // Product exists, check if it's already linked to the seller
-          const productId = result[0].id;
+    const token = authHeader.split(" ")[1];
 
-          db.query(
-              `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?`,
-              [productId, sellerId],
-              (err, detailResult) => {
-                  if (err) return res.status(500).send({ msg: 'Database error' });
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const sellerId = decoded.seller_id; // ✅ Use seller_id, not user_id
 
-                  if (detailResult.length > 0) {
-                      return res.status(409).send({ msg: "You have already listed this product!" });
-                  }
+        if (!sellerId) {
+            return res.status(403).json({ msg: "Access denied: Not a seller" });
+        }
 
-                  // Link existing product to the seller with a unique image
-                  db.query(
-                      `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image) VALUES (?, ?, ?, ?, ?)`,
-                      [productId, sellerId, price, in_stock, image],
-                      (err) => {
-                          if (err) return res.status(500).send({ msg: 'Error saving product details' });
+        // ✅ 4. Check if the seller exists in `sellers` table
+        db.query(`SELECT id FROM sellers WHERE id = ?`, [sellerId], (err, sellerResult) => {
+            if (err) {
+                console.error("Database Error:", err);
+                return res.status(500).json({ msg: "Database error", details: err });
+            }
+            
+            if (sellerResult.length === 0) {
+                return res.status(404).json({ msg: "Seller profile not found" });
+            }
 
-                          return res.status(201).send({ msg: 'Product added successfully with unique image!' });
-                      }
-                  );
-              }
-          );
-      } else {
-          // Product does not exist, create a new entry
-          db.query(
-              `INSERT INTO products (name, category) VALUES (?, ?)`,
-              [name, category],
-              (err, productResult) => {
-                  if (err) return res.status(500).send({ msg: 'Error saving product' });
+            // ✅ 5. Check if the product already exists
+            db.query(`SELECT id FROM products WHERE LOWER(name) = LOWER(?)`, [name], (err, productResult) => {
+                if (err) return res.status(500).json({ msg: "Database error" });
 
-                  const productId = productResult.insertId;
+                if (productResult.length > 0) {
+                    const productId = productResult[0].id;
 
-                  // Link the newly created product to the seller with an image
-                  db.query(
-                    `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image, description) 
-                     VALUES (?, ?, ?, ?, ?, ?)`,
-                    [productId, sellerId, price, in_stock, image, description],                
-                      (err) => {
-                          if (err) return res.status(500).send({ msg: 'Error saving product details' });
+                    // ✅ 6. Check if the seller already has this product listed
+                    db.query(
+                        `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?`,
+                        [productId, sellerId],
+                        (err, detailResult) => {
+                            if (err) return res.status(500).json({ msg: "Database error" });
 
-                          return res.status(201).send({ msg: 'Product added successfully with unique image!' });
-                      }
-                  );
-              }
-          );
-      }
-  });
+                            if (detailResult.length > 0) {
+                                return res.status(409).json({ msg: "You have already listed this product!" });
+                            }
+
+                            // ✅ 7. Add product under seller's listing
+                            db.query(
+                                `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image, description) 
+                                 VALUES (?, ?, ?, ?, ?, ?)`,
+                                [productId, sellerId, price, in_stock, image, description],
+                                (err) => {
+                                    if (err) return res.status(500).json({ msg: "Error saving product details" });
+
+                                    return res.status(201).json({ msg: "Product added successfully!" });
+                                }
+                            );
+                        }
+                    );
+                } else {
+                    // ✅ 8. If product doesn't exist, add new product
+                    db.query(
+                        `INSERT INTO products (name, category) VALUES (?, ?)`,
+                        [name, category],
+                        (err, productInsertResult) => {
+                            if (err) return res.status(500).json({ msg: "Error saving product" });
+
+                            const productId = productInsertResult.insertId;
+
+                            // ✅ 9. Link the newly created product to the seller
+                            db.query(
+                                `INSERT INTO productdetails (product_id, seller_id, price, in_stock, image, description) 
+                                 VALUES (?, ?, ?, ?, ?, ?)`,
+                                [productId, sellerId, price, in_stock, image, description],
+                                (err) => {
+                                    if (err) return res.status(500).json({ msg: "Error saving product details" });
+
+                                    return res.status(201).json({ msg: "Product added successfully!" });
+                                }
+                            );
+                        }
+                    );
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Token Verification Error:", error);
+        return res.status(401).json({ msg: "Unauthorized: Invalid token" });
+    }
 };
 
 
 const getproducts = (req, res) => {
-  const sellerId = req.user.id; // Get seller ID from token
+    // ✅ 1. Extract and verify token
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ msg: "Unauthorized: No token provided" });
+    }
 
-  let sqlQuery = `
-            SELECT p.id AS product_id, p.name AS product_name, p.category, pd.description, pd.price, pd.in_stock, pd.image 
-            FROM products p
-            JOIN productdetails pd ON p.id = pd.product_id
-            WHERE pd.seller_id = ?
-          `;
+    const token = authHeader.split(" ")[1];
 
-  db.query(sqlQuery, [sellerId], (err, result) => {
-      if (err) return res.status(500).json({ msg: 'Database error', details: err });
-      if (!result.length) return res.status(404).json({ msg: 'No products found' });
-      
-      res.json({ success: true, products: result }); 
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const sellerId = decoded.seller_id; // ✅ Use seller_id, not user_id
+
+        if (!sellerId) {
+            return res.status(403).json({ msg: "Access denied: Not a seller" });
+        }
+
+        // ✅ 2. Check if the seller exists in `sellers` table
+        db.query(`SELECT id FROM sellers WHERE id = ?`, [sellerId], (err, sellerResult) => {
+            if (err) {
+                console.error("Database Error:", err);
+                return res.status(500).json({ msg: "Database error", details: err });
+            }
+            
+            if (sellerResult.length === 0) {
+                return res.status(404).json({ msg: "Seller profile not found" });
+            }
+
+            // ✅ 3. Fetch all products for the seller
+            let sqlQuery = `
+                SELECT p.id AS product_id, p.name AS product_name, p.category, pd.description, pd.price, pd.in_stock, 
+                CONCAT('http://localhost:3000/', COALESCE(pd.image, 'default-image.jpg')) AS image
+                FROM products p
+                JOIN productdetails pd ON p.id = pd.product_id
+                WHERE pd.seller_id = ?
+            `;
+
+            db.query(sqlQuery, [sellerId], (err, result) => {
+                if (err) return res.status(500).json({ msg: "Database error", details: err });
+                if (!result.length) return res.status(404).json({ msg: "No products found" });
+
+                res.json({ success: true, products: result });
+            });
+        });
+
+    } catch (error) {
+        console.error("Token Verification Error:", error);
+        return res.status(401).json({ msg: "Unauthorized: Invalid token" });
+    }
+};
+
+const getSellerId = (email, callback) => {
+  db.query(`SELECT id FROM sellers WHERE email = ?`, [email], (err, result) => {
+    if (err) return callback(err, null);
+    if (result.length === 0) return callback(null, null);
+    return callback(null, result[0].id);
   });
 };
+;
 
-
-// Update products
 const updateproducts = (req, res) => {
-  const { id, price, in_stock, description } = req.body; // Get ID from request body
-  const image = req.file ? req.file.filename : null;
-  const sellerId = req.user.id;
-
-  if (!id) {
-      return res.status(400).json({ msg: "Product ID is required" });
-  }
-
-  // Check if the product exists in productdetails for the seller
-  db.query(
-      `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
-      [id, sellerId],
-      (err, results) => {
-          if (err) {
-              return res.status(500).json({ msg: "Database error" });
-          }
-          if (results.length === 0) {
-              return res.status(404).json({ msg: "Product not found for this seller" });
-          }
-
-          // Update `productdetails` for the specific seller
-          db.query(
-            `UPDATE productdetails SET price = ?, in_stock = ?, image = ?, description = ? WHERE product_id = ? AND seller_id = ?`,
-            [price, in_stock, image, description, id, sellerId],        
-              (err) => {
-                  if (err) {
-                      return res.status(500).json({ msg: "Failed to update product details" });
-                  }
-                  res.status(200).json({ msg: "Product details updated successfully" });
-              }
-          );
-      }
-  );
-};
-
-// Delete products
-const deleteproducts = (req, res) => {
-  const { id } = req.body; // Get Product ID from request body
-  const sellerId = req.user.id; // Get seller ID from authenticated user
+  const { id, price, in_stock, description } = req.body;
+  const newImage = req.file ? `uploads/products/${req.file.filename}` : null;
 
   if (!id) {
     return res.status(400).json({ msg: "Product ID is required" });
   }
 
-  // Check if the product exists for this specific seller in productdetails
-  db.query(
-    `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
-    [id, sellerId],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({ msg: "Database error", details: err });
+  const token = req.headers.authorization.split(" ")[1];
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const sellerId = decoded.seller_id;
+
+  if (!sellerId) return res.status(403).json({ msg: "Unauthorized: Seller ID missing" });
+
+  // Fetch the existing image from the database
+  db.query(`SELECT image FROM productdetails WHERE product_id = ? AND seller_id = ?`, [id, sellerId], (err, result) => {
+    if (err) return res.status(500).json({ msg: "Database error", details: err });
+
+    if (result.length === 0) return res.status(404).json({ msg: "Product not found" });
+
+    const existingImage = result[0].image;
+    const finalImage = newImage || existingImage; // ✅ Preserve the existing image if no new image is uploaded
+
+    // Update product details
+    db.query(
+      `UPDATE productdetails SET price = ?, in_stock = ?, image = ?, description = ? WHERE product_id = ? AND seller_id = ?`,
+      [price, in_stock, finalImage, description, id, sellerId],
+      (err) => {
+        if (err) return res.status(500).json({ msg: "Failed to update product details" });
+
+        res.status(200).json({ msg: "Product updated successfully", image: finalImage });
       }
-      if (!result.length) {
-        return res.status(404).json({ msg: "Product not found for this seller" });
-      }
-
-      // Delete the product from productdetails for this seller
-      db.query(
-        `DELETE FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
-        [id, sellerId],
-        (err) => {
-          if (err) {
-            return res.status(500).json({ msg: "Failed to delete product details", details: err });
-          }
-
-          // Check if there are any remaining sellers for this product
-          db.query(
-            `SELECT * FROM productdetails WHERE product_id = ?;`,
-            [id],
-            (err, remainingSellers) => {
-              if (err) {
-                return res.status(500).json({ msg: "Database error", details: err });
-              }
-
-              // If no other sellers are selling this product, remove it from products
-              if (remainingSellers.length === 0) {
-                db.query(
-                  `DELETE FROM products WHERE id = ?;`,
-                  [id],
-                  (err) => {
-                    if (err) {
-                      return res.status(500).json({ msg: "Failed to delete product from main table", details: err });
-                    }
-                    return res.status(200).json({ msg: "Product deleted successfully from all records" });
-                  }
-                );
-              } else {
-                // If other sellers still have this product, just remove the seller's entry
-                return res.status(200).json({ msg: "Product deleted successfully for this seller" });
-              }
-            }
-          );
-        }
-      );
-    }
-  );
+    );
+  });
 };
 
 
-// Upload Image for products
 const uploadproductsImage = (req, res) => {
   try {
       if (!req.file) {
@@ -620,71 +694,124 @@ const uploadproductsImage = (req, res) => {
       }
 
       const productId = req.body.id;
-      const sellerId = req.user.id; // Get seller ID from token
-      const imagePath = req.file.filename;
+      const token = req.headers.authorization.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Check if the seller owns this product
-      db.query(
-          `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
-          [productId, sellerId],
-          (err, result) => {
-              if (err) {
-                  return res.status(500).json({ msg: "Database error", details: err });
-              }
-              if (!result.length) {
-                  return res.status(404).json({ msg: "Product not found for this seller" });
-              }
+      getSellerId(decoded.id, (err, sellerId) => {
+          if (err) return res.status(500).json({ msg: "Database error", details: err });
+          if (!sellerId) return res.status(404).json({ msg: "Seller not found" });
 
-              // Update image for this seller's product
-              db.query(
-                  `UPDATE productdetails SET image = ? WHERE product_id = ? AND seller_id = ?;`,
-                  [imagePath, productId, sellerId],
-                  (err) => {
-                      if (err) {
-                          return res.status(500).json({ msg: "Failed to save image in database." });
-                      }
-                      return res.status(200).json({ msg: "Image uploaded successfully.", image: imagePath });
+          const imagePath = `uploads/products/${req.file.filename}`;
+
+          db.query(
+              `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?`,
+              [productId, sellerId],
+              (err, result) => {
+                  if (err) return res.status(500).json({ msg: "Database error", details: err });
+
+                  if (!result.length) {
+                      return res.status(404).json({ msg: "Product not found for this seller" });
                   }
-              );
-          }
-      );
+
+                  // Update image in database
+                  db.query(
+                      `UPDATE productdetails SET image = ? WHERE product_id = ? AND seller_id = ?`,
+                      [imagePath, productId, sellerId],
+                      (err) => {
+                          if (err) return res.status(500).json({ msg: "Failed to save image in database." });
+                          return res.status(200).json({ msg: "Image uploaded successfully.", image: imagePath });
+                      }
+                  );
+              }
+          );
+      });
   } catch (err) {
       res.status(500).json({ msg: "Internal server error" });
   }
 };
-
-
-// Remove Image from products
 const removeproductsImage = (req, res) => {
   const { id } = req.body; // Product ID
-  const sellerId = req.user.id; // Get seller ID from token
+  const token = req.headers.authorization.split(" ")[1];
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-  // Check if the seller owns this product
-  db.query(
-      `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?;`,
+  getSellerId(decoded.id, (err, sellerId) => {
+      if (err) return res.status(500).json({ msg: "Database error", details: err });
+      if (!sellerId) return res.status(404).json({ msg: "Seller not found" });
+
+      db.query(
+          `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?`,
+          [id, sellerId],
+          (err, result) => {
+              if (err) return res.status(500).json({ msg: "Database error", details: err });
+              if (!result.length) return res.status(404).json({ msg: "Product not found for this seller" });
+
+              db.query(
+                  `UPDATE productdetails SET image = NULL WHERE product_id = ? AND seller_id = ?`,
+                  [id, sellerId],
+                  (err) => {
+                      if (err) return res.status(500).json({ msg: "Failed to remove image" });
+                      res.status(200).json({ msg: "Image removed successfully" });
+                  }
+              );
+          }
+      );
+  });
+};
+const deleteproducts = (req, res) => {
+  const { id } = req.body; // Product ID
+  if (!id) return res.status(400).json({ msg: "Product ID is required" });
+
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const sellerId = decoded.seller_id; // ✅ Ensure seller ID is used, not user ID
+
+    if (!sellerId) return res.status(403).json({ msg: "Unauthorized: Seller ID missing" });
+
+    // **1️⃣ Check if the seller owns this product**
+    db.query(
+      `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?`,
       [id, sellerId],
       (err, result) => {
-          if (err) {
-              return res.status(500).json({ msg: "Database error", details: err });
-          }
-          if (!result.length) {
-              return res.status(404).json({ msg: "Product not found for this seller" });
-          }
+        if (err) return res.status(500).json({ msg: "Database error", details: err });
+        if (!result.length) return res.status(404).json({ msg: "Product not found for this seller" });
 
-          // Remove only this seller's product image
-          db.query(
-              `UPDATE productdetails SET image = NULL WHERE product_id = ? AND seller_id = ?;`,
-              [id, sellerId],
-              (err) => {
-                  if (err) {
-                      return res.status(500).json({ msg: "Failed to remove image" });
-                  }
-                  res.status(200).json({ msg: "Image removed successfully" });
+        // **2️⃣ Delete product from seller's listings (productdetails)**
+        db.query(
+          `DELETE FROM productdetails WHERE product_id = ? AND seller_id = ?`,
+          [id, sellerId],
+          (err) => {
+            if (err) return res.status(500).json({ msg: "Failed to delete product details" });
+
+            // **3️⃣ Check if other sellers are still selling the product**
+            db.query(`SELECT * FROM productdetails WHERE product_id = ?`, [id], (err, remainingSellers) => {
+              if (err) return res.status(500).json({ msg: "Database error" });
+
+              if (remainingSellers.length === 0) {
+                // **4️⃣ If no other sellers have listed this product, delete the product itself**
+                db.query(`DELETE FROM products WHERE id = ?`, [id], (err) => {
+                  if (err) return res.status(500).json({ msg: "Failed to delete product" });
+
+                  return res.status(200).json({
+                    msg: "Product deleted successfully from all records",
+                  });
+                });
+              } else {
+                return res.status(200).json({
+                  msg: "Product removed from seller's listing, but still available from other sellers",
+                });
               }
-          );
+            });
+          }
+        );
       }
-  );
+    );
+  } catch (error) {
+    return res.status(500).json({ msg: "Internal server error", error: error.message });
+  }
 };
+
+
 
 const sellerchangePassword = (req, res) => {
 
@@ -804,8 +931,10 @@ const getProductsByStore = (req, res) => {
             const products = productResult.map((product) => ({
               ...product,
               image: product.image
-                ? `http://localhost:3000/uploads/products/${product.image}`
-                : null,
+                ? product.image.startsWith("uploads/products/")
+                  ? `http://localhost:3000/${product.image}`
+                  : `http://localhost:3000/uploads/products/${product.image}`
+                : "http://localhost:3000/uploads/default-product.png", // Fallback image
             }));
 
             res.status(200).json({
@@ -1283,7 +1412,6 @@ const updateStatus = (req, res) => {
 
 module.exports = {
   registerSeller,
-  loginSeller,
   verifySellerCode,
   resendSellerCode,
   getSeller,

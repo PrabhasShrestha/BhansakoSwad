@@ -5,6 +5,7 @@ const {
     loginValidation,
     forgetValidation,
     updateProfileValidation,
+    loginSellerValidation,
 } = require('../helpers/validation');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');

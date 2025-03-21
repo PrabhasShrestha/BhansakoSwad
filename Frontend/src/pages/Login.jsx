@@ -9,7 +9,6 @@ const Login = () => {
     email: "",
     password: "",
   });
-  const [role, setRole] = useState(""); // Default role is user
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -31,9 +30,6 @@ const Login = () => {
     if (!formData.password) {
       newErrors.password = "Password is required";
     }
-    if (!role) {
-      newErrors.role = "Please select a role";
-    }
     return newErrors;
   };
 
@@ -44,54 +40,61 @@ const Login = () => {
     // Validate inputs
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+        setErrors(validationErrors);
+        return;
     }
 
     setErrors({}); // Clear any previous errors
+
     try {
-      const endpoint =
-        role === "user"
-          ? "http://localhost:3000/api/login" // User login endpoint
-          : "http://localhost:3000/api/loginseller"; // Seller login endpoint
+        const endpoint = "http://localhost:3000/api/login"; // Single endpoint for all
+        const response = await axios.post(endpoint, formData);
 
-      const response = await axios.post(endpoint, formData);
+        console.log("Login successful", response.data);
 
-      console.log("Login successful", response.data);
+        // Store JWT token and role
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("role", response.data.role); // Role is received from backend
 
-      // Store JWT token and role in localStorage
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", role);
+      
 
-      if (role === "seller") {
-        localStorage.setItem("vendorId", response.data.seller.id);
-        console.log("Stored Vendor ID:", response.data.seller.id); // Debugging
-      }
-      if (role === "user") {
-        localStorage.setItem("userId", response.data.user.id);
-        console.log("Stored user ID:", response.data.user.id); // Debugging
-      }
-
-
-      // Navigate based on role
-      if (role === "user") {
-        navigate("/home"); // Redirect to user home page
-      } else if (role === "seller") {
-        navigate("/dashboard"); // Redirect to seller dashboard
-      }
+        if (response.data.user.role === "all") {
+            localStorage.setItem("userId", response.data.user.id);
+            localStorage.setItem("sellerId", response.data.user.seller_id);
+            localStorage.setItem("chefId", response.data.user.chef_id);
+        } else if (response.data.user.role === "user_seller") {
+            localStorage.setItem("userId", response.data.user.id);
+            localStorage.setItem("sellerId", response.data.user.seller_id);
+        } else if (response.data.user.role === "user_chef") {
+            localStorage.setItem("userId", response.data.user.id);
+            localStorage.setItem("chefId", response.data.user.chef_id);
+        } else if (response.data.user.role === "seller_chef") {
+            localStorage.setItem("sellerId", response.data.user.seller_id);
+            localStorage.setItem("chefId", response.data.user.chef_id);
+        } else if (response.data.user.role === "seller") {
+            localStorage.setItem("sellerId", response.data.user.seller_id);
+        } else if (response.data.user.role === "chef") {
+            localStorage.setItem("chefId", response.data.user.chef_id);
+        } else {
+            localStorage.setItem("userId", response.data.user.id);
+        }
+        navigate("/home");
+        
     } catch (error) {
-      // Handle errors from the backend
-      if (error.response?.status === 401) {
-        setErrors({ password: "Invalid password. Please try again." });
-      } else if (error.response?.status === 404) {
-        setErrors({ email: "Account not found. Please register first." });
-      } else if (error.response?.status === 403) {
-        setErrors({ api: "Email is not verified. Please verify your email first." });
-      } else {
-        setErrors({ api: "Login failed. Please try again later." });
-      }
+        // Handle errors from the backend
+        if (error.response?.status === 401) {
+            setErrors({ password: "Invalid password. Please try again." });
+        } else if (error.response?.status === 404) {
+            setErrors({ email: "Account not found. Please register first." });
+        } else if (error.response?.status === 403) {
+            setErrors({
+                api: "Your account is under verification. Please wait for admin approval."
+            });
+        } else {
+            setErrors({ api: "Login failed. Please try again later." });
+        }
     }
-  };
+};
 
   // Toggle password visibility
   const togglePasswordVisibility = () => {
@@ -136,23 +139,6 @@ const Login = () => {
           {errors.password && <span className="error-message">{errors.password}</span>}
           {errors.api && <span className="error-message">{errors.api}</span>}
 
-          <div className="role-dropdown">
-            <label htmlFor="role">Choose your Role:</label>
-            <select
-              id="role"
-              name="role"
-              value={role} // Controlled component to bind the state
-              onChange={(e) => setRole(e.target.value)}
-              className={errors.role ? "error-input" : ""} // Update the role state
-            >
-              <option value="" disabled>
-                Select a role
-              </option>
-              <option value="user">User</option>
-              <option value="seller">Seller</option>
-            </select>
-            {errors.role && <span className="error-message">{errors.role}</span>}
-          </div>
 
           <a href="/ForgotPass" className="forgot-password">
             Forgot Password?
@@ -168,3 +154,6 @@ const Login = () => {
 };
 
 export default Login;
+
+
+

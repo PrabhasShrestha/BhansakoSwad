@@ -41,30 +41,35 @@ const SellerUpdatePage = () => {
   }, []);
 
   const fetchVendorData = () => {
-    axios.get("http://localhost:3000/api/get-seller", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-    .then((response) => {
-      const data = response.data.data;
-      const FormData = {
-        shopName: data.shop_name,
-        ownerName: data.owner_name,
-        storeAddress: data.store_address,
-        email: data.email,
-        phoneNumber: data.phone_number,
-        image: data.image || vendorImage,
-      };
-      setFormData(FormData);
-      setVendor(FormData);
-      setLoading(false);
-    })
-    .catch((error) => {
-      setError(error.response?.data?.message || "Failed to fetch vendor data");
-      setLoading(false);
-    });
+    axios
+      .get("http://localhost:3000/api/get-seller", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((response) => {
+        if (response.data.success && response.data.data) {
+          const data = response.data.data;
+          setFormData({
+            shopName: data.shop_name,
+            ownerName: data.owner_name,
+            storeAddress: data.store_address,
+            email: data.email,
+            phoneNumber: data.phone_number,
+            image: data.image || vendorImage,
+          });
+          setVendor(data);
+        } else {
+          setError("Seller profile not found.");
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        setError(error.response?.data?.message || "Failed to fetch vendor data");
+        setLoading(false);
+      });
   };
+  
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

@@ -8,6 +8,8 @@ const sellerRouter = require('./routes/sellerRoute');
 const cartRouter = require('./routes/cartRoute.js')
 const khaltiPaymentRouter = require('./routes/khaltiPayment.js')
 const recipeRouter = require('./routes/recipeRoute.js')
+const chefRouter = require('./routes/chefRoute.js')
+const adminRouter = require('./routes/adminRoute.js')
 const bodyParser = require('body-parser');
 const {expireSubscriptions} = require('./controllers/userController.js')
 
@@ -27,9 +29,11 @@ app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded data
 // Routes
 app.use('/api', userRouter);
 app.use('/api', sellerRouter);
-app.use('/api', cartRouter);
-app.use('/api', khaltiPaymentRouter)
-app.use('/api/recipe', recipeRouter)
+app.use('/api/cart', cartRouter);
+app.use('/api', khaltiPaymentRouter);
+app.use('/api/recipe', recipeRouter);
+app.use('/api/chef', chefRouter)
+app.use('/api/admin', adminRouter)
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

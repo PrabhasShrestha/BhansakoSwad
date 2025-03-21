@@ -4,6 +4,8 @@
   }
   
   .admin-filters {
+    margin-left: 40px;
+    margin-right: 40px;
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
@@ -80,6 +82,7 @@
   }
   
   .admin-pagination-button {
+    width: 100px;
     padding: 0.5rem 1rem;
     border: 1px solid #dcdfe6;
     background-color: white;
@@ -127,4 +130,15 @@
   .admin-pagination-active:hover {
     background-color: #2980b9;
   }
+
+  .admin-order-search-icon {
+    position: absolute;
+    right: 430px;
+    top: 17.25%;
+    transform: translateY(-50%);
+    color: gray;
+    font-size: 18px;
+    cursor:auto;
+}
+
   

@@ -348,13 +348,13 @@ const AdminRecipePanel = () => {
               <table className="admin-recipe-table">
                 <thead className="admin-table-head">
                   <tr>
-                    <th className="admin-table-header">Title</th>
-                    <th className="admin-table-header">Category</th>
-                    <th className="admin-table-header">Difficulty</th>
-                    <th className="admin-table-header">Prep/Cook Time</th>
-                    <th className="admin-table-header">Status</th>
-                    <th className="admin-table-header">Date Added</th>
-                    <th className="admin-table-header admin-actions-column">Actions</th>
+                    <th className="admins-table-header">Title</th>
+                    <th className="admins-table-header">Category</th>
+                    <th className="admins-table-header">Difficulty</th>
+                    <th className="admins-table-header">Prep/Cook Time</th>
+                    <th className="admins-table-header">Status</th>
+                    <th className="admins-table-header">Date Added</th>
+                    <th className="admins-table-header admin-actions-column">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="admin-table-body">

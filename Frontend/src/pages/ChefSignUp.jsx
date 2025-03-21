@@ -1,22 +1,26 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { FaEye, FaEyeSlash, FaUpload } from "react-icons/fa";
 import "../styles/UserSignUp.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Importing new eye icons
 
 function ChefSignUp() {
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    address: "",
+    full_name: "",
+    nationality: "",
     email: "",
     phone_number: "",
+    about_you: "",
     password: "",
+    certificate: null,
   });
 
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false); // Toggle visibility of password
-  const navigate = useNavigate(); // Use navigate hook
+  const [showPassword, setShowPassword] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState(null);
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,58 +30,100 @@ function ChefSignUp() {
     });
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Check if file is an image
+      if (file.type.match('image.*')) {
+        // Create a preview URL for the image
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPreviewUrl(reader.result);
+          setPdfUrl(null);
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type === "application/pdf") {
+        const pdfBlob = URL.createObjectURL(file);
+        setPdfUrl(pdfBlob);
+        setPreviewUrl(null);
+      } else {
+        setPreviewUrl(null);
+        setPdfUrl(null);
+      }
+      
+      setFormData({
+        ...formData,
+        certificate: file,
+      });
+    }
+  };
+
   const validateForm = () => {
     let errors = {};
-    if (!formData.first_name) errors.first_name = "First Name is required";
-    if (!formData.last_name) errors.last_name = "Last Name is required";
-    if (!formData.address) errors.address = "Address is required";
+    if (!formData.full_name) errors.full_name = "Full Name is required";
+    if (!formData.nationality) errors.nationality = "Nationality is required";
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
       errors.email = "Valid email is required";
     if (!formData.phone_number || formData.phone_number.length !== 10)
       errors.phone_number = "Phone Number must be 10 digits";
+    if (!formData.about_you) errors.about_you = "About You is required";
     if (!formData.password) errors.password = "Password is required";
+    if (!formData.certificate) errors.certificate = "Certificate is required";
+
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
     if (validateForm()) {
       try {
+        const formDataToSend = new FormData();
+        formDataToSend.append("name", formData.full_name);
+        formDataToSend.append("email", formData.email);
+        formDataToSend.append("nationality", formData.nationality);
+        formDataToSend.append("about_you", formData.about_you);
+        formDataToSend.append("phone_number", formData.phone_number);
+        formDataToSend.append("password", formData.password);
+        formDataToSend.append("certificate", formData.certificate);
+  
         const response = await axios.post(
-          "http://localhost:3000/api/register",
-          formData
+          "http://localhost:3000/api/chef/chefRegister",
+          formDataToSend,
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
+  
+        alert("Your account has been submitted for verification. Please wait for admin approval.");
         console.log("Response from backend:", response.data);
-
         localStorage.setItem("email", formData.email);
-        setFormData({
-          first_name: "",
-          last_name: "",
-          address: "",
-          email: "",
-          phone_number: "",
-          password: "",
-        });
-        setErrors({});
-        navigate("/verify"); // Navigate to the verification page
+        navigate("/");
+  
       } catch (error) {
-        if (error.response?.status === 409) {
-          // Handle duplicate email error
-          setErrors({ email: "This email is already registered" });
+        if (error.response) {
+          console.error("Error Response Data:", error.response.data);
+  
+          // Handle 400 error (Bad Request)
+          if (error.response.status === 400) {
+            setErrors({ password: error.response.data.msg }); // Show password mismatch error
+          } 
+          // Handle 409 error (Conflict - Email Already Exists)
+          else if (error.response.status === 409) {
+            setErrors({ email: "This email is already registered as a chef." });
+          } 
+          // Handle General Errors
+          else {
+            setErrors({ api: "Registration failed. Please try again." });
+          }
         } else {
-          // Handle other API errors
-          console.error(
-            "Error during registration:",
-            error.response?.data?.message || error.message
-          );
-          setErrors({
-            api: error.response?.data?.message || "Registration failed",
-          });
+          setErrors({ api: "Unable to connect to server. Try again later." });
         }
       }
     }
   };
+  
+
 
   return (
     <div className="container">
@@ -87,45 +133,31 @@ function ChefSignUp() {
         <h1>SIGN UP</h1>
         <form onSubmit={handleSubmit}>
           <div className="input-container">
-            <label htmlFor="first_name">First Name</label>
+            <label htmlFor="full_name">Full Name</label>
             <input
               type="text"
-              id="first_name"
-              name="first_name"
-              placeholder="Enter your first name"
-              className={`input-box ${errors.first_name ? "input-error" : ""}`}
-              value={formData.first_name}
+              id="full_name"
+              name="full_name"
+              placeholder="Enter your full name"
+              className={`input-box ${errors.full_name ? "input-error" : ""}`}
+              value={formData.full_name}
               onChange={handleChange}
             />
-            {errors.first_name && <p className="error">{errors.first_name}</p>}
+            {errors.full_name && <p className="error">{errors.full_name}</p>}
           </div>
 
           <div className="input-container">
-            <label htmlFor="last_name">Last Name</label>
+            <label htmlFor="nationality">Nationality</label>
             <input
               type="text"
-              id="last_name"
-              name="last_name"
-              placeholder="Enter your last name"
-              className={`input-box ${errors.last_name ? "input-error" : ""}`}
-              value={formData.last_name}
+              id="nationality"
+              name="nationality"
+              placeholder="Enter your nationality"
+              className={`input-box ${errors.nationality ? "input-error" : ""}`}
+              value={formData.nationality}
               onChange={handleChange}
             />
-            {errors.last_name && <p className="error">{errors.last_name}</p>}
-          </div>
-
-          <div className="input-container">
-            <label htmlFor="address">Address</label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              placeholder="Enter your address"
-              className={`input-box ${errors.address ? "input-error" : ""}`}
-              value={formData.address}
-              onChange={handleChange}
-            />
-            {errors.address && <p className="error">{errors.address}</p>}
+            {errors.nationality && <p className="error">{errors.nationality}</p>}
           </div>
 
           <div className="input-container">
@@ -159,6 +191,54 @@ function ChefSignUp() {
           </div>
 
           <div className="input-container">
+          <label htmlFor="about_you">About You</label>
+          <textarea
+            id="about_you"
+            name="about_you"
+            placeholder="Tell us about yourself"
+            className={`input-box ${errors.about_you ? "input-error" : ""}`}
+            value={formData.about_you}
+            onChange={handleChange}
+            onInput={(e) => {
+              e.target.style.height = "auto"; // Reset height
+              e.target.style.height = e.target.scrollHeight + "px"; // Adjust height based on content
+            }}
+          />
+          {errors.about_you && <p className="error">{errors.about_you}</p>}
+        </div>
+
+        <div className="input-container">
+            <label htmlFor="certificate">Certificate</label>
+            <div className="file-upload-container">
+              <div className={`file-input-wrapper ${errors.about_you ? "input-error" : ""}`}>
+                {pdfUrl ? (
+                  <button
+                    onClick={() => window.open(pdfUrl, "_blank")}
+                    className="pdf-preview-btn"
+                  >
+                    View PDF
+                  </button>
+                ) : (
+                  <span className="no-file-text">No PDF chosen</span>
+                )}
+
+                <label htmlFor="certificate" className="upload-btn">
+                  Choose PDF <FaUpload className="upload-icon" />
+                </label>
+                <input
+                  type="file"
+                  id="certificate"
+                  name="certificate"
+                  className="input-file"
+                  onChange={handleFileChange}
+                  accept=".pdf"
+                />
+              </div>
+            </div>
+            {errors.certificate && <p className="error">{errors.certificate}</p>}
+          </div>
+
+          <div className="input-container">
             <label htmlFor="password">Password</label>
             <div className="pw-input-container">
               <input
@@ -179,7 +259,6 @@ function ChefSignUp() {
             </div>
             {errors.password && <p className="error">{errors.password}</p>}
           </div>
-
           <button type="submit" className="create-account-btn">
             Create Account
           </button>
@@ -188,6 +267,8 @@ function ChefSignUp() {
           Already have an account? <a href="/login" className="login-link">Login</a>
         </p>
       </div>
+
+      
 
       {/* Right Section: Information Section */}
       <div className="info-section">

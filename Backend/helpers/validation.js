@@ -178,4 +178,25 @@ exports.updateproductsValidation = [
   }),
 ];
 
-
+exports.registerChefValidation = [
+  check("name", "Name is required").not().isEmpty().trim(),
+  check("email", "Valid email is required")
+    .not()
+    .isEmpty()
+    .bail()
+    .isEmail()
+    .withMessage("Invalid email format")
+    .normalizeEmail({ gmail_remove_dots: true }),
+  check("specialty", "Specialty is required").not().isEmpty().trim(),
+  check("phone_number", "Invalid phone number format for Nepal")
+    .isMobilePhone("ne-NP")
+    .isLength({ min: 10, max: 10 })
+    .withMessage("Phone number must be exactly 10 digits"),
+  check("password", "Password must be at least 6 characters long")
+    .not()
+    .isEmpty()
+    .withMessage("Password is required")
+    .bail()
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters long"),
+];
