@@ -57,7 +57,7 @@ const StoreDetails = () => {
 
     console.log("🛒 Sending to cart:", JSON.stringify(cartItem, null, 2));
 
-    fetch("http://localhost:3000/api/add", {
+    fetch("http://localhost:3000/api/cart/add", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

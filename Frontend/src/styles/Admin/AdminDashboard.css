@@ -1,7 +1,8 @@
 /* AdminDashboard.css */
 .admin-dashboard {
     width: 100%;
-    margin-right: 200px;
+    
+    margin-left: 20px;
   }
   
   .admin-layout {
@@ -10,7 +11,7 @@
   
   .admin-main {
     flex: 1;
-    margin-left: 250px;  
+    margin-right: 10px;
     padding: 2rem;
     background-color: #f5f7fa;
     min-height: 100vh;
@@ -219,7 +220,7 @@
     color: #8e44ad;
   }
   
-  .admin-role-customer {
+  .admin-role-user {
     background-color: rgba(52, 152, 219, 0.1);
     color: #3498db;
   }
@@ -232,6 +233,11 @@
   .admin-role-chef {
     background-color: rgba(155, 89, 182, 0.1);
     color: #8e44ad;
+  }
+
+  .admin-role-admin {
+    background-color: rgba(161, 80, 80, 0.1);
+    color: #c81f1f;
   }
   
   @media (min-width: 992px) {

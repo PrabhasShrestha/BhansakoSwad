@@ -183,11 +183,12 @@ const resendCode = (req, res) => {
   );
 };
 
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if the user exists in the `users` table
+    // Step 1: Check if the user exists
     const userQuery = `SELECT * FROM users WHERE email = ?`;
     db.query(userQuery, [email], async (err, userResult) => {
       if (err) {
@@ -201,9 +202,26 @@ const login = async (req, res) => {
 
       const user = userResult[0];
 
-      // Check if the user is also a seller
+      // Step 2: Check if the user's account is deactivated
+      if (user.activity_status === 'deactivated') {
+        return res.status(409).json({ message: "Your account has been deactivated by the admin. Please contact support." });
+      }
+
+      // Step 3: Check if the user's account is under verification (isVerified can be used here)
+      if (user.isVerified === 0) {
+        return res.status(403).json({ message: "Your account is under verification. Please wait for admin approval." });
+      }
+
+      // Step 4: Verify password with bcrypt
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Step 5: Check seller status
       const sellerQuery = `SELECT id AS seller_id FROM sellers WHERE email = ?`;
-      db.query(sellerQuery, [email], async (err, sellerResult) => {
+      db.query(sellerQuery, [email], (err, sellerResult) => {
         if (err) {
           console.error("Database Error:", err);
           return res.status(500).json({ message: "Internal server error" });
@@ -211,26 +229,42 @@ const login = async (req, res) => {
 
         const sellerId = sellerResult.length > 0 ? sellerResult[0].seller_id : null;
 
-        // Check if the user is also a chef
-        const chefQuery = `SELECT id AS chef_id FROM chefs WHERE email = ?`;
-        db.query(chefQuery, [email], async (err, chefResult) => {
+        // Step 6: Check chef status
+        const chefQuery = `SELECT id AS chef_id, status AS chef_status FROM chefs WHERE email = ?`;
+        db.query(chefQuery, [email], (err, chefResult) => {
           if (err) {
             console.error("Database Error:", err);
             return res.status(500).json({ message: "Internal server error" });
           }
 
           const chefId = chefResult.length > 0 ? chefResult[0].chef_id : null;
+          const chefStatus = chefResult.length > 0 ? chefResult[0].chef_status : null;
 
-          // Generate JWT Token with all roles
+          let role = user.is_admin ? 'admin' : 'user';
+          if (sellerId && chefId && chefStatus === 'approved') {
+            role = 'all';
+          } else if (sellerId && chefId && chefStatus !== 'approved') {
+            role = 'user_seller'; // Chef pending or rejected
+          } else if (sellerId) {
+            role = 'seller';
+          } else if (chefId && chefStatus === 'approved') {
+            role = 'chef';
+          } else if (chefId && chefStatus !== 'approved') {
+            role = 'user'; // Chef pending or rejected
+          }
+
+          // Step 7: Generate JWT after successful verification
           const token = jwt.sign(
             {
               id: user.id,
               email: user.email,
-              role: user.role,
-              seller_id: sellerId, // Include seller ID if available
-              chef_id: chefId, // Include chef ID if available
+              role,
+              seller_id: sellerId,
+              chef_id: chefId,
+              chef_status: chefStatus
             },
-            JWT_SECRET
+            JWT_SECRET,
+            { expiresIn: "7d" }
           );
 
           res.status(200).json({
@@ -239,9 +273,10 @@ const login = async (req, res) => {
             user: {
               id: user.id,
               email: user.email,
-              role: user.role,
-              seller_id: sellerId, // Return seller ID if user is a seller
-              chef_id: chefId, // Return chef ID if user is a chef
+              role,
+              seller_id: sellerId,
+              chef_id: chefId,
+              chef_status: chefStatus
             },
           });
         });
@@ -252,6 +287,7 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
@@ -326,18 +362,33 @@ const getUser = (req, res) => {
           const isSeller = sellerResult.length > 0;
           const sellerId = isSeller ? sellerResult[0].seller_id : null;
 
+          db.query(
+            "SELECT id AS chef_id, status AS chef_status FROM chefs WHERE email = ?",
+            [user.email],
+            (chefErr, chefResult) => {
+              if (chefErr) {
+                console.error("Database Error (Chef):", chefErr);
+                return res.status(500).send({ message: "Internal server error." });
+              }
+
+              const isChef = chefResult.length > 0;
+              const chefId = isChef ? chefResult[0].chef_id : null;
+              const chefStatus = isChef ? chefResult[0].chef_status : null;
           return res.status(200).send({
             success: true,
             data: {
               ...user,
               is_seller: isSeller,
               seller_id: sellerId,
+              chef_id: chefId,
+                  chef_status: chefStatus,
             },
             message: "Fetch Successful!",
           });
         }
       );
     });
+  });
   } catch (err) {
     if (err.name === "JsonWebTokenError") {
       return res.status(401).send({ message: "Unauthorized: Invalid token." });

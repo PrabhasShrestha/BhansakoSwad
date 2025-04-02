@@ -55,13 +55,18 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     // Add a new ingredient to the list
     const addIngredient = () => {
         if (currentIngredient.name && currentIngredient.amount) {
-            setIngredients([...ingredients, currentIngredient]);
-            setCurrentIngredient({ name: '', amount: '' });
+            // Check if the ingredient is already in the list to avoid duplicates
+            const isIngredientExists = ingredients.some(ing => ing.name === currentIngredient.name);
+            if (!isIngredientExists) {
+                setIngredients([...ingredients, currentIngredient]);
+                setCurrentIngredient({ name: '', amount: '' });
+            } else {
+                showToast("Ingredient already added to the recipe", "info");
+            }
         } else {
             showToast("Please select an ingredient and specify amount", "info");
         }
     };
-
     // Remove an ingredient from the list
     const removeIngredient = (index) => {
         const updatedIngredients = [...ingredients];
@@ -178,12 +183,19 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
         .then(response => {
             console.log("Recipe added successfully", response.data);
             resetForm();
-            showToast("Recipe added successfully!", "success");
+        
+            if (response.data.approval_status === 'pending') {
+                showToast("Recipe submitted and awaiting admin approval.", "info");
+            } else {
+                showToast("Recipe added and published successfully!", "success");
+            }
+        
             setTimeout(() => {
                 onClose();
-                onSubmit(); // Call the onSubmit callback to refresh recipes
-            }, 1000); // Small delay to let user see the success message
+                onSubmit(); // Refresh the recipe list
+            }, 1000); // Brief delay to show the toast notification
         })
+        
         .catch(error => {
             console.error("Error adding recipe:", error.response?.data || error);
             showToast("Failed to add recipe. Please check your inputs.", "error");

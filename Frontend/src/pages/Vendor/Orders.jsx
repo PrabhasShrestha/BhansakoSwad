@@ -124,7 +124,7 @@ const OrderPage = () => {
                   <td>
                     {order.products.map((product, index) => (
                       <div key={index} className="product-info">
-                        <img src={`http://localhost:3000/uploads/products/${product.image}`} className="products-image" />
+                        <img src={`http://localhost:3000/${product.image}`} className="products-image" />
                         <span className="products-name">{product.name}</span>
                       </div>
                     ))}

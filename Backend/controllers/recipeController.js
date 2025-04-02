@@ -1,28 +1,30 @@
 const db = require("../config/dbConnection");
 
-const getAllRecipes = (req, res) => {
+
+
+const getApprovedRecipes = (req, res) => {
   const query = `
       SELECT r.*, 
           IFNULL(AVG(rt.rating), 0) AS average_rating
       FROM recipes r
       LEFT JOIN ratings rt ON r.id = rt.recipe_id
+      WHERE r.approval_status = 'approved'
       GROUP BY r.id
   `;
 
   db.query(query, (err, results) => {
-      if (err) {
-          console.error("Database Error:", err);
-          return res.status(500).json({ message: "Internal Server Error" });
-      }
+    if (err) {
+      console.error("Database Error:", err);
+      return res.status(500).json({ message: "Internal Server Error" });
+    }
 
-      if (results.length === 0) {
-          return res.status(404).json({ message: "No recipes found" });
-      }
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No approved recipes found" });
+    }
 
-      res.status(200).json(results);
+    res.status(200).json(results);
   });
 };
-
 
 const getRecipeById = (req, res) => {
     const { id } = req.params;
@@ -66,29 +68,154 @@ const getRecipeById = (req, res) => {
       });
     });
   };
+  const updateRecipe = (req, res) => {
+    try {
+      // Extract recipe data from the request body
+      const {
+        title,
+        difficulty,
+        cooking_time,
+        category,
+        cuisine,
+        ingredients,
+        methods,
+        nutrition,
+      } = req.body;
   
-
-const updateRecipe = (req, res) => {
-  const { id } = req.params;
-  const { title, difficulty, cooking_time, category, image_url } = req.body;
-
-  const query = `UPDATE recipes SET title=?, difficulty=?, cooking_time=?, category=?, image_url=? WHERE id=?`;
-
-  db.query(query, [title, difficulty, cooking_time, category, image_url, id], (err, result) => {
-    if (err) {
-      console.error("Database Error:", err);
-      return res.status(500).json({ message: "Internal Server Error" });
+      const recipeId = req.params.id; // Recipe ID from URL parameters
+      const user_id = req.user.id; // Logged-in user ID (from JWT token)
+      const image = req.file; // Image file if uploaded
+  
+      // Handle image URL (if updated)
+      let image_url = null;
+      if (image) {
+        image_url = `http://localhost:3000/images/${image.filename}`;
+      }
+  
+      // If no image uploaded, retain the previous image URL
+      if (!image_url) {
+        const query = `SELECT image_url FROM recipes WHERE id = ?`;
+        db.query(query, [recipeId], (err, result) => {
+          if (err) {
+            console.error("Error fetching current image:", err);
+            return res.status(500).json({ message: "Error fetching current image", error: err });
+          }
+          image_url = result[0]?.image_url;  // Retain the existing image URL
+        });
+      }
+  
+      // Basic validation
+      if (!title || !difficulty || !cooking_time || !category) {
+        return res.status(400).json({ message: "All required fields must be provided" });
+      }
+  
+      // Update recipe in the database
+      const recipeQuery = `
+        UPDATE recipes 
+        SET title = ?, difficulty = ?, cooking_time = ?, category = ?, cuisine = ?, image_url = ?
+        WHERE id = ? AND user_id = ?
+      `;
+  
+      db.query(
+        recipeQuery,
+        [title, difficulty, cooking_time, category, cuisine || null, image_url, recipeId, user_id],
+        (err, result) => {
+          if (err) {
+            console.error("Error updating recipe:", err);
+            return res.status(500).json({ message: "Error updating recipe", error: err });
+          }
+  
+          // Proceed with ingredient, method, and nutrition updates after recipe update
+          // Update Ingredients
+          if (ingredients && ingredients.length > 0) {
+            ingredients.forEach((ingredient) => {
+              // Check if the ingredient already exists
+              const checkQuery = 'SELECT * FROM ingredients WHERE name = ?';
+              db.query(checkQuery, [ingredient.name], (err, result) => {
+                if (err) {
+                  console.error("Error checking ingredient:", err);
+                  return res.status(500).json({ message: "Error checking ingredient", error: err });
+                }
+  
+                let ingredientId;
+                if (result.length > 0) {
+                  ingredientId = result[0].id; // Use existing ingredient
+                } else {
+                  // Insert the ingredient if it doesn't exist
+                  const insertIngredientQuery = 'INSERT INTO ingredients (name) VALUES (?)';
+                  db.query(insertIngredientQuery, [ingredient.name], (err, insertResult) => {
+                    if (err) {
+                      console.error("Error inserting ingredient:", err);
+                      return res.status(500).json({ message: "Error inserting ingredient", error: err });
+                    }
+                    ingredientId = insertResult.insertId; // Get the newly inserted ingredient ID
+                  });
+                }
+  
+                // Link the ingredient to the recipe
+                const linkIngredientQuery = `
+                  INSERT INTO recipe_ingredients (recipe_id, ingredient_id, amount) 
+                  VALUES (?, ?, ?)
+                `;
+                db.query(linkIngredientQuery, [recipeId, ingredientId, ingredient.amount], (err) => {
+                  if (err) {
+                    console.error("Error linking ingredient:", err);
+                    return res.status(500).json({ message: "Error linking ingredient", error: err });
+                  }
+                });
+              });
+            });
+          }
+  
+          // Update Methods
+          if (methods && methods.length > 0) {
+            methods.forEach((method, index) => {
+              const methodQuery = `
+                UPDATE methods 
+                SET description = ? 
+                WHERE recipe_id = ? AND step_number = ?
+              `;
+              db.query(methodQuery, [method.description, recipeId, index + 1], (err) => {
+                if (err) {
+                  console.error("Error updating method:", err);
+                  return res.status(500).json({ message: "Error updating method", error: err });
+                }
+              });
+            });
+          }
+  
+          // Update Nutrition
+          if (nutrition && nutrition.length > 0) {
+            nutrition.forEach((item, index) => {
+              const nutritionQuery = `
+                UPDATE nutrition 
+                SET nutrient = ?, value = ?
+                WHERE recipe_id = ? AND nutrient = ?
+              `;
+              db.query(nutritionQuery, [item.nutrient, item.value, recipeId, item.nutrient], (err) => {
+                if (err) {
+                  console.error("Error updating nutrition:", err);
+                  return res.status(500).json({ message: "Error updating nutrition", error: err });
+                }
+              });
+            });
+          }
+  
+          // Successfully updated the recipe
+          res.status(200).json({
+            success: true,
+            message: "Recipe updated successfully",
+            recipeId,
+          });
+        }
+      );
+    } catch (error) {
+      console.error("Error updating recipe:", error);
+      res.status(500).json({ message: "Server error while updating recipe" });
     }
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Recipe not found" });
-    }
-
-    res.status(200).json({ success: true, message: "Recipe updated successfully" });
-  });
-};
-
-// ✅ Delete a Recipe
+  };
+  
+  
 const deleteRecipe = (req, res) => {
   const { id } = req.params;
   const query = `DELETE FROM recipes WHERE id = ?`;
@@ -190,8 +317,9 @@ const giveratings = async (req, res) => {
 
 const createRecipe = (req, res) => {
   try {
-    console.log(req.file);  // Image file info
+    console.log(req.file); // Image file info
     console.log(req.body);
+
     const title = JSON.parse(req.body.title);
     const difficulty = JSON.parse(req.body.difficulty);
     const cooking_time = JSON.parse(req.body.cooking_time);
@@ -201,149 +329,150 @@ const createRecipe = (req, res) => {
     const methods = JSON.parse(req.body.methods);
     const nutrition = JSON.parse(req.body.nutrition);
 
-    const user_id = req.user.id; // Get the user ID from the logged-in user
+    const user_id = req.user.id; // Logged-in user ID
+    const user_role = req.user.role; // Get user role from JWT payload
 
-    // Extract the image path correctly
-    const image_url = req.file ? `http://localhost:3000/images/${req.file.filename}` : null;
+    // Extract image URL
+    const image_url = req.file
+      ? `http://localhost:3000/images/${req.file.filename}`
+      : null;
+
+    // Determine approval status based on role
+    const approval_status = user_role === "admin" || user_role === "chef" ? "approved" : "pending";
 
     // Basic validation
     if (!title || !difficulty || !cooking_time || !category) {
-        return res.status(400).json({ message: "All required fields must be provided" });
+      return res.status(400).json({ message: "All required fields must be provided" });
     }
 
-    // Insert recipe first, include user_id in the query
+    // Insert recipe first, include user_id and approval_status
     const recipeQuery = `
-        INSERT INTO recipes 
-        (title, difficulty, cooking_time, category, cuisine, image_url, user_id) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO recipes 
+      (title, difficulty, cooking_time, category, cuisine, image_url, user_id, approval_status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(recipeQuery, [title, difficulty, cooking_time, category, cuisine || null, image_url, user_id], (err, recipeResult) => {
+    db.query(
+      recipeQuery,
+      [title, difficulty, cooking_time, category, cuisine || null, image_url, user_id, approval_status],
+      (err, recipeResult) => {
         if (err) {
-            console.error("Recipe insertion error:", err);
-            return res.status(500).json({ message: "Error inserting recipe", error: err });
+          console.error("Recipe insertion error:", err);
+          return res.status(500).json({ message: "Error inserting recipe", error: err });
         }
 
         const recipeId = recipeResult.insertId;
 
-        // Function to handle ingredients insertion
-        const insertIngredients = (callback) => {
-            if (!ingredients || ingredients.length === 0) {
-                return callback(null);
-            }
+        // Insert Ingredients
+        if (ingredients && ingredients.length > 0) {
+          ingredients.forEach((ingredient, index) => {
+            // Check if the ingredient already exists
+            const checkQuery = 'SELECT * FROM ingredients WHERE name = ?';
+            db.query(checkQuery, [ingredient.name], (err, result) => {
+              if (err) {
+                console.error("Error checking ingredient:", err);
+                return res.status(500).json({ message: "Error checking ingredient", error: err });
+              }
 
-            // Insert or get existing ingredients and link to recipe
-            const ingredientTasks = ingredients.map((ingredient, index) => {
-                // First, insert ingredient if not exists
-                const ingredientQuery = `
-                    INSERT IGNORE INTO ingredients (name) 
-                    VALUES (?)
+              // If the ingredient exists, link it with the recipe
+              if (result.length > 0) {
+                const ingredientId = result[0].id;
+                const linkQuery = `
+                  INSERT INTO recipe_ingredients (recipe_id, ingredient_id, amount)
+                  VALUES (?, ?, ?)
                 `;
-
+                db.query(linkQuery, [recipeId, ingredientId, ingredient.amount], (err) => {
+                  if (err) {
+                    console.error("Error linking existing ingredient:", err);
+                    return res.status(500).json({ message: "Error linking ingredient", error: err });
+                  }
+                  if (index === ingredients.length - 1) {
+                    console.log("Ingredients linked successfully");
+                  }
+                });
+              } else {
+                // Insert the ingredient if it doesn't exist
+                const ingredientQuery = 'INSERT INTO ingredients (name) VALUES (?)';
                 db.query(ingredientQuery, [ingredient.name], (err) => {
-                    if (err) return callback(err);
+                  if (err) {
+                    console.error("Error inserting ingredient:", err);
+                    return res.status(500).json({ message: "Error inserting ingredient", error: err });
+                  }
 
-                    // Link ingredient to recipe
-                    const linkQuery = `
-                        INSERT INTO recipe_ingredients 
-                        (recipe_id, ingredient_id, amount) 
-                        VALUES (?, (SELECT id FROM ingredients WHERE name = ?), ?)
-                    `;
-
-                    db.query(linkQuery, [recipeId, ingredient.name, ingredient.amount], (err) => {
-                        if (err) return callback(err);
-                        
-                        // If this is the last ingredient, call callback
-                        if (index === ingredients.length - 1) {
-                            callback(null);
-                        }
-                    });
-                });
-            });
-        };
-
-        const insertMethods = (callback) => {
-            if (!methods || methods.length === 0) {
-                return callback(null);
-            }
-
-            const methodTasks = methods.map((method, index) => {
-                const methodQuery = `
-                    INSERT INTO methods 
-                    (recipe_id, step_number, description) 
-                    VALUES (?, ?, ?)
-                `;
-
-                db.query(methodQuery, [recipeId, index + 1, method.description], (err) => {
-                    if (err) return callback(err);
-                    
-                    // If this is the last method, call callback
-                    if (index === methods.length - 1) {
-                        callback(null);
-                    }
-                });
-            });
-        };
-
-        // Function to handle nutrition insertion
-        const insertNutrition = (callback) => {
-            if (!nutrition || nutrition.length === 0) {
-                return callback(null);
-            }
-
-            const nutritionTasks = nutrition.map((item, index) => {
-                const nutritionQuery = `
-                    INSERT INTO nutrition 
-                    (recipe_id, nutrient, value) 
-                    VALUES (?, ?, ?)
-                `;
-
-                db.query(nutritionQuery, [recipeId, item.nutrient, item.value], (err) => {
-                    if (err) return callback(err);
-                    
-                    // If this is the last nutrition item, call callback
-                    if (index === nutrition.length - 1) {
-                        callback(null);
-                    }
-                });
-            });
-        };
-
-        // Run all insertions
-        insertIngredients((err) => {
-            if (err) {
-                console.error("Ingredients insertion error:", err);
-                return res.status(500).json({ message: "Error inserting ingredients", error: err });
-            }
-
-            insertMethods((err) => {
-                if (err) {
-                    console.error("Methods insertion error:", err);
-                    return res.status(500).json({ message: "Error inserting methods", error: err });
-                }
-
-                insertNutrition((err) => {
+                  // Link the ingredient with the recipe after insertion
+                  const linkQuery = `
+                    INSERT INTO recipe_ingredients (recipe_id, ingredient_id, amount)
+                    VALUES (?, (SELECT id FROM ingredients WHERE name = ?), ?)
+                  `;
+                  db.query(linkQuery, [recipeId, ingredient.name, ingredient.amount], (err) => {
                     if (err) {
-                        console.error("Nutrition insertion error:", err);
-                        return res.status(500).json({ message: "Error inserting nutrition", error: err });
+                      console.error("Error linking ingredient:", err);
+                      return res.status(500).json({ message: "Error linking ingredient", error: err });
                     }
-
-                    // Success response
-                    res.status(201).json({ 
-                        success: true, 
-                        message: "Recipe created successfully", 
-                        recipe_id: recipeId 
-                    });
+                    if (index === ingredients.length - 1) {
+                      console.log("Ingredients inserted and linked successfully");
+                    }
+                  });
                 });
+              }
             });
+          });
+        }
+
+        // Insert Methods
+        if (methods && methods.length > 0) {
+          methods.forEach((method, index) => {
+            const methodQuery = `
+              INSERT INTO methods (recipe_id, step_number, description)
+              VALUES (?, ?, ?)
+            `;
+            db.query(methodQuery, [recipeId, index + 1, method.description], (err) => {
+              if (err) {
+                console.error("Error inserting method:", err);
+                return res.status(500).json({ message: "Error inserting method", error: err });
+              }
+              if (index === methods.length - 1) {
+                console.log("Methods inserted successfully");
+              }
+            });
+          });
+        }
+
+        // Insert Nutrition
+        if (nutrition && nutrition.length > 0) {
+          nutrition.forEach((item, index) => {
+            const nutritionQuery = `
+              INSERT INTO nutrition (recipe_id, nutrient, value)
+              VALUES (?, ?, ?)
+            `;
+            db.query(nutritionQuery, [recipeId, item.nutrient, item.value], (err) => {
+              if (err) {
+                console.error("Error inserting nutrition:", err);
+                return res.status(500).json({ message: "Error inserting nutrition", error: err });
+              }
+              if (index === nutrition.length - 1) {
+                console.log("Nutrition inserted successfully");
+              }
+            });
+          });
+        }
+
+        // Success response
+        res.status(201).json({
+          success: true,
+          message: "Recipe created successfully",
+          recipe_id: recipeId,
+          approval_status,
         });
-    });
-  }
-  catch (error) {
+      }
+    );
+  } catch (error) {
     console.error("Error creating recipe:", error);
     res.status(500).json({ message: "Server error while creating recipe" });
   }
 };
+
+
 
 
 // In your backend routes
@@ -357,12 +486,27 @@ const getIngridients = (req, res) => {
 
 const addIngridients = (req, res) => {
   const { name } = req.body;
-  const query = 'INSERT IGNORE INTO ingredients (name) VALUES (?)';
-  db.query(query, [name], (err, result) => {
+
+  // Check if the ingredient already exists
+  const checkQuery = 'SELECT * FROM ingredients WHERE name = ?';
+  db.query(checkQuery, [name], (err, result) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+
+    // If the ingredient exists, throw an error
+    if (result.length > 0) {
+      return res.status(400).json({ message: "Ingredient with this name already exists" });
+    }
+
+    // If the ingredient doesn't exist, insert it
+    const query = 'INSERT INTO ingredients (name) VALUES (?)';
+    db.query(query, [name], (err, result) => {
       if (err) return res.status(500).json({ message: "Database error" });
+
       res.status(201).json({ message: "Ingredient created", name });
+    });
   });
 };
+
 
 const getRecipeByUser = async (req, res) => {
     try {
@@ -580,7 +724,6 @@ const getFavorite = async (req, res) => {
   
 
 module.exports = {
-  getAllRecipes,
   getRecipeById,
   updateRecipe,
   deleteRecipe,
@@ -593,5 +736,6 @@ module.exports = {
   getRecipeByUser,
   addFavorite,
   getFavorite,
-  removeFavorite
+  removeFavorite,
+  getApprovedRecipes
 };

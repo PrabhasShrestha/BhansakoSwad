@@ -8,11 +8,13 @@ const AdminUserPanel = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusUpdating, setStatusUpdating] = useState(false)
 
   // Fetch users from API
   useEffect(() => {
     axios.get("http://localhost:3000/api/admin/allData") // Adjust API URL if needed
       .then(response => {
+        console.log(response);
         if (response.data.success) {
           const fetchedUsers = response.data.users.map(user => {
             let roles = user.role.split(', ').map(role => role.trim());
@@ -40,6 +42,9 @@ const AdminUserPanel = () => {
 
   // Toggle User Status (Deactivate/Reactivate)
   const toggleUserStatus = (userId) => {
+    if (statusUpdating) return; // Prevent multiple clicks
+    setStatusUpdating(true);
+  
     axios.post(`http://localhost:3000/api/admin/UserStatus/${userId}`)
       .then(response => {
         if (response.data.success) {
@@ -53,7 +58,8 @@ const AdminUserPanel = () => {
       .catch(error => {
         console.error("Error updating user status:", error);
         alert("Failed to update user status.");
-      });
+      })
+      .finally(() => setStatusUpdating(false));
   };
 
   // Filter users based on search term
@@ -79,6 +85,12 @@ const AdminUserPanel = () => {
       case 'Premium User': return 'admin-badge admin-badge-red';
       default: return 'admin-badge admin-badge-gray'; 
     }
+  };
+
+  const getActivityStatusClass = (activityStatus) => {
+    return activityStatus === "active" 
+      ? "admin-badge admin-badge-green" 
+      : "admin-badge admin-badge-red";
   };
 
   return (
@@ -117,6 +129,7 @@ const AdminUserPanel = () => {
                     <th className="admins-table-header">Email</th>
                     <th className="admins-table-header">Role</th>
                     <th className="admins-table-header">Status</th>
+                    <th className="admins-table-header">Activity Status</th>
                     <th className="admins-table-header">Contact Number</th>
                     <th className="admins-table-header admin-actions-column">Actions</th>
                   </tr>
@@ -140,13 +153,19 @@ const AdminUserPanel = () => {
                         <td className="admin-table-cell">
                           <span className={getStatusClass(user.status)}>{user.status}</span>
                         </td>
+                        <td className="admin-table-cell">
+                          <span className={getActivityStatusClass(user.activity_status)}>
+                            {user.activity_status === "active" ? "Active" : "Deactivated"}
+                          </span>
+                        </td>
                         <td className="admin-table-cell admin-login-date">{user.contactNumber}</td>
                         <td className="admin-table-cell admin-actions-cell">
                           <div className="admin-action-buttons">
                             {user.role.includes("Admin") ? (
-                              <span className="admin-btn-disabled">Cannot Deactivate Admin</span>
+                              <span className="admin-btn-disabled">Cannot Modify Admin</span>
                             ) : user.activity_status === "active" ? (
                               <button
+                              disabled={statusUpdating}
                                 onClick={() => toggleUserStatus(user.id)}
                                 className="admin-btn admin-btn-deactivate"
                               >
@@ -154,10 +173,12 @@ const AdminUserPanel = () => {
                               </button>
                             ) : (
                               <button
+                              disabled={statusUpdating}
+
                                 onClick={() => toggleUserStatus(user.id)}
                                 className="admin-btn admin-btn-reactivate"
                               >
-                                Deactivate
+                                Reactivate
                               </button>
                             )}
                           </div>
@@ -166,7 +187,7 @@ const AdminUserPanel = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="admin-empty-results">
+                      <td colSpan="7" className="admin-empty-results">
                         No users found matching your search criteria.
                       </td>
                     </tr>

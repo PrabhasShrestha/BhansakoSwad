@@ -28,17 +28,23 @@ const Navigationbar = () => {
 
        
         const userData = response.data?.data;
-        if (userData?.role === "admin") {
+        if (userData?.is_admin === 1) {
           setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
         }
+        
         if (userData?.seller_id) {
           setIsSeller(true);
           localStorage.setItem("sellerId", userData.seller_id);
         }
-        if (userData?.chef_id) {
+        if (userData?.chef_id && userData?.chef_status === 'approved') {
           setIsChef(true);
           localStorage.setItem("chefId", userData.chef_id);
-        }
+        } else {
+          setIsChef(false);
+          localStorage.removeItem("chefId");
+        }        
 
         const userImage = userData?.image;
         if (userImage) {
@@ -258,6 +264,15 @@ const Navigationbar = () => {
                   View Seller Dashboard
                 </NavLink>
               )}
+              {isChef && (
+              <NavLink
+                to="/chefdashboard"
+                className="dropdown-item"
+                onClick={() => setShowUserDropdown(false)}
+              >
+                View Chef Dashboard
+              </NavLink>
+            )}
               <NavLink to="/userProfile" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
                 My Profile
               </NavLink>

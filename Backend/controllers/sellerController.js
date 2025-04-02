@@ -12,6 +12,7 @@ const registerSeller = (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
+    
         const { shop_name, owner_name, store_address, email, phone_number, password } = req.body;
         console.log("Incoming request data:", req.body);
         // Check if email already exists
@@ -526,14 +527,14 @@ const addproducts = (req, res) => {
                 return res.status(404).json({ msg: "Seller profile not found" });
             }
 
-            // ✅ 5. Check if the product already exists
+            
             db.query(`SELECT id FROM products WHERE LOWER(name) = LOWER(?)`, [name], (err, productResult) => {
                 if (err) return res.status(500).json({ msg: "Database error" });
 
                 if (productResult.length > 0) {
                     const productId = productResult[0].id;
 
-                    // ✅ 6. Check if the seller already has this product listed
+                    
                     db.query(
                         `SELECT * FROM productdetails WHERE product_id = ? AND seller_id = ?`,
                         [productId, sellerId],
@@ -1018,9 +1019,13 @@ const getProductById = (req, res) => {
       }
 
       const product = result[0];
-      if (product.image) {
-        product.image = `http://localhost:3000/uploads/products/${product.image}`;
-      }
+
+      // ✅ Ensure correct image path formatting
+      product.image = product.image
+        ? product.image.startsWith("uploads/products/")  // If it's already in the correct folder
+          ? `http://localhost:3000/${product.image}`  // Append base URL
+          : `http://localhost:3000/uploads/products/${product.image}`  // Add folder path manually
+        : "http://localhost:3000/uploads/default-product.png"; // Fallback if im
 
       res.status(200).json({
         success: true,
@@ -1070,7 +1075,11 @@ if (storeId) {
     // Format image URLs
     const products = result.map((product) => ({
       ...product,
-      image: product.image ? `http://localhost:3000/uploads/products/${product.image}` : null,
+      image: product.image
+        ? product.image.startsWith("uploads/products/")  // If already has the path
+          ? `http://localhost:3000/${product.image}`  // Just add base URL
+          : `http://localhost:3000/uploads/products/${product.image}`  // Otherwise, prepend folder path
+        : "http://localhost:3000/uploads/default-product.png", // Fallback if null
     }));
 
     res.json({ success: true, data: products, message: "Products fetched successfully." });
@@ -1086,7 +1095,7 @@ const getRelatedProducts = (req, res) => {
            FROM products p
            JOIN productdetails pd ON p.id = pd.product_id
            WHERE pd.seller_id = ? AND p.id != ? 
-           LIMIT 5`,  //  Fetch only 5 products from the same seller
+           LIMIT 5`,  
           [sellerId, productId],
           (error, results) => {
               if (error) {

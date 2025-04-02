@@ -31,15 +31,15 @@ const fileFilter = (req, file, callback) => {
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 2 * 1024 * 1024 } // Limit to 2MB
+    limits: { fileSize: 10 * 1024 * 1024 } // Limit to 2MB
 });
 
 
 
-router.get("/recipes", recipeController.getAllRecipes);        
+router.get("/recipes", recipeController.getApprovedRecipes);        
 router.get("/recipe/:id", recipeController.getRecipeById);      
 router.post("/addrecipe", upload.single('image'), auth.isAuthorize, recipeController.createRecipe);          
-router.put("/recipe/:id", recipeController.updateRecipe);       
+router.post("/updaterecipe/:id", upload.single('image'), auth.isAuthorize, recipeController.updateRecipe);       
 router.delete("/recipe/:id", recipeController.deleteRecipe);
 router.get("/search", recipeController.searchRecipe); 
 router.post("/filterRecipes", recipeController.filterRecipes);    

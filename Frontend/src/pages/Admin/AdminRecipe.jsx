@@ -1,324 +1,286 @@
-// AdminRecipePanel.jsx
-import React, { useState } from 'react';
-import '../../styles/Admin/AdminRecipe.css';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import "../../styles/Admin/AdminRecipe.css";
 import AdminSidebar from '../../components/AdminSidebar';
+import { FaTrash, FaCheck, FaBan, FaPlus, FaTimes, FaEye } from 'react-icons/fa';
 
 const AdminRecipePanel = () => {
-  // Sample initial recipe data
-  const initialRecipes = [
-    { 
-      id: 1, 
-      title: 'Spaghetti Carbonara', 
-      category: 'Italian', 
-      difficulty: 'Medium', 
-      prepTime: '20 mins', 
-      cookTime: '15 mins',
-      ingredients: ['Spaghetti', 'Eggs', 'Pancetta', 'Parmesan cheese', 'Black pepper', 'Salt'],
-      instructions: '1. Cook pasta. 2. Fry pancetta. 3. Mix eggs and cheese. 4. Combine all ingredients.',
-      isPublished: true,
-      dateAdded: '2025-02-15'
-    },
-    { 
-      id: 2, 
-      title: 'Classic Beef Burger', 
-      category: 'American', 
-      difficulty: 'Easy', 
-      prepTime: '15 mins', 
-      cookTime: '10 mins',
-      ingredients: ['Ground beef', 'Burger buns', 'Cheese slices', 'Lettuce', 'Tomato', 'Onion', 'Ketchup', 'Mustard'],
-      instructions: '1. Form patties. 2. Grill until cooked. 3. Assemble burger with toppings.',
-      isPublished: true,
-      dateAdded: '2025-03-01'
-    },
-    { 
-      id: 3, 
-      title: 'Vegetable Stir Fry', 
-      category: 'Asian', 
-      difficulty: 'Easy', 
-      prepTime: '15 mins', 
-      cookTime: '10 mins',
-      ingredients: ['Broccoli', 'Carrots', 'Bell peppers', 'Snap peas', 'Soy sauce', 'Garlic', 'Ginger', 'Vegetable oil'],
-      instructions: '1. Prepare vegetables. 2. Heat oil in wok. 3. Stir fry vegetables. 4. Add sauce and serve.',
-      isPublished: false,
-      dateAdded: '2025-03-05'
-    },
-  ];
-  
-  // State variables
-  const [recipes, setRecipes] = useState(initialRecipes);
+  const [recipes, setRecipes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
-  const [currentRecipe, setCurrentRecipe] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    category: '',
-    difficulty: 'Easy',
-    prepTime: '',
-    cookTime: '',
-    ingredients: '',
-    instructions: '',
-    isPublished: true
-  });
-  
-  // Filter recipes based on search term
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  // Local state for ingredients, cooking steps, nutrition info, image
+  // Note: ingredients now include a "customIngredient" field for "Other"
+  const [ingredients, setIngredients] = useState([{ ingredient: '', amount: '', customIngredient: '' }]);
+  const [cookingSteps, setCookingSteps] = useState([{ step: '' }]);
+  const [nutritionInfo, setNutritionInfo] = useState([{ nutrient: '', value: '' }]);
+  const [recipeImage, setRecipeImage] = useState(null);
+
+  // State for all ingredients fetched from DB
+  const [allIngredients, setAllIngredients] = useState([]);
+
+  useEffect(() => {
+    fetchRecipes();
+    fetchAllIngredients();
+  }, []);
+
+  const fetchRecipes = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/admin/recipes');
+      setRecipes(response.data);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    }
+  };
+
+  const fetchAllIngredients = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/recipe/ingredients');
+      // Response expected to be an array of objects with at least a "name" property
+      setAllIngredients(response.data);
+    } catch (error) {
+      console.error('Error fetching ingredients:', error);
+    }
+  };
+
   const filteredRecipes = recipes.filter(recipe => 
     recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    recipe.category.toLowerCase().includes(searchTerm.toLowerCase())
+    recipe.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    recipe.submittedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    recipe.approvalStatus.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
-  // Handle input change for form fields
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-  
-  // Handle ingredients input (convert string to array)
-  const handleIngredientsChange = (e) => {
-    setFormData({
-      ...formData,
-      ingredients: e.target.value
-    });
-  };
-  
-  // Start adding a new recipe
-  const startAddRecipe = () => {
-    setFormData({
-      title: '',
-      category: '',
-      difficulty: 'Easy',
-      prepTime: '',
-      cookTime: '',
-      ingredients: '',
-      instructions: '',
-      isPublished: true
-    });
-    setIsAdding(true);
-    setIsEditing(false);
-  };
-  
-  // Start editing a recipe
-  const startEditRecipe = (recipe) => {
-    setCurrentRecipe(recipe);
-    setFormData({
-      title: recipe.title,
-      category: recipe.category,
-      difficulty: recipe.difficulty,
-      prepTime: recipe.prepTime,
-      cookTime: recipe.cookTime,
-      ingredients: recipe.ingredients.join('\n'),
-      instructions: recipe.instructions,
-      isPublished: recipe.isPublished
-    });
-    setIsEditing(true);
-    setIsAdding(false);
-  };
-  
-  // Cancel editing or adding
-  const cancelEdit = () => {
-    setIsEditing(false);
-    setIsAdding(false);
-    setCurrentRecipe(null);
-  };
-  
-  // Save a new or edited recipe
-  const saveRecipe = (e) => {
-    e.preventDefault();
-    
-    const ingredientsArray = formData.ingredients
-      .split('\n')
-      .map(item => item.trim())
-      .filter(item => item !== '');
-    
-    const recipeData = {
-      title: formData.title,
-      category: formData.category,
-      difficulty: formData.difficulty,
-      prepTime: formData.prepTime,
-      cookTime: formData.cookTime,
-      ingredients: ingredientsArray,
-      instructions: formData.instructions,
-      isPublished: formData.isPublished,
-      dateAdded: new Date().toISOString().split('T')[0]
-    };
-    
-    if (isAdding) {
-      // Add new recipe
-      const newRecipe = {
-        id: recipes.length > 0 ? Math.max(...recipes.map(r => r.id)) + 1 : 1,
-        ...recipeData
-      };
-      setRecipes([...recipes, newRecipe]);
-    } else if (isEditing && currentRecipe) {
-      // Update existing recipe
-      setRecipes(recipes.map(recipe => 
-        recipe.id === currentRecipe.id ? { ...recipe, ...recipeData } : recipe
-      ));
+
+  const updateApprovalStatus = async (recipeId, status) => {
+    try {
+      await axios.post(`http://localhost:3000/api/admin/${recipeId}/approval`, {
+        approvalStatus: status
+      });
+      fetchRecipes();
+    } catch (error) {
+      console.error('Error updating approval status:', error);
+      alert('Failed to update approval status. Please try again.');
     }
-    
-    // Reset form state
-    setIsEditing(false);
-    setIsAdding(false);
-    setCurrentRecipe(null);
   };
   
-  // Delete a recipe
-  const deleteRecipe = (recipeId) => {
+  const handleApprove = async (recipeId) => {
+    await updateApprovalStatus(recipeId, 'approved');
+  };
+  
+  const handleReject = async (recipeId) => {
+    await updateApprovalStatus(recipeId, 'rejected');
+  };
+  
+  const handleReAdd = async (recipeId) => {
+    await updateApprovalStatus(recipeId, 'approved'); 
+  };
+  
+  const handleRevoke = async (recipeId) => {
+    if (window.confirm('Are you sure you want to revoke approval for this recipe?')) {
+      await updateApprovalStatus(recipeId, 'rejected');
+    }
+  };
+
+  const deleteRecipe = async (recipeId) => {
     if (window.confirm('Are you sure you want to delete this recipe?')) {
-      setRecipes(recipes.filter(recipe => recipe.id !== recipeId));
+      try {
+        await axios.delete(`http://localhost:3000/api/admin/deleterecipes/${recipeId}`);
+        fetchRecipes();
+      } catch (error) {
+        console.error('Error deleting recipe:', error);
+        alert('Failed to delete recipe. Please try again.');
+      }
+    }
+  };
+
+  const openEditModal = async (recipe) => {
+    try {
+      const response = await axios.get(`http://localhost:3000/api/recipe/recipe/${recipe.id}`);
+      const recipeData = response.data;
+
+      // Set selected recipe from DB
+      setSelectedRecipe({
+        ...recipeData,
+        cookingSteps: recipeData.methods.map(step => ({ step: step.description })),
+        ingredients: recipeData.ingredients.map(ing => ({
+          ingredient: ing.name,
+          amount: ing.amount,
+          customIngredient: ''
+        })),
+        nutritionInfo: recipeData.nutrition,
+        image: recipeData.image_url,
+        submittedBy: recipeData.creator_name || 'Bhansako Swad Team',
+        created_at: recipeData.created_at,
+      });
+
+      // Also update local state for form fields
+      setIngredients(recipeData.ingredients.map(ing => ({
+        ingredient: ing.name,
+        amount: ing.amount,
+        customIngredient: ''
+      })));
+      setCookingSteps(recipeData.methods.map(step => ({ step: step.description })));
+      setNutritionInfo(recipeData.nutrition);
+      setRecipeImage(recipeData.image_url);
+
+      setIsEditModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching recipe for edit:', error);
+      alert('Unable to fetch recipe details for editing.');
+    }
+  };
+
+  // On submit, if an ingredient's value is "Other", use its customIngredient value.
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+
+    const finalImageUrl = recipeImage || selectedRecipe.image;
+
+    const updatedRecipe = {
+      title: selectedRecipe.title,
+      difficulty: selectedRecipe.difficulty,
+      cooking_time: selectedRecipe.cooking_time,
+      category: selectedRecipe.category,
+      image_url: finalImageUrl,
+      ingredients: ingredients.map(({ ingredient, amount, customIngredient }) => ({
+        name: ingredient === "Other" && customIngredient.trim() !== "" ? customIngredient : ingredient,
+        amount: amount
+      })),
+      methods: cookingSteps.map(({ step }, index) => ({
+        step_number: index + 1,
+        description: step
+      })),
+      nutrition: nutritionInfo
+    };
+
+    try {
+
+      const token = localStorage.getItem('token'); 
+
+      if (!token) {
+        alert('You are not logged in. Please log in again.');
+        return;
+      }
+  
+      // Make the axios request with the token included in the headers
+      await axios.post(
+        `http://localhost:3000/api/recipe/updaterecipe/${selectedRecipe.id}`,
+        updatedRecipe,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,  // Add the token here
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+  
+      alert('Recipe updated successfully.');
+      fetchRecipes();  // Assuming you want to refetch the recipes after update
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Error updating recipe:', error);
+      alert('Failed to update the recipe.');
+    }
+  };
+
+  const openViewModal = async (recipe) => {
+    try {
+      const response = await axios.get(`http://localhost:3000/api/recipe/recipe/${recipe.id}`);
+      const recipeData = response.data;
+  
+      setSelectedRecipe({
+        ...recipeData,
+        cookingSteps: recipeData.methods.map(step => ({ step: step.description })),
+        ingredients: recipeData.ingredients.map(ing => ({ ingredient: ing.name, amount: ing.amount })),
+        nutritionInfo: recipeData.nutrition,
+        image: recipeData.image_url,
+        submittedBy: recipeData.creator_name || 'Bhansako Swad Team',
+        created_at: recipeData.created_at
+      });
+  
+      setIsViewModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching recipe details:', error);
+      alert('Unable to fetch recipe details.');
     }
   };
   
-  // Toggle recipe publication status
-  const togglePublishStatus = (recipeId) => {
-    setRecipes(recipes.map(recipe => 
-      recipe.id === recipeId ? { ...recipe, isPublished: !recipe.isPublished } : recipe
-    ));
+  // Ingredients Management
+  const addIngredient = () => {
+    setIngredients([...ingredients, { ingredient: '', amount: '', customIngredient: '' }]);
+  };
+
+  const removeIngredient = (index) => {
+    const newIngredients = ingredients.filter((_, i) => i !== index);
+    setIngredients(newIngredients);
+  };
+
+  // Updates ingredient at index, for given field (ingredient, amount, customIngredient)
+  const updateIngredient = (index, field, value) => {
+    const newIngredients = [...ingredients];
+    newIngredients[index][field] = value;
+    setIngredients(newIngredients);
+  };
+
+  // Cooking Steps Management
+  const addCookingStep = () => {
+    setCookingSteps([...cookingSteps, { step: '' }]);
+  };
+
+  const removeCookingStep = (index) => {
+    const newSteps = cookingSteps.filter((_, i) => i !== index);
+    setCookingSteps(newSteps);
+  };
+
+  const updateCookingStep = (index, value) => {
+    const newSteps = [...cookingSteps];
+    newSteps[index].step = value;
+    setCookingSteps(newSteps);
+  };
+
+  // Nutrition Info Management
+  const addNutritionInfo = () => {
+    setNutritionInfo([...nutritionInfo, { nutrient: '', value: '' }]);
+  };
+
+  const removeNutritionInfo = (index) => {
+    const newNutritionInfo = nutritionInfo.filter((_, i) => i !== index);
+    setNutritionInfo(newNutritionInfo);
+  };
+
+  const updateNutritionInfo = (index, field, value) => {
+    const newNutritionInfo = [...nutritionInfo];
+    newNutritionInfo[index][field] = value;
+    setNutritionInfo(newNutritionInfo);
+  };
+
+  // Image Upload Handler
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    console.log("File selected:", file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        console.log("Base64 data:", reader.result);
+        setRecipeImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
   
+
   return (
     <div className="admin-layout">
       <AdminSidebar />
       <div className="admin-main">
-    <div className="admin-container">
-      <div className="admin-panel">
-        <div className="admin-panel-header">
-          <h1 className="admin-panel-title">Recipe Management</h1>
-          <p className="admin-panel-subtitle">Add, edit, and manage recipes</p>
-        </div>
-        
-        {/* Recipe Form (Add/Edit) */}
-        {(isAdding || isEditing) && (
-          <div className="admin-form-container">
-            <h2 className="admin-form-title">
-              {isAdding ? 'Add New Recipe' : 'Edit Recipe'}
-            </h2>
-            <form onSubmit={saveRecipe} className="admin-recipe-form">
-              <div className="admin-form-row">
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Recipe Title</label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    className="admin-form-input"
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Category</label>
-                  <input
-                    type="text"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    className="admin-form-input"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="admin-form-row">
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Difficulty</label>
-                  <select
-                    name="difficulty"
-                    value={formData.difficulty}
-                    onChange={handleInputChange}
-                    className="admin-form-select"
-                  >
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Prep Time</label>
-                  <input
-                    type="text"
-                    name="prepTime"
-                    value={formData.prepTime}
-                    onChange={handleInputChange}
-                    className="admin-form-input"
-                    placeholder="e.g. 15 mins"
-                    required
-                  />
-                </div>
-                <div className="admin-form-group">
-                  <label className="admin-form-label">Cook Time</label>
-                  <input
-                    type="text"
-                    name="cookTime"
-                    value={formData.cookTime}
-                    onChange={handleInputChange}
-                    className="admin-form-input"
-                    placeholder="e.g. 30 mins"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="admin-form-group">
-                <label className="admin-form-label">Ingredients (one per line)</label>
-                <textarea
-                  name="ingredients"
-                  value={formData.ingredients}
-                  onChange={handleIngredientsChange}
-                  className="admin-form-textarea"
-                  rows="6"
-                  required
-                />
-              </div>
-              
-              <div className="admin-form-group">
-                <label className="admin-form-label">Instructions</label>
-                <textarea
-                  name="instructions"
-                  value={formData.instructions}
-                  onChange={handleInputChange}
-                  className="admin-form-textarea"
-                  rows="6"
-                  required
-                />
-              </div>
-              
-              <div className="admin-form-group admin-form-checkbox-group">
-                <input
-                  type="checkbox"
-                  name="isPublished"
-                  id="isPublished"
-                  checked={formData.isPublished}
-                  onChange={handleInputChange}
-                  className="admin-form-checkbox"
-                />
-                <label htmlFor="isPublished" className="admin-form-checkbox-label">
-                  Publish recipe
-                </label>
-              </div>
-              
-              <div className="admin-form-actions">
-                <button type="submit" className="admin-btn admin-btn-primary">
-                  {isAdding ? 'Add Recipe' : 'Save Changes'}
-                </button>
-                <button 
-                  type="button" 
-                  onClick={cancelEdit} 
-                  className="admin-btn admin-btn-secondary"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-        
-        {/* Recipe List */}
-        {!isAdding && !isEditing && (
-          <>
+        <div className="admin-container">
+          <div className="admin-panel">
+            <div className="admin-panel-header">
+              <h1 className="admin-panel-title">Recipe Management</h1>
+              <p className="admin-panel-subtitle">Review and manage submitted recipes</p>
+            </div>
+
             <div className="admin-search-section">
               <div className="admin-search-container">
                 <div className="admin-search-input-wrapper">
@@ -335,26 +297,22 @@ const AdminRecipePanel = () => {
                     </svg>
                   </span>
                 </div>
-                <button 
-                  className="admin-btn admin-btn-primary"
-                  onClick={startAddRecipe}
-                >
-                  Add Recipe
-                </button>
               </div>
             </div>
-            
+
             <div className="admin-table-container">
               <table className="admin-recipe-table">
                 <thead className="admin-table-head">
                   <tr>
-                    <th className="admins-table-header">Title</th>
-                    <th className="admins-table-header">Category</th>
-                    <th className="admins-table-header">Difficulty</th>
-                    <th className="admins-table-header">Prep/Cook Time</th>
-                    <th className="admins-table-header">Status</th>
-                    <th className="admins-table-header">Date Added</th>
-                    <th className="admins-table-header admin-actions-column">Actions</th>
+                    <th className="admin-table-headers">Title</th>
+                    <th className="admin-table-headers">Category</th>
+                    <th className="admin-table-headers">Difficulty</th>
+                    <th className="admin-table-headers">Cook Time</th>
+                    <th className="admin-table-headers">Submitted By</th>
+                    <th className="admin-table-headers">Role</th>
+                    <th className="admin-table-headers">Status</th>
+                    <th className="admin-table-headers">Date Added</th>
+                    <th className="admin-table-headers admin-actions-column">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="admin-table-body">
@@ -379,32 +337,99 @@ const AdminRecipePanel = () => {
                           </span>
                         </td>
                         <td className="admin-table-cell">
-                          {recipe.prepTime} / {recipe.cookTime}
+                          {recipe.cooking_time || '-'}
                         </td>
                         <td className="admin-table-cell">
-                          <span 
-                            className={`admin-badge ${recipe.isPublished ? 'admin-badge-green' : 'admin-badge-gray'}`}
-                            onClick={() => togglePublishStatus(recipe.id)}
-                          >
-                            {recipe.isPublished ? 'Published' : 'Draft'}
+                          <span className={`admin-badge ${
+                            recipe.userType === 'chef' ? 'admin-badge-purple' :
+                            recipe.userType === 'admin' ? 'admin-badge-blue' :
+                            'admin-badge-gray'
+                          }`}>
+                            {recipe.submittedBy || 'Bhansako Swad Team'}
                           </span>
                         </td>
+                        <td className="admin-table-cell">
+                          <span className={`admin-badge ${
+                            recipe.userType === 'admin' ? 'admin-badge-purple' :
+                            recipe.userType === 'chef' ? 'admin-badge-orange' :
+                            recipe.userType === 'seller' ? 'admin-badge-gray' :
+                            'admin-badge-blue'
+                          }`}>
+                            {recipe.userType.charAt(0).toUpperCase() + recipe.userType.slice(1)}
+                          </span>
+                        </td>
+                        <td className="admin-table-cell">
+                          <div className="admin-status-container">
+                            <span className={`admin-badge ${
+                              recipe.approval_status === 'approved' ? 'admin-badge-green' : 
+                              recipe.approval_status === 'pending' ? 'admin-badge-orange' : 
+                              'admin-badge-red'
+                            }`}>
+                              {recipe.approval_status}
+                            </span>
+                          </div>
+                          <div className="admin-approval-actions">
+                            {recipe.approval_status === 'pending' && (
+                              <>
+                                <button 
+                                  onClick={() => handleApprove(recipe.id)} 
+                                  className="admin-btn-icon admin-btn-approve" 
+                                  title="Approve"
+                                >
+                                  <FaCheck />
+                                </button>
+                                <button 
+                                  onClick={() => handleReject(recipe.id)} 
+                                  className="admin-btn-icon admin-btn-reject" 
+                                  title="Reject"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </>
+                            )}
+                            {recipe.approval_status === 'rejected' && (
+                              <button 
+                                onClick={() => handleReAdd(recipe.id)} 
+                                className="admin-btn-icon admin-btn-approve" 
+                                title="Re-add for Approval"
+                              >
+                                <FaCheck />
+                              </button>
+                            )}
+                            {recipe.approval_status === 'approved' && (
+                              <button 
+                                onClick={() => handleRevoke(recipe.id)} 
+                                className="admin-btn-icon admin-btn-reject" 
+                                title="Revoke Approval"
+                              >
+                                <FaBan />
+                              </button>
+                            )}
+                          </div>
+                        </td>
                         <td className="admin-table-cell admin-date-cell">
-                          {recipe.dateAdded}
+                          {new Date(recipe.created_at).toLocaleDateString()}
                         </td>
                         <td className="admin-table-cell admin-actions-cell">
-                          <div className="admin-action-buttons">
-                            <button 
-                              onClick={() => startEditRecipe(recipe)} 
-                              className="admin-btn-text admin-btn-edit"
-                            >
-                              Edit
-                            </button>
+                          <div className="admins-action-buttons">
                             <button 
                               onClick={() => deleteRecipe(recipe.id)} 
                               className="admin-btn-text admin-btn-remove"
                             >
                               Delete
+                            </button>
+                            <button 
+                              onClick={() => openEditModal(recipe)} 
+                              className="admin-btn-text admin-btn-edit"
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              onClick={() => openViewModal(recipe)} 
+                              className="admin-btn-text admin-btn-view"
+                              title="View Recipe"
+                            >
+                              View
                             </button>
                           </div>
                         </td>
@@ -412,7 +437,7 @@ const AdminRecipePanel = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="admin-empty-results">
+                      <td colSpan="8" className="admin-empty-results">
                         No recipes found matching your search criteria.
                       </td>
                     </tr>
@@ -420,11 +445,392 @@ const AdminRecipePanel = () => {
                 </tbody>
               </table>
             </div>
-          </>
-        )}
+
+            {/* View Modal */}
+            {isViewModalOpen && selectedRecipe && (
+              <div className="admin-modal-overlay">
+                <div className="admin-modal-container admin-view-recipe-modal">
+                  <div className="admin-modal-header">
+                    <h2>Recipe Details: {selectedRecipe.title}</h2>
+                    <button 
+                      className="admin-modal-close"
+                      onClick={() => setIsViewModalOpen(false)}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  <div className="admin-view-modal-content">
+                    <div className="admin-view-recipe-image">
+                      {selectedRecipe.image ? (
+                        <img src={selectedRecipe.image_url} alt={selectedRecipe.title} />
+                      ) : (
+                        <div className="admin-no-image-placeholder">No Image Available</div>
+                      )}
+                    </div>
+                    <div className="admin-view-recipe-details">
+                      <div className="admin-view-recipe-header">
+                        <h3>{selectedRecipe.title}</h3>
+                        <div className="admin-view-recipe-badges">
+                          <span className="admin-badge admin-badge-blue">
+                            {selectedRecipe.category}
+                          </span>
+                          <span className={`admin-badge ${
+                            selectedRecipe.difficulty === 'Easy' ? 'admin-badge-green' :
+                            selectedRecipe.difficulty === 'Medium' ? 'admin-badge-orange' :
+                            'admin-badge-red'
+                          }`}>
+                            {selectedRecipe.difficulty}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="admin-view-recipe-section">
+                        <h4>Cooking Time</h4>
+                        <p>{selectedRecipe.cooking_time || 'Not specified'}</p>
+                      </div>
+                      <div className="admin-view-recipe-section">
+                        <h4>Ingredients</h4>
+                        <ul>
+                          {selectedRecipe.ingredients?.map((ing, index) => (
+                            <li key={index}>
+                              {ing.amount} {ing.ingredient}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="admin-view-recipe-section">
+                        <h4>Cooking Steps</h4>
+                        <ol>
+                          {selectedRecipe.cookingSteps?.map((step, index) => (
+                            <li key={index}>{step.step}</li>
+                          ))}
+                        </ol>
+                      </div>
+                      <div className="admin-view-recipe-section">
+                        <h4>Nutrition Information</h4>
+                        <table className="admin-view-nutrition-table">
+                          <tbody>
+                            {selectedRecipe.nutritionInfo?.map((info, index) => (
+                              <tr key={index}>
+                                <td>{info.nutrient}</td>
+                                <td>{info.value}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="admin-view-recipe-footer">
+                        <div className="admin-view-recipe-metadata">
+                          <p>Submitted By: {selectedRecipe.submittedBy}</p>
+                          <p>Date Added: {new Date(selectedRecipe.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="admin-modal-actions">
+                    <button 
+                      className="admin-btn-secondary"
+                      onClick={() => setIsViewModalOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit Modal */}
+            {isEditModalOpen && selectedRecipe && (
+              <div className="admin-modal-overlay">
+                <div className="admin-modal-container admin-edit-recipe-modal">
+                  <div className="admin-modal-header">
+                    <h2>Edit Recipe: {selectedRecipe.title}</h2>
+                    <button 
+                      className="admin-modal-close"
+                      onClick={() => setIsEditModalOpen(false)}
+                    >
+                      &times;
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleEditSubmit} className="admin-modal-form">
+                    {/* Recipe Basics */}
+                    <div className="admin-modal-section">
+                      <h3>Recipe Basics</h3>
+                      <div className="admin-modal-form-row">
+                        <div className="admin-modal-form-group">
+                          <label>Recipe Name</label>
+                          <input
+                            type="text"
+                            value={selectedRecipe.title || ""}
+                            onChange={(e) =>
+                              setSelectedRecipe({
+                                ...selectedRecipe,
+                                title: e.target.value
+                              })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="admin-modal-form-group">
+                          <label>Difficulty</label>
+                          <select
+                            value={selectedRecipe.difficulty || ""}
+                            onChange={(e) =>
+                              setSelectedRecipe({
+                                ...selectedRecipe,
+                                difficulty: e.target.value
+                              })
+                            }
+                            required
+                          >
+                            <option value="">Select Difficulty</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="admin-modal-form-row">
+                        <div className="admin-modal-form-group">
+                          <label>Cooking Time</label>
+                          <input
+                            type="text"
+                            placeholder="e.g., 30 mins"
+                            value={selectedRecipe.cooking_time || ""}
+                            onChange={(e) =>
+                              setSelectedRecipe({
+                                ...selectedRecipe,
+                                cooking_time: e.target.value
+                              })
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="admin-modal-form-group">
+                          <label>Category</label>
+                          <select
+                            value={selectedRecipe.category || ""}
+                            onChange={(e) =>
+                              setSelectedRecipe({
+                                ...selectedRecipe,
+                                category: e.target.value
+                              })
+                            }
+                            required
+                          >
+                            <option value="">Select Category</option>
+                            <option value="Vegetarian">Vegetarian</option>
+                            <option value="Pescatarian">Pescatarian</option>
+                            <option value="Non-Vegetarian">Non-Vegetarian</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Gluten-Free">Gluten-Free</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="admin-modal-form-group">
+                        <label>Cuisine</label>
+                        <select
+                          value={selectedRecipe.cuisine || ""}
+                          onChange={(e) =>
+                            setSelectedRecipe({
+                              ...selectedRecipe,
+                              cuisine: e.target.value
+                            })
+                          }
+                        >
+                          <option value="">(Optional) Select Cuisine</option>
+                          <option value="Italian">Italian</option>
+                          <option value="Mexican">Mexican</option>
+                          <option value="Japanese">Japanese</option>
+                          <option value="Indian">Indian</option>
+                          <option value="Nepali">Nepali</option>
+                          <option value="Thai">Thai</option>
+                          <option value="Turkish">Turkish</option>
+                          <option value="Chinese">Chinese</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Ingredients Section */}
+                    <div className="admin-modal-section">
+                      <h3>Ingredients</h3>
+                      {ingredients.map((ing, index) => (
+                        <div key={index} className="admin-modal-form-row ingredient-row">
+                          <div className="admin-modal-form-group">
+                            <label>Ingredient</label>
+                            <select
+                              value={ing.ingredient}
+                              onChange={(e) => updateIngredient(index, 'ingredient', e.target.value)}
+                            >
+                              <option value="">Select Ingredient</option>
+                              {allIngredients.map(item => (
+                                <option key={item.name} value={item.name}>
+                                  {item.name}
+                                </option>
+                              ))}
+                              <option value="Other">Other</option>
+                            </select>
+                            {ing.ingredient === "Other" && (
+                              <input
+                                type="text"
+                                placeholder="Enter ingredient"
+                                value={ing.customIngredient || ""}
+                                onChange={(e) =>
+                                  updateIngredient(index, 'customIngredient', e.target.value)
+                                }
+                              />
+                            )}
+                          </div>
+                          <div className="admin-modal-form-group">
+                            <label>Amount</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., 2 cups"
+                              value={ing.amount}
+                              onChange={(e) => updateIngredient(index, 'amount', e.target.value)}
+                            />
+                          </div>
+                          <div className="admin-modal-form-group admin-ingredient-actions">
+                            {ingredients.length > 1 && (
+                              <button 
+                                type="button" 
+                                onClick={() => removeIngredient(index)}
+                                className="admin-btn-remove"
+                              >
+                                <FaTimes />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <button 
+                        type="button" 
+                        onClick={addIngredient}
+                        className="admin-btn-add-ingredient"
+                      >
+                        <FaPlus /> Add Ingredient
+                      </button>
+                    </div>
+
+                    {/* Cooking Methods */}
+                    <div className="admin-modal-section">
+                      <h3>Cooking Methods</h3>
+                      {cookingSteps.map((step, index) => (
+                        <div key={index} className="admin-modal-form-row cooking-step-row">
+                          <div className="admin-modal-form-group step-input">
+                            <label>Step {index + 1}</label>
+                            <textarea
+                              placeholder="Describe step"
+                              value={step.step}
+                              onChange={(e) => updateCookingStep(index, e.target.value)}
+                            />
+                          </div>
+                          <div className="admin-modal-form-group admin-step-actions">
+                            {cookingSteps.length > 1 && (
+                              <button 
+                                type="button" 
+                                onClick={() => removeCookingStep(index)}
+                                className="admin-btn-remove"
+                              >
+                                <FaTimes />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <button 
+                        type="button" 
+                        onClick={addCookingStep}
+                        className="admin-btn-add-step"
+                      >
+                        <FaPlus /> Add Step
+                      </button>
+                    </div>
+
+                    {/* Nutrition Information */}
+                    <div className="admin-modal-section">
+                      <h3>Nutrition Information</h3>
+                      {nutritionInfo.map((info, index) => (
+                        <div key={index} className="admin-modal-form-row nutrition-row">
+                          <div className="admin-modal-form-group">
+                            <label>Nutrient</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., Calories"
+                              value={info.nutrient}
+                              onChange={(e) => updateNutritionInfo(index, 'nutrient', e.target.value)}
+                            />
+                          </div>
+                          <div className="admin-modal-form-group">
+                            <label>Value</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., 250"
+                              value={info.value}
+                              onChange={(e) => updateNutritionInfo(index, 'value', e.target.value)}
+                            />
+                          </div>
+                          <div className="admin-modal-form-group admin-nutrition-actions">
+                            {nutritionInfo.length > 1 && (
+                              <button 
+                                type="button" 
+                                onClick={() => removeNutritionInfo(index)}
+                                className="admin-btn-remove"
+                              >
+                                <FaTimes />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      <button 
+                        type="button" 
+                        onClick={addNutritionInfo}
+                        className="admin-btn-add-nutrition"
+                      >
+                        <FaPlus /> Add Nutrition Info
+                      </button>
+                    </div>
+
+                    {/* Recipe Image */}
+                    <div className="admin-modal-section">
+                      <h3>Recipe Image</h3>
+                      <div className="admin-modal-form-group">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                        />
+                        {recipeImage && (
+  <img src={recipeImage} alt="Preview" style={{ maxWidth: "200px" }} />
+)}
+
+                      </div>
+                    </div>
+
+                    {/* Submit Actions */}
+                    <div className="admin-modal-actions">
+                      <button type="submit" className="admin-btn-primary">
+                        Update Recipe
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-btn-secondary"
+                        onClick={() => setIsEditModalOpen(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
       </div>
-    </div>
-    </div>
     </div>
   );
 };

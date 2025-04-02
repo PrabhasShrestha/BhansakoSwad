@@ -115,6 +115,7 @@ const AdminOrders = () => {
                 <thead>
                   <tr>
                     <th>Order ID</th>
+                    <th>Product</th>
                     <th>Customer</th>
                     <th>Shop Name</th>
                     <th>Date</th>
@@ -128,6 +129,15 @@ const AdminOrders = () => {
                   {currentItems.map(order => (
                     <tr key={order.order_id}>
                       <td>{order.order_id}</td>
+                      <td>
+                      <div className="adminorderproduct-info">
+                          <img 
+                            src={`http://localhost:3000/${order.product_image}`}  
+                            className="adminorderproduct-image"
+                          />
+                          <span className='products-name'>{order.product_name}</span>
+                        </div>
+                      </td>
                       <td>
                         <div>{order.first_name} {order.last_name}</div>
                       </td>

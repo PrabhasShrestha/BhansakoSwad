@@ -366,7 +366,7 @@ const handleAddProduct = async (e) => {
           />
         ) : (
           <img
-            src={`http://localhost:3000/uploads/products/${selectedProduct.image}`} // Show old image
+            src={`${selectedProduct.image}`} // Show old image
             alt="Current Product"
             className="product-preview"
           />

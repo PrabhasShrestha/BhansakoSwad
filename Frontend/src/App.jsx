@@ -1,4 +1,5 @@
 import React from "react";
+import { ToastContainer, toast } from 'react-toastify';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import UserSignUp from "./pages/User/UserSignUp";
 import VerificationCode from "./pages/User/VerificationCode";
@@ -40,6 +41,7 @@ import ChefApproval from "./pages/Admin/AdminChef";
 
 function App() {
   return (
+    <>
 <Routes>
   <Route path="/signUp" element={<UserSignUp />} />
   <Route path="/sellersignUp" element={<SellerSignUp />} />
@@ -77,6 +79,8 @@ function App() {
   <Route path="/adminrecipes" element={<AdminRecipePanel/>}/>
   <Route path="/adminchef" element={<ChefApproval/>}/>
 </Routes>
+  <ToastContainer />
+  </>
   );
 }
 

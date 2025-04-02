@@ -36,8 +36,8 @@ const SuccessPage = () => {
                     console.log("Payment stored successfully.");
                 }
     
-                // ✅ Step 4: Clear Cart After Payment Success
-                const clearCartResponse = await fetch("http://localhost:3000/api/clear-cart", {
+             
+                const clearCartResponse = await fetch("http://localhost:3000/api/cart/clear-cart", {
                     method: "POST",
                     headers: { 
                         "Content-Type": "application/json",

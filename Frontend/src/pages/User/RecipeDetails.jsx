@@ -18,7 +18,6 @@ const RecipeDetails = () => {
     const [hover, setHover] = useState(0)
     const isLoggedIn = localStorage.getItem("token") !== null;
     const [toast, setToast] = useState(null);
-    const [favoriteMessage, setFavoriteMessage] = useState("");
     const [creatorName, setCreatorName] = useState("Bhansako Swad Team");
     useEffect(() => {
         const fetchRecipeDetails = async () => {

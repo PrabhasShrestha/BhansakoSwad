@@ -96,10 +96,13 @@ const getCart = (req, res) => {
             // Format product image URLs correctly
             const cartItems = result.map((item) => ({
                 ...item,
-                image: item.image 
-                    ? `http://localhost:3000/uploads/products/${item.image}`
-                    : null,
+                image: item.image
+                    ? item.image.startsWith("uploads/products/")  // Avoid duplicate paths
+                        ? `http://localhost:3000/${item.image}`
+                        : `http://localhost:3000/uploads/products/${item.image}`
+                    : "http://localhost:3000/uploads/default-product.png", // Fallback image
             }));
+            
 
             res.status(200).json({
                 success: true,
@@ -128,43 +131,95 @@ const removeFromCart = (req, res) => {
 const updateCartQuantity = (req, res) => {
     const { productdetails_id, quantity } = req.body;
     const user_id = req.user.id;
-
-    if (quantity <= 0) {
-        return res.status(400).json({ message: "Quantity must be greater than zero." });
+  
+    // Basic validation
+    if (!productdetails_id || quantity == null) {
+      return res.status(400).json({ message: "Product details ID and quantity are required." });
     }
-
-    db.query(
-        `UPDATE cart_items SET quantity = ? WHERE user_id = ? AND productdetails_id = ?`,
-        [quantity, user_id, productdetails_id],
-        (err, result) => {
-            if (err) return res.status(500).json({ message: "Internal server error." });
-            return res.status(200).json({ message: "Cart quantity updated successfully." });
+  
+    if (quantity <= 0) {
+      return res.status(400).json({ message: "Quantity must be greater than zero." });
+    }
+  
+    // 1) Check the available stock for the given productdetails_id
+    const checkStockQuery = `SELECT in_stock FROM productdetails WHERE id = ?`;
+  
+    db.query(checkStockQuery, [productdetails_id], (err, results) => {
+      if (err) {
+        console.error("Error checking stock:", err);
+        return res.status(500).json({ message: "Internal server error." });
+      }
+  
+      // If no matching productdetails found
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Product not found." });
+      }
+  
+      const in_stock = results[0].in_stock;
+  
+      // 2) If the requested quantity exceeds in_stock, respond with an error
+      if (quantity > in_stock) {
+        return res.status(400).json({
+          message: `Cannot set quantity to ${quantity}. Only ${in_stock} items in stock.`,"success": false
+        });
+      }
+  
+      // 3) Update the cart quantity if it's within the stock limit
+      const updateCartQuery = `
+        UPDATE cart_items
+        SET quantity = ?
+        WHERE user_id = ? AND productdetails_id = ?
+      `;
+  
+      db.query(updateCartQuery, [quantity, user_id, productdetails_id], (err, result) => {
+        if (err) {
+          console.error("Error updating cart quantity:", err);
+          return res.status(500).json({ message: "Internal server error." });
         }
-    );
-};
+  
+        return res.status(200).json({ message: "Cart quantity updated successfully." });
+      });
+    });
+  };
+  
 
 
 const deleteCart = (req, res) => {
-    const user_id = req.user.id; // Extract user ID from JWT
-
+    const user_id = req.user.id;
+  
     if (!user_id) {
-        return res.status(400).json({ message: "User ID is required." });
+      return res.status(400).json({ message: "User ID is required." });
     }
-
-    db.query(
-        `DELETE FROM cart_items WHERE user_id = ?`,
-        [user_id],
-        (err, result) => {
-            if (err) {
-                console.error("Database Error:", err);
-                return res.status(500).json({ message: "Failed to clear cart." });
-            }
-
-            return res.status(200).json({ message: "Cart cleared successfully." });
+  
+    // First, update the stock by subtracting the quantity for each cart item
+    const updateStockQuery = `
+      UPDATE productdetails p
+        JOIN cart_items c ON p.id = c.productdetails_id
+        SET p.in_stock = p.in_stock - c.quantity
+        WHERE c.user_id = ?
+    `;
+  
+    db.query(updateStockQuery, [user_id], (err, updateResult) => {
+      if (err) {
+        console.error("Stock Update Error:", err);
+        return res.status(500).json({ message: "Failed to update stock." });
+      }
+  
+      // Next, remove the cart items for the user
+      const deleteCartQuery = `DELETE FROM cart_items WHERE user_id = ?`;
+      db.query(deleteCartQuery, [user_id], (err, deleteResult) => {
+        if (err) {
+          console.error("Cart Deletion Error:", err);
+          return res.status(500).json({ message: "Failed to clear cart." });
         }
-    );
-};
-
+  
+        return res.status(200).json({
+          message: "Cart cleared and stock updated successfully."
+        });
+      });
+    });
+  };
+  
 module.exports = {
     addToCart,
     updateCartQuantity,

@@ -199,7 +199,7 @@ const SellerUpdatePage = () => {
     // Send the API request to change the password
     axios
       .post(
-        "http://localhost:3000/api/change-password-seller",
+        "http://localhost:3000/api/change-password",
         {
           oldPassword: passwordData.oldPassword,
           newPassword: passwordData.newPassword,

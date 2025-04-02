@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from 'react-toastify';
 import { useNavigate } from "react-router-dom";
 import Navigationbar from "../../components/NavBar";
 import Footer from "../../components/Footer";
@@ -50,7 +51,15 @@ const ShoppingCart = () => {
       },
       body: JSON.stringify({ productdetails_id: id, quantity: newQuantity }),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        // If the response is not OK (e.g., status 400), throw an error
+        const data = await res.json();
+        if (!res.ok) {
+          // Throw the backend error message so we can catch it below
+          throw new Error(data.message || "Failed to update cart quantity.");
+        }
+        return data;
+      })
       .then((data) => {
         if (data.success) {
           const updatedCart = cartItems.map((item) =>
@@ -60,7 +69,11 @@ const ShoppingCart = () => {
           localStorage.setItem("cart", JSON.stringify(updatedCart)); // ✅ Update localStorage
         }
       })
-      .catch((error) => console.error("Error updating cart quantity:", error));
+      .catch((error) => {
+        console.error("Error updating cart quantity:", error);
+        // Moved toast inside the catch block
+        toast.error(error.message || "Error updating cart quantity.");
+      });
   };  
   
   const removeItem = (id) => {

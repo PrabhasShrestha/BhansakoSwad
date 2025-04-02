@@ -52,33 +52,42 @@ const Login = () => {
 
         console.log("Login successful", response.data);
 
+        const user = response.data.user;
         // Store JWT token and role
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("role", response.data.role); // Role is received from backend
-
+        localStorage.setItem("role", user.role); // Role is received from backend
+        localStorage.setItem("userId", user.id);
       
-
         if (response.data.user.role === "all") {
-            localStorage.setItem("userId", response.data.user.id);
-            localStorage.setItem("sellerId", response.data.user.seller_id);
-            localStorage.setItem("chefId", response.data.user.chef_id);
-        } else if (response.data.user.role === "user_seller") {
-            localStorage.setItem("userId", response.data.user.id);
-            localStorage.setItem("sellerId", response.data.user.seller_id);
-        } else if (response.data.user.role === "user_chef") {
-            localStorage.setItem("userId", response.data.user.id);
-            localStorage.setItem("chefId", response.data.user.chef_id);
-        } else if (response.data.user.role === "seller_chef") {
-            localStorage.setItem("sellerId", response.data.user.seller_id);
-            localStorage.setItem("chefId", response.data.user.chef_id);
-        } else if (response.data.user.role === "seller") {
-            localStorage.setItem("sellerId", response.data.user.seller_id);
-        } else if (response.data.user.role === "chef") {
-            localStorage.setItem("chefId", response.data.user.chef_id);
-        } else {
-            localStorage.setItem("userId", response.data.user.id);
-        }
-        navigate("/home");
+          localStorage.setItem("userId", response.data.user.id);
+          localStorage.setItem("sellerId", response.data.user.seller_id);
+          if (response.data.user.chef_status === "approved") {
+              localStorage.setItem("chefId", response.data.user.chef_id);
+          }
+      } else if (response.data.user.role === "user_seller") {
+          localStorage.setItem("userId", response.data.user.id);
+          localStorage.setItem("sellerId", response.data.user.seller_id);
+      } else if (response.data.user.role === "user_chef") {
+          localStorage.setItem("userId", response.data.user.id);
+          if (response.data.user.chef_status === "approved") {
+              localStorage.setItem("chefId", response.data.user.chef_id);
+          }
+      } else if (response.data.user.role === "seller_chef") {
+          localStorage.setItem("sellerId", response.data.user.seller_id);
+          if (response.data.user.chef_status === "approved") {
+              localStorage.setItem("chefId", response.data.user.chef_id);
+          }
+      } else if (response.data.user.role === "seller") {
+          localStorage.setItem("sellerId", response.data.user.seller_id);
+      } else if (response.data.user.role === "chef") {
+          if (response.data.user.chef_status === "approved") {
+              localStorage.setItem("chefId", response.data.user.chef_id);
+          }
+      } else {
+          localStorage.setItem("userId", response.data.user.id);
+      }
+      
+      navigate("/home");      
         
     } catch (error) {
         // Handle errors from the backend
@@ -86,7 +95,10 @@ const Login = () => {
             setErrors({ password: "Invalid password. Please try again." });
         } else if (error.response?.status === 404) {
             setErrors({ email: "Account not found. Please register first." });
-        } else if (error.response?.status === 403) {
+        } else if (error.response?.status === 409 ) {
+          setErrors({
+            api: "Your account has been deactivated by the admin. Please contact support."
+          });}else if (error.response?.status === 403) {
             setErrors({
                 api: "Your account is under verification. Please wait for admin approval."
             });
