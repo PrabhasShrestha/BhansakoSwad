@@ -3,6 +3,7 @@ import axios from 'axios';
 import "../../styles/Admin/AdminRecipe.css";
 import AdminSidebar from '../../components/AdminSidebar';
 import { FaTrash, FaCheck, FaBan, FaPlus, FaTimes, FaEye } from 'react-icons/fa';
+import translations from "../../components/nepaliTranslations.json";
 
 const AdminRecipePanel = () => {
   const [recipes, setRecipes] = useState([]);
@@ -10,15 +11,12 @@ const AdminRecipePanel = () => {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [translated, setTranslated] = useState(false);
 
-  // Local state for ingredients, cooking steps, nutrition info, image
-  // Note: ingredients now include a "customIngredient" field for "Other"
   const [ingredients, setIngredients] = useState([{ ingredient: '', amount: '', customIngredient: '' }]);
   const [cookingSteps, setCookingSteps] = useState([{ step: '' }]);
   const [nutritionInfo, setNutritionInfo] = useState([{ nutrient: '', value: '' }]);
   const [recipeImage, setRecipeImage] = useState(null);
-
-  // State for all ingredients fetched from DB
   const [allIngredients, setAllIngredients] = useState([]);
 
   useEffect(() => {
@@ -38,7 +36,6 @@ const AdminRecipePanel = () => {
   const fetchAllIngredients = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/recipe/ingredients');
-      // Response expected to be an array of objects with at least a "name" property
       setAllIngredients(response.data);
     } catch (error) {
       console.error('Error fetching ingredients:', error);
@@ -99,10 +96,9 @@ const AdminRecipePanel = () => {
       const response = await axios.get(`http://localhost:3000/api/recipe/recipe/${recipe.id}`);
       const recipeData = response.data;
 
-      // Set selected recipe from DB
       setSelectedRecipe({
         ...recipeData,
-        cookingSteps: recipeData.methods.map(step => ({ step: step.description })),
+        cookingSteps: recipeData.methods.map(step => ({ step: step.description, step_ne: step.description_ne })),
         ingredients: recipeData.ingredients.map(ing => ({
           ingredient: ing.name,
           amount: ing.amount,
@@ -114,13 +110,12 @@ const AdminRecipePanel = () => {
         created_at: recipeData.created_at,
       });
 
-      // Also update local state for form fields
       setIngredients(recipeData.ingredients.map(ing => ({
         ingredient: ing.name,
         amount: ing.amount,
         customIngredient: ''
       })));
-      setCookingSteps(recipeData.methods.map(step => ({ step: step.description })));
+      setCookingSteps(recipeData.methods.map(step => ({ step: step.description, step_ne: step.description_ne })));
       setNutritionInfo(recipeData.nutrition);
       setRecipeImage(recipeData.image_url);
 
@@ -131,7 +126,6 @@ const AdminRecipePanel = () => {
     }
   };
 
-  // On submit, if an ingredient's value is "Other", use its customIngredient value.
   const handleEditSubmit = async (e) => {
     e.preventDefault();
 
@@ -155,7 +149,6 @@ const AdminRecipePanel = () => {
     };
 
     try {
-
       const token = localStorage.getItem('token'); 
 
       if (!token) {
@@ -163,20 +156,19 @@ const AdminRecipePanel = () => {
         return;
       }
   
-      // Make the axios request with the token included in the headers
       await axios.post(
         `http://localhost:3000/api/recipe/updaterecipe/${selectedRecipe.id}`,
         updatedRecipe,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,  // Add the token here
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           }
         }
       );
   
       alert('Recipe updated successfully.');
-      fetchRecipes();  // Assuming you want to refetch the recipes after update
+      fetchRecipes();
       setIsEditModalOpen(false);
     } catch (error) {
       console.error('Error updating recipe:', error);
@@ -191,9 +183,20 @@ const AdminRecipePanel = () => {
   
       setSelectedRecipe({
         ...recipeData,
-        cookingSteps: recipeData.methods.map(step => ({ step: step.description })),
-        ingredients: recipeData.ingredients.map(ing => ({ ingredient: ing.name, amount: ing.amount })),
-        nutritionInfo: recipeData.nutrition,
+        cookingSteps: recipeData.methods.map(step => ({
+          step: step.description,
+          step_ne: step.description_ne // Store Nepali description
+        })),
+        ingredients: recipeData.ingredients.map(ing => ({
+          ingredient: ing.name,
+          amount: ing.amount
+        })),
+        nutritionInfo: recipeData.nutrition.map(info => ({
+          nutrient: info.nutrient,
+          value: info.value,
+          nutrient_ne: info.nutrient_ne,
+          value_ne: info.value_ne
+        })),
         image: recipeData.image_url,
         submittedBy: recipeData.creator_name || 'Bhansako Swad Team',
         created_at: recipeData.created_at
@@ -206,7 +209,6 @@ const AdminRecipePanel = () => {
     }
   };
   
-  // Ingredients Management
   const addIngredient = () => {
     setIngredients([...ingredients, { ingredient: '', amount: '', customIngredient: '' }]);
   };
@@ -216,14 +218,12 @@ const AdminRecipePanel = () => {
     setIngredients(newIngredients);
   };
 
-  // Updates ingredient at index, for given field (ingredient, amount, customIngredient)
   const updateIngredient = (index, field, value) => {
     const newIngredients = [...ingredients];
     newIngredients[index][field] = value;
     setIngredients(newIngredients);
   };
 
-  // Cooking Steps Management
   const addCookingStep = () => {
     setCookingSteps([...cookingSteps, { step: '' }]);
   };
@@ -239,7 +239,6 @@ const AdminRecipePanel = () => {
     setCookingSteps(newSteps);
   };
 
-  // Nutrition Info Management
   const addNutritionInfo = () => {
     setNutritionInfo([...nutritionInfo, { nutrient: '', value: '' }]);
   };
@@ -255,7 +254,6 @@ const AdminRecipePanel = () => {
     setNutritionInfo(newNutritionInfo);
   };
 
-  // Image Upload Handler
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     console.log("File selected:", file);
@@ -268,7 +266,10 @@ const AdminRecipePanel = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
+  const toggleTranslation = () => {
+    setTranslated(!translated);
+  };
 
   return (
     <div className="admin-layout">
@@ -451,12 +452,12 @@ const AdminRecipePanel = () => {
               <div className="admin-modal-overlay">
                 <div className="admin-modal-container admin-view-recipe-modal">
                   <div className="admin-modal-header">
-                    <h2>Recipe Details: {selectedRecipe.title}</h2>
+                    <h2>Recipe Details: {translated ? selectedRecipe.title_ne || selectedRecipe.title : selectedRecipe.title}</h2>
                     <button 
                       className="admin-modal-close"
                       onClick={() => setIsViewModalOpen(false)}
                     >
-                      &times;
+                      ×
                     </button>
                   </div>
                   <div className="admin-view-modal-content">
@@ -469,7 +470,7 @@ const AdminRecipePanel = () => {
                     </div>
                     <div className="admin-view-recipe-details">
                       <div className="admin-view-recipe-header">
-                        <h3>{selectedRecipe.title}</h3>
+                        <h3>{translated ? selectedRecipe.title_ne || selectedRecipe.title : selectedRecipe.title}</h3>
                         <div className="admin-view-recipe-badges">
                           <span className="admin-badge admin-badge-blue">
                             {selectedRecipe.category}
@@ -484,11 +485,11 @@ const AdminRecipePanel = () => {
                         </div>
                       </div>
                       <div className="admin-view-recipe-section">
-                        <h4>Cooking Time</h4>
-                        <p>{selectedRecipe.cooking_time || 'Not specified'}</p>
+                        <h4>{translated ? "खाना पकाउने समय" : "Cooking Time"}</h4>
+                        <p>{selectedRecipe.cooking_time || (translated ? "उल्लेख गरिएको छैन" : "Not specified")}</p>
                       </div>
                       <div className="admin-view-recipe-section">
-                        <h4>Ingredients</h4>
+                        <h4>{translated ? "सामग्रीहरू" : "Ingredients"}</h4>
                         <ul>
                           {selectedRecipe.ingredients?.map((ing, index) => (
                             <li key={index}>
@@ -498,21 +499,31 @@ const AdminRecipePanel = () => {
                         </ul>
                       </div>
                       <div className="admin-view-recipe-section">
-                        <h4>Cooking Steps</h4>
-                        <ol>
-                          {selectedRecipe.cookingSteps?.map((step, index) => (
-                            <li key={index}>{step.step}</li>
+                      <h4>{translated ? translations.cookingSteps : "Cooking Steps"}</h4>
+                      {selectedRecipe.cookingSteps?.length > 0 ? (
+                        <>
+                          {selectedRecipe.cookingSteps.map((step, index) => (
+                            <div className="admin-method-step" key={index}>
+                              <h4>
+                                {translated ? translations.step : "Step"}{" "}
+                                {translated ? translations.nepaliNumbers[index + 1] : index + 1}
+                              </h4>
+                              <p>{translated && step.step_ne ? step.step_ne : step.step}</p>
+                            </div>
                           ))}
-                        </ol>
-                      </div>
+                        </>
+                      ) : (
+                        <p>{translated ? "कुनै चरणहरू उपलब्ध छैनन्" : "No steps available"}</p>
+                      )}
+                    </div>
                       <div className="admin-view-recipe-section">
-                        <h4>Nutrition Information</h4>
+                        <h4>{translated ? "पोषण जानकारी" : "Nutrition Information"}</h4>
                         <table className="admin-view-nutrition-table">
                           <tbody>
                             {selectedRecipe.nutritionInfo?.map((info, index) => (
                               <tr key={index}>
-                                <td>{info.nutrient}</td>
-                                <td>{info.value}</td>
+                                <td>{translated ? (info.nutrient_ne || info.nutrient) : info.nutrient}</td>
+                                <td>{translated ? (info.value_ne || info.value) : info.value}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -520,8 +531,14 @@ const AdminRecipePanel = () => {
                       </div>
                       <div className="admin-view-recipe-footer">
                         <div className="admin-view-recipe-metadata">
-                          <p>Submitted By: {selectedRecipe.submittedBy}</p>
-                          <p>Date Added: {new Date(selectedRecipe.created_at).toLocaleDateString()}</p>
+                          <p>{translated ? "पेश गर्ने: " : "Submitted By: "} {selectedRecipe.submittedBy}</p>
+                          <p>{translated ? "थपिएको मिति: " : "Date Added: "} {new Date(selectedRecipe.created_at).toLocaleDateString()}</p>
+                          <button
+                            className="translate-btn"                      
+                            onClick={toggleTranslation}                      
+                          >
+                            {translated ? "Translate to English" : translations.translateToNepali}                       
+                          </button>                   
                         </div>
                       </div>
                     </div>
@@ -531,14 +548,14 @@ const AdminRecipePanel = () => {
                       className="admin-btn-secondary"
                       onClick={() => setIsViewModalOpen(false)}
                     >
-                      Close
+                      {translated ? "बन्द गर्नुहोस्" : "Close"}
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Edit Modal */}
+            {/* Edit Modal (Unchanged) */}
             {isEditModalOpen && selectedRecipe && (
               <div className="admin-modal-overlay">
                 <div className="admin-modal-container admin-edit-recipe-modal">
@@ -548,12 +565,11 @@ const AdminRecipePanel = () => {
                       className="admin-modal-close"
                       onClick={() => setIsEditModalOpen(false)}
                     >
-                      &times;
+                      ×
                     </button>
                   </div>
 
                   <form onSubmit={handleEditSubmit} className="admin-modal-form">
-                    {/* Recipe Basics */}
                     <div className="admin-modal-section">
                       <h3>Recipe Basics</h3>
                       <div className="admin-modal-form-row">
@@ -653,7 +669,6 @@ const AdminRecipePanel = () => {
                       </div>
                     </div>
 
-                    {/* Ingredients Section */}
                     <div className="admin-modal-section">
                       <h3>Ingredients</h3>
                       {ingredients.map((ing, index) => (
@@ -714,7 +729,6 @@ const AdminRecipePanel = () => {
                       </button>
                     </div>
 
-                    {/* Cooking Methods */}
                     <div className="admin-modal-section">
                       <h3>Cooking Methods</h3>
                       {cookingSteps.map((step, index) => (
@@ -749,7 +763,6 @@ const AdminRecipePanel = () => {
                       </button>
                     </div>
 
-                    {/* Nutrition Information */}
                     <div className="admin-modal-section">
                       <h3>Nutrition Information</h3>
                       {nutritionInfo.map((info, index) => (
@@ -794,7 +807,6 @@ const AdminRecipePanel = () => {
                       </button>
                     </div>
 
-                    {/* Recipe Image */}
                     <div className="admin-modal-section">
                       <h3>Recipe Image</h3>
                       <div className="admin-modal-form-group">
@@ -804,13 +816,11 @@ const AdminRecipePanel = () => {
                           onChange={handleImageUpload}
                         />
                         {recipeImage && (
-  <img src={recipeImage} alt="Preview" style={{ maxWidth: "200px" }} />
-)}
-
+                          <img src={recipeImage} alt="Preview" style={{ maxWidth: "200px" }} />
+                        )}
                       </div>
                     </div>
 
-                    {/* Submit Actions */}
                     <div className="admin-modal-actions">
                       <button type="submit" className="admin-btn-primary">
                         Update Recipe
@@ -827,7 +837,6 @@ const AdminRecipePanel = () => {
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>

@@ -64,9 +64,9 @@ SELECT
 
     CASE 
         WHEN u.is_admin = TRUE THEN 'Admin'
-        WHEN ps.user_id IS NOT NULL AND ps.status = 'active' THEN 'Premium User'
-        WHEN c.email IS NOT NULL AND c.status = 'approved' THEN 'Chef'
-        WHEN s.email IS NOT NULL THEN 'Seller'
+        WHEN MAX(ps.user_id) IS NOT NULL AND MAX(ps.status) = 'active' THEN 'Premium User'
+        WHEN MAX(c.email) IS NOT NULL AND MAX(c.status) = 'approved' THEN 'Chef'
+        WHEN MAX(s.email) IS NOT NULL THEN 'Seller'
         ELSE 'Normal User'
     END AS status
 
@@ -81,8 +81,7 @@ LEFT JOIN users u ON all_users.email = u.email
 LEFT JOIN chefs c ON all_users.email = c.email
 LEFT JOIN sellers s ON all_users.email = s.email
 LEFT JOIN premium_subscriptions ps ON all_users.id = ps.user_id AND ps.status = 'active'
-GROUP BY id, first_name, last_name, email, phone_number, activity_status;
-
+GROUP BY id, first_name, last_name, email, phone_number, activity_status, u.is_admin;
   `;
 
   db.query(usersQuery, (err, users) => {

@@ -5,12 +5,13 @@ import { FaPlus, FaTrash } from 'react-icons/fa';
 
 const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     const [recipeName, setRecipeName] = useState('');
+    const [recipeNameNepali, setRecipeNameNepali] = useState('');
     const [difficulty, setDifficulty] = useState('');
     const [cookingTime, setCookingTime] = useState('');
     const [category, setCategory] = useState('');
     const [image, setImage] = useState(null);
     const [cuisine, setCuisine] = useState('');
-    const [toast, setToast] = useState(null); // Changed to match the Toast component's expected props
+    const [toast, setToast] = useState(null);
     const [ingredients, setIngredients] = useState([]);
     const [availableIngredients, setAvailableIngredients] = useState([]);
     const [currentIngredient, setCurrentIngredient] = useState({
@@ -18,20 +19,21 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
         amount: ''
     });
     const [newIngredientName, setNewIngredientName] = useState('');
+    const [showNewIngredientInput, setShowNewIngredientInput] = useState(false);
 
     // Methods state
     const [methods, setMethods] = useState([
-        { step_number: 1, description: '' }
+        { step_number: 1, description: '', nepali_description: '' }
     ]);
 
     // Nutrition state
     const [nutrition, setNutrition] = useState([
-        { nutrient: '', value: '' }
+        { nutrient: '', value: '', nepali_nutrient: '', nepali_value: '' } // Added nepali_value
     ]);
 
     // Fetch available ingredients on component mount
     useEffect(() => {
-        if (isOpen) { // Only fetch when modal is open
+        if (isOpen) {
             axios.get("http://localhost:3000/api/recipe/ingredients")
                 .then(response => {
                     setAvailableIngredients(response.data);
@@ -46,7 +48,6 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     // Toast helper function
     const showToast = (message, type) => {
         setToast({ message, type });
-        // Auto clear toast after duration
         setTimeout(() => {
             setToast(null);
         }, 3000);
@@ -55,7 +56,6 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     // Add a new ingredient to the list
     const addIngredient = () => {
         if (currentIngredient.name && currentIngredient.amount) {
-            // Check if the ingredient is already in the list to avoid duplicates
             const isIngredientExists = ingredients.some(ing => ing.name === currentIngredient.name);
             if (!isIngredientExists) {
                 setIngredients([...ingredients, currentIngredient]);
@@ -67,6 +67,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
             showToast("Please select an ingredient and specify amount", "info");
         }
     };
+
     // Remove an ingredient from the list
     const removeIngredient = (index) => {
         const updatedIngredients = [...ingredients];
@@ -82,6 +83,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                     setAvailableIngredients([...availableIngredients, { name: newIngredientName }]);
                     setNewIngredientName('');
                     showToast(`Ingredient "${newIngredientName}" added successfully`, "success");
+                    setShowNewIngredientInput(false);
                 })
                 .catch(error => {
                     console.error("Error adding new ingredient:", error);
@@ -92,18 +94,23 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
         }
     };
 
+    // Toggle new ingredient input
+    const toggleNewIngredientInput = () => {
+        setShowNewIngredientInput(!showNewIngredientInput);
+    };
+
     // Add a new method step
     const addMethodStep = () => {
         setMethods([
             ...methods, 
-            { step_number: methods.length + 1, description: '' }
+            { step_number: methods.length + 1, description: '', nepali_description: '' }
         ]);
     };
 
     // Update a method step
-    const updateMethodStep = (index, description) => {
+    const updateMethodStep = (index, field, value) => {
         const updatedMethods = [...methods];
-        updatedMethods[index].description = description;
+        updatedMethods[index][field] = value;
         setMethods(updatedMethods);
     };
 
@@ -111,7 +118,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     const addNutritionEntry = () => {
         setNutrition([
             ...nutrition, 
-            { nutrient: '', value: '' }
+            { nutrient: '', value: '', nepali_nutrient: '', nepali_value: '' }
         ]);
     };
 
@@ -150,13 +157,22 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     
         const recipeData = {
             title: recipeName,
+            title_ne: recipeNameNepali, // Changed from title_nepali to title_ne
             difficulty: difficulty,
             cooking_time: cookingTime,
             category: category,
             ingredients: ingredients,
             cuisine: cuisine,
-            methods: validMethods,
-            nutrition: nutrition.filter(n => n.nutrient && n.value)
+            methods: validMethods.map(method => ({
+                description: method.description,
+                nepali_description: method.nepali_description // Already matches backend
+            })),
+            nutrition: nutrition.filter(n => n.nutrient && n.value).map(item => ({
+                nutrient: item.nutrient,
+                value: item.value,
+                nepali_nutrient: item.nepali_nutrient,
+                value_ne: item.nepali_value || item.value // Use nepali_value if provided, else use value
+            }))
         };
     
         const formData = new FormData();
@@ -168,7 +184,6 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
         
         // Append image if exists
         if (image) {
-            // Generate a unique filename or use original filename
             const filename = `recipe_${Date.now()}_${image.name}`;
             formData.append('image_url', filename);
             formData.append('image', image);
@@ -187,15 +202,14 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
             if (response.data.approval_status === 'pending') {
                 showToast("Recipe submitted and awaiting admin approval.", "info");
             } else {
-                showToast("Recipe added and published successfully!", "success");
+                showToast("Recipe created successfully!", "success"); // Aligned with backend message
             }
         
             setTimeout(() => {
                 onClose();
-                onSubmit(); // Refresh the recipe list
-            }, 1000); // Brief delay to show the toast notification
+                onSubmit();
+            }, 1000);
         })
-        
         .catch(error => {
             console.error("Error adding recipe:", error.response?.data || error);
             showToast("Failed to add recipe. Please check your inputs.", "error");
@@ -204,20 +218,21 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
 
     const resetForm = () => {
         setRecipeName('');
+        setRecipeNameNepali('');
         setDifficulty('');
         setCookingTime('');
         setCategory('');
         setImage(null);
         setIngredients([]);
-        setMethods([{ step_number: 1, description: '' }]);
-        setNutrition([{ nutrient: '', value: '' }]);
+        setMethods([{ step_number: 1, description: '', nepali_description: '' }]);
+        setNutrition([{ nutrient: '', value: '', nepali_nutrient: '', nepali_value: '' }]);
+        setShowNewIngredientInput(false);
     };
 
     if (!isOpen) return null;
 
     return (
         <div className="recipemodal-overlay">
-            {/* Toast should be at the top level for visibility */}
             {toast && (
                 <Toast
                     type={toast.type}
@@ -235,6 +250,12 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                         placeholder="Recipe Name" 
                         value={recipeName} 
                         onChange={(e) => setRecipeName(e.target.value)} 
+                    />
+                    <input 
+                        type="text" 
+                        placeholder="Recipe Name in Nepali" 
+                        value={recipeNameNepali} 
+                        onChange={(e) => setRecipeNameNepali(e.target.value)} 
                     />
                     <select 
                         value={difficulty} 
@@ -308,20 +329,26 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                         <button className='add-recipe-ingridients' onClick={addIngredient}>
                             <FaPlus /> Add Ingredient
                         </button>
+                        
+                        <button className='create-ingredient-btn' onClick={toggleNewIngredientInput}>
+                            {showNewIngredientInput ? 'Hide' : 'Add New Ingredient'}
+                        </button>
                     </div>
 
                     {/* New Ingredient Creation */}
-                    <div className="new-ingredient-input">
-                        <input 
-                            type="text" 
-                            placeholder="Add New Ingredient" 
-                            value={newIngredientName} 
-                            onChange={(e) => setNewIngredientName(e.target.value)} 
-                        />
-                        <button className='create-recipe-ingridient' onClick={addNewIngredient}>
-                            <FaPlus /> Create Ingredient
-                        </button>
-                    </div>
+                    {showNewIngredientInput && (
+                        <div className="new-ingredient-input">
+                            <input 
+                                type="text" 
+                                placeholder="Add New Ingredient" 
+                                value={newIngredientName} 
+                                onChange={(e) => setNewIngredientName(e.target.value)} 
+                            />
+                            <button className='create-recipe-ingridient' onClick={addNewIngredient}>
+                                <FaPlus /> Create Ingredient
+                            </button>
+                        </div>
+                    )}
 
                     {/* Ingredients List */}
                     <div className="ingredients-list">
@@ -345,8 +372,13 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                             <label>Step {step.step_number}</label>
                             <textarea 
                                 value={step.description} 
-                                onChange={(e) => updateMethodStep(index, e.target.value)}
+                                onChange={(e) => updateMethodStep(index, 'description', e.target.value)}
                                 placeholder={`Describe step ${step.step_number}`}
+                            />
+                            <textarea 
+                                value={step.nepali_description} 
+                                onChange={(e) => updateMethodStep(index, 'nepali_description', e.target.value)}
+                                placeholder={`Describe step ${step.step_number} in Nepali`}
                             />
                         </div>
                     ))}
@@ -368,9 +400,21 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                             />
                             <input 
                                 type="text" 
+                                placeholder="Nutrient in Nepali" 
+                                value={item.nepali_nutrient}
+                                onChange={(e) => updateNutritionEntry(index, 'nepali_nutrient', e.target.value)}
+                            />
+                            <input 
+                                type="text" 
                                 placeholder="Value (e.g., 250)" 
                                 value={item.value}
                                 onChange={(e) => updateNutritionEntry(index, 'value', e.target.value)}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Value in Nepali" 
+                                value={item.nepali_value}
+                                onChange={(e) => updateNutritionEntry(index, 'nepali_value', e.target.value)}
                             />
                         </div>
                     ))}
