@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom"; // Added useNavigate and useLocation
 import axios from "axios";
 import "../styles/Header.css";
 import userImage from "../assets/user.png";
-import { FaBell } from "react-icons/fa";
+import { FaBell, FaShoppingCart } from "react-icons/fa";
 
 const Navigationbar = () => {
   const [errorMessages, setErrorMessages] = useState({});
@@ -15,6 +15,12 @@ const Navigationbar = () => {
   const [isChef, setIsChef] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const userId = localStorage.getItem("userId");
+  const navigate = useNavigate(); // For cart button navigation
+  const location = useLocation(); // To check current route
+  const isRecipesActive =
+  location.pathname === "/recipes" ||
+  location.pathname.startsWith("/recipedetails") ||
+  location.pathname.startsWith("/chef");
 
   useEffect(() => {
     console.log("📢 Fetching user profile data...");
@@ -26,25 +32,24 @@ const Navigationbar = () => {
       .then((response) => {
         console.log("User data response:", response.data);
 
-       
         const userData = response.data?.data;
         if (userData?.is_admin === 1) {
           setIsAdmin(true);
         } else {
           setIsAdmin(false);
         }
-        
+
         if (userData?.seller_id) {
           setIsSeller(true);
           localStorage.setItem("sellerId", userData.seller_id);
         }
-        if (userData?.chef_id && userData?.chef_status === 'approved') {
+        if (userData?.chef_id && userData?.chef_status === "approved") {
           setIsChef(true);
           localStorage.setItem("chefId", userData.chef_id);
         } else {
           setIsChef(false);
           localStorage.removeItem("chefId");
-        }        
+        }
 
         const userImage = userData?.image;
         if (userImage) {
@@ -115,7 +120,7 @@ const Navigationbar = () => {
         if (response.data.deletedIds) {
           return prevNotifications.filter((n) => !response.data.deletedIds.includes(n.id));
         }
-        return []; // Clear all notifications if no specific IDs are returned
+        return [];
       });
 
       fetchNotifications();
@@ -155,12 +160,15 @@ const Navigationbar = () => {
 
       {/* Navigation Links */}
       <nav className="nav">
-        <NavLink to="/home" className={({ isActive }) => (isActive ? "active" : "")} end>
+        <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")} end>
           Home
         </NavLink>
-        <NavLink to="/recipes" className={({ isActive }) => (isActive ? "active" : "")}>
-          Recipes
-        </NavLink>
+        <NavLink
+      to="/recipes"
+      className={isRecipesActive ? "active" : ""}
+    >
+      Recipes
+    </NavLink>
         <NavLink to="/aboutus" className={({ isActive }) => (isActive ? "active" : "")}>
           About
         </NavLink>
@@ -174,7 +182,7 @@ const Navigationbar = () => {
 
       {/* User & Notifications */}
       <div className="user-icon">
-        {/* Notification Bell */}
+        {/* Notification Bell and Cart Button */}
         <div className="notification-container">
           <FaBell
             size={23}
@@ -188,6 +196,7 @@ const Navigationbar = () => {
             onMouseLeave={(e) => (e.currentTarget.style.color = "#a64dff")}
             onClick={toggleNotifications}
           />
+          
 
           {showNotifications && (
             <div className="notification-dropdown">
@@ -221,6 +230,10 @@ const Navigationbar = () => {
             </div>
           )}
         </div>
+
+        <button className="nav-cart-button" onClick={() => navigate("/shoppingcart")}>
+            <FaShoppingCart size={24} />
+          </button>
 
         {/* Profile Icon */}
         <div className="user-dropdown-container" style={{ position: "relative" }}>
@@ -265,15 +278,19 @@ const Navigationbar = () => {
                 </NavLink>
               )}
               {isChef && (
+                <NavLink
+                  to="/chefdashboard"
+                  className="dropdown-item"
+                  onClick={() => setShowUserDropdown(false)}
+                >
+                  View Chef Dashboard
+                </NavLink>
+              )}
               <NavLink
-                to="/chefdashboard"
+                to="/userProfile"
                 className="dropdown-item"
                 onClick={() => setShowUserDropdown(false)}
               >
-                View Chef Dashboard
-              </NavLink>
-            )}
-              <NavLink to="/userProfile" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
                 My Profile
               </NavLink>
               <NavLink

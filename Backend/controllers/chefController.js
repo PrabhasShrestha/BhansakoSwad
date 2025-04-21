@@ -1,13 +1,13 @@
 const bcrypt = require('bcryptjs');
-const jwt =require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const db = require('../config/dbConnection');
 const multer = require("multer");
 const path = require("path");
 const sendMail = require('../helpers/sendMail');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
+// Configure multer for certificate uploads
+const certificateStorage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, "./uploads/chefs"); // Save files in "uploads/chefs" directory
     },
@@ -16,10 +16,22 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage }).single("certificate");
+const uploadCertificate = multer({ storage: certificateStorage }).single("certificate");
+
+// Configure multer for profile photo uploads
+const photoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "./uploads/chefs"); // Save photos in "uploads/chefs" directory
+    },
+    filename: function (req, file, cb) {
+        cb(null, `photo-${Date.now()}${path.extname(file.originalname)}`); // Unique filename
+    }
+});
+
+const uploadPhotoMulter = multer({ storage: photoStorage }).single("photo");
 
 const registerChef = (req, res) => {
-    upload(req, res, async (err) => {
+    uploadCertificate(req, res, async (err) => {
       if (err) {
         console.error("File Upload Error:", err);
         return res.status(500).json({ msg: "Error uploading certificate" });
@@ -59,12 +71,11 @@ const registerChef = (req, res) => {
         } else {
           hashedPassword = await bcrypt.hash(password, 10);
           
-          // ✅ FIX: Store `nationality` in `address` column
           const insertUserQuery = `INSERT INTO users (first_name, last_name, address, email, phone_number, password, isVerified, activity_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
   
           db.query(
             insertUserQuery,
-            [first_name, last_name, nationality, email, phone_number, hashedPassword, 0, "active"], // ✅ nationality stored in address
+            [first_name, last_name, nationality, email, phone_number, hashedPassword, 0, "active"],
             (err) => {
               if (err) {
                 console.error("Error inserting user:", err);
@@ -74,7 +85,6 @@ const registerChef = (req, res) => {
           );
         }
   
-        // Check if chef already exists
         db.query("SELECT * FROM chefs WHERE LOWER(email) = LOWER(?)", [email], (err, result) => {
           if (err) {
             console.error("DB Error:", err);
@@ -105,7 +115,7 @@ const registerChef = (req, res) => {
         });
       });
     });
-  };
+};
   
 const getAllChefs = (req, res) => {
     db.query("SELECT * FROM chefs", (err, result) => {
@@ -134,7 +144,6 @@ const updateChefStatus = (req, res) => {
                 return res.status(500).json({ msg: "Database error" });
             }
 
-            // If chef is approved, send a confirmation email
             if (status === "approved") {
                 db.query(
                     "SELECT name, email FROM chefs WHERE id = ?",
@@ -172,7 +181,24 @@ const updateChefStatus = (req, res) => {
     );
 };
 
-// Verify Chef Documents
+const getChefById = (req, res) => {
+  const { id } = req.params;
+  db.query(
+    'SELECT id, name, email, phone_number, nationality, about_you, image, photo FROM chefs WHERE id = ? AND status = ?',
+    [id, 'approved'],
+    (err, rows) => {
+      if (err) {
+        console.error('Error fetching chef:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
+      }
+      if (rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'Chef not found' });
+      }
+      res.json({ success: true, data: rows[0] });
+    }
+  );
+};
+
 const verifyChefDocuments = (req, res) => {
     const { id } = req.params;
 
@@ -215,13 +241,10 @@ const loginChef = (req, res) => {
 
             const chef = result[0];
 
-            // Check if chef is approved
             if (chef.status !== "approved") {
                 return res.status(403).json({ msg: "Your account is under verification. Please wait for admin approval." });
             }
 
-            
-            // Compare password
             bcrypt.compare(password, chef.password, (err, isMatch) => {
                 if (err) {
                     console.error("Error comparing passwords:", err);
@@ -232,7 +255,6 @@ const loginChef = (req, res) => {
                     return res.status(401).json({ msg: "Invalid password. Please try again." });
                 }
 
-                // Generate JWT Token
                 const token = jwt.sign(
                     { id: chef.id, email: chef.email, role: "chef" },
                     process.env.JWT_SECRET,
@@ -248,10 +270,340 @@ const loginChef = (req, res) => {
         }
     );
 };
+
+const getChefRecipe = (req, res) => {
+  const { id } = req.params;
+  db.query(
+    `SELECT r.id, r.title, r.image_url, r.cooking_time, r.difficulty, r.cuisine,
+            COALESCE(AVG(rt.rating), 0) AS rating
+     FROM recipes r
+     JOIN users u ON r.user_id = u.id
+     JOIN chefs c ON c.email = u.email
+     LEFT JOIN ratings rt ON r.id = rt.recipe_id
+     WHERE c.id = ? AND r.approval_status = ?
+     GROUP BY r.id, r.title, r.image_url, r.cooking_time, r.difficulty, r.cuisine`,
+    [id, 'approved'],
+    (err, rows) => {
+      if (err) {
+        console.error('Error fetching recipes:', err);
+        return res.status(500).json({ success: false, message: 'Server error' });
+      }
+      res.json({ success: true, data: rows });
+    }
+  );
+};
+
+const getCurrentChef = (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ msg: 'Access denied' });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) return res.status(403).json({ msg: 'Invalid token' });
+
+      db.query(
+          "SELECT * FROM chefs WHERE email = ?",
+          [decoded.email],
+          (err, result) => {
+              if (err) {
+                  console.error("Database error:", err);
+                  return res.status(500).json({ msg: "Database error" });
+              }
+              if (result.length === 0) {
+                  return res.status(404).json({ msg: "Chef not found" });
+              }
+              res.json(result[0]);
+          }
+      );
+  });
+};
+
+// Get recipes for the current chef
+const getChefRecipes = (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; 
+    if (!token) return res.status(401).json({ msg: 'Access denied' });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ msg: 'Invalid token' });
+
+        db.query(
+            "SELECT id FROM users WHERE email = ?",
+            [decoded.email],
+            (err, userResult) => {
+                if (err || userResult.length === 0) {
+                    console.error("Error fetching user:", err);
+                    return res.status(404).json({ msg: "User not found" });
+                }
+                const userId = userResult[0].id;
+
+                db.query(
+                    "SELECT * FROM recipes WHERE user_id = ? AND approval_status = ?",
+                    [userId, 'approved'],
+                    (err, recipes) => {
+                        if (err) {
+                            console.error("Error fetching recipes:", err);
+                            return res.status(500).json({ msg: "Database error" });
+                        }
+                        res.json(recipes);
+                    }
+                );
+            }
+        );
+    });
+};
+
+// Get ratings for the current chef's recipes
+const getChefRatings = (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ msg: 'Access denied' });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ msg: 'Invalid token' });
+
+        db.query(
+            "SELECT id FROM users WHERE email = ?",
+            [decoded.email],
+            (err, userResult) => {
+                if (err || userResult.length === 0) {
+                    console.error("Error fetching user:", err);
+                    return res.status(404).json({ msg: "User not found" });
+                }
+                const userId = userResult[0].id;
+
+                db.query(
+                    "SELECT id FROM recipes WHERE user_id = ? AND approval_status = ?",
+                    [userId, 'approved'],
+                    (err, recipes) => {
+                        if (err) {
+                            console.error("Error fetching recipes:", err);
+                            return res.status(500).json({ msg: "Database error" });
+                        }
+                        const recipeIds = recipes.map(recipe => recipe.id);
+
+                        if (recipeIds.length === 0) return res.json([]);
+
+                        db.query(
+                            "SELECT * FROM ratings WHERE recipe_id IN (?)",
+                            [recipeIds],
+                            (err, ratings) => {
+                                if (err) {
+                                    console.error("Error fetching ratings:", err);
+                                    return res.status(500).json({ msg: "Database error" });
+                                }
+                                res.json(ratings);
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    });
+};
+
+const getActivities = (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ msg: 'Access denied' });
+  
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) return res.status(403).json({ msg: 'Invalid token' });
+  
+      // Step 1: Fetch the chef's ID
+      db.query(
+        "SELECT id FROM chefs WHERE email = ? AND status = 'approved'",
+        [decoded.email],
+        (err, chefResult) => {
+          if (err || chefResult.length === 0) {
+            console.error("Error fetching chef:", err);
+            return res.status(404).json({ msg: "Chef not found" });
+          }
+          const chefId = chefResult[0].id;
+  
+          // Step 2: Fetch recent activities (recipe added and ratings received)
+          db.query(
+            `
+            SELECT 'recipe_added' AS type, r.title AS recipe_title, r.created_at, NULL AS rating
+            FROM recipes r
+            WHERE r.user_id = ? AND r.approval_status = 'approved'
+            UNION
+            SELECT 'rating_received' AS type, r.title AS recipe_title, rt.created_at, rt.rating
+            FROM ratings rt
+            JOIN recipes r ON rt.recipe_id = r.id
+            WHERE r.user_id = ? AND r.approval_status = 'approved'
+            ORDER BY created_at DESC
+            LIMIT 5
+          `,
+            [chefId, chefId],
+            (err, activities) => {
+              if (err) {
+                console.error("Error fetching activities:", err);
+                return res.status(500).json({ msg: "Error fetching activities" });
+              }
+              res.json(activities);
+            }
+          );
+        }
+      );
+    });
+  };
+// Upload chef profile photo
+const uploadPhoto = (req, res) => {
+  uploadPhotoMulter(req, res, (err) => {
+    if (err) {
+      console.error("Error uploading photo:", err);
+      return res.status(500).json({ msg: "Error uploading photo" });
+    }
+
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ msg: 'Access denied' });
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) return res.status(403).json({ msg: 'Invalid token' });
+
+      // Get chef ID from email
+      db.query(
+        "SELECT id FROM chefs WHERE email = ? AND status = 'approved'",
+        [decoded.email],
+        (err, chefResult) => {
+          if (err || chefResult.length === 0) {
+            console.error("Error fetching chef:", err);
+            return res.status(404).json({ msg: "Chef not found" });
+          }
+          const chefId = chefResult[0].id;
+
+          if (!req.file) {
+            return res.status(400).json({ msg: "No photo uploaded" });
+          }
+
+          const photoUrl = `/uploads/chefs/${req.file.filename}`;
+
+          // Update chef's photo in the database
+          db.query(
+            "UPDATE chefs SET photo = ? WHERE id = ?",
+            [photoUrl, chefId],
+            (err) => {
+              if (err) {
+                console.error("Error updating photo:", err);
+                return res.status(500).json({ msg: "Error updating photo" });
+              }
+              res.json({ photoUrl });
+            }
+          );
+        }
+      );
+    });
+  });
+};
+
+const updateProfile = (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ msg: 'Access denied' });
+  
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) return res.status(403).json({ msg: 'Invalid token' });
+  
+      // Step 1: Fetch the chef's ID
+      db.query(
+        "SELECT id FROM chefs WHERE email = ? AND status = 'approved'",
+        [decoded.email],
+        (err, chefResult) => {
+          if (err || chefResult.length === 0) {
+            console.error("Error fetching chef:", err);
+            return res.status(404).json({ msg: "Chef not found" });
+          }
+          const chefId = chefResult[0].id;
+  
+          const { name, email, phone_number, nationality, about_you } = req.body;
+  
+          if (!name || !email) {
+            return res.status(400).json({ msg: "Name and email are required" });
+          }
+  
+          // Step 2: Check if the new email is already in use by another chef, user, or seller
+          if (email !== decoded.email) {
+            db.query(
+              `SELECT 'chef' as type, id FROM chefs WHERE email = ? AND id != ?
+               UNION
+               SELECT 'user' as type, id FROM users WHERE email = ? AND email != ?
+               UNION
+               SELECT 'seller' as type, id FROM sellers WHERE email = ? AND email != ?`,
+              [email, chefId, email, decoded.email, email, decoded.email],
+              (err, emailCheck) => {
+                if (err) {
+                  console.error("Error checking email:", err);
+                  return res.status(500).json({ msg: "Database error" });
+                }
+                if (emailCheck.length > 0) {
+                  const conflictType = emailCheck[0].type;
+                  return res.status(409).json({ 
+                    msg: `This email is already in use by another ${conflictType}. Please use a different email.` 
+                  });
+                }
+  
+                // If no email conflict, proceed to update profile data
+                updateProfileData();
+              }
+            );
+          } else {
+            // If email hasn't changed, proceed to update profile data
+            updateProfileData();
+          }
+  
+          function updateProfileData() {
+            // Step 3: Update the chefs table
+            db.query(
+              "UPDATE chefs SET name = ?, email = ?, phone_number = ?, nationality = ?, about_you = ? WHERE id = ?",
+              [name, email, phone_number || null, nationality || null, about_you || null, chefId],
+              (err) => {
+                if (err) {
+                  console.error("Error updating chef profile:", err);
+                  return res.status(500).json({ msg: "Error updating chef profile" });
+                }
+  
+                // Step 4: Update the users table
+                db.query(
+                  "UPDATE users SET email = ? WHERE email = ?",
+                  [email, decoded.email],
+                  (err) => {
+                    if (err) {
+                      console.error("Error updating user email:", err);
+                      return res.status(500).json({ msg: "Error updating user email" });
+                    }
+  
+                    // Step 5: Update the sellers table
+                    db.query(
+                      "UPDATE sellers SET email = ? WHERE email = ?",
+                      [email, decoded.email],
+                      (err) => {
+                        if (err) {
+                          console.error("Error updating seller email:", err);
+                          return res.status(500).json({ msg: "Error updating seller email" });
+                        }
+  
+                        // All updates successful
+                        res.json({ message: "Profile updated successfully" });
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        }
+      );
+    });
+  };
+
 module.exports = { 
     registerChef,
     getAllChefs,
     updateChefStatus,
     verifyChefDocuments,
-    loginChef
- };
+    loginChef,
+    getChefById,
+    getChefRecipe,
+    getCurrentChef,
+    getChefRecipes,
+    getChefRatings,
+    getActivities,
+    uploadPhoto,
+    updateProfile
+};

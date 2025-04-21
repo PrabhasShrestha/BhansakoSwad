@@ -106,7 +106,7 @@ const AdminOrders = () => {
                   value={searchQuery}
                   onChange={handleSearchChange}
                 />
-                <FaSearch className="admin-order-search-icon" />
+                <div className="admin-order-search-icon" />
               </div>
             </div>
 

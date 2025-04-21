@@ -8,7 +8,7 @@ const SuccessPage = () => {
     useEffect(() => {
         const paymentData = JSON.parse(localStorage.getItem("paymentData"));
         if (!paymentData) {
-            navigate("/home");
+            navigate("/");
             return;
         }
     
@@ -92,7 +92,7 @@ const SuccessPage = () => {
                     fontSize: "16px",
                     transition: "background 0.3s"
                 }}
-                onClick={() => navigate("/home")}>
+                onClick={() => navigate("/")}>
                     Back to the website
                 </button>
             </div>

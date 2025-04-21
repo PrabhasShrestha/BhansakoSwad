@@ -44,8 +44,8 @@ router.delete("/recipe/:id", recipeController.deleteRecipe);
 router.get("/search", recipeController.searchRecipe); 
 router.post("/filterRecipes", recipeController.filterRecipes);    
 router.post("/rate",recipeController.giveratings)
-router.get("/ingredients", recipeController.getIngridients);    
-router.post("/ingredients/create",recipeController.addIngridients)
+router.get("/ingredients", recipeController.getIngredients);    
+router.post("/ingredients/create",recipeController.addIngredients)
 router.get("/creator/:id",recipeController.getRecipeById)
 router.post("/favorite",recipeController.addFavorite)
 router.get("/favorites/:userId",recipeController.getFavorite)

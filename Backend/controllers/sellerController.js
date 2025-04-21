@@ -307,9 +307,9 @@ const updateSeller = (req, res) => {
       imagePath = `uploads/sellers/${req.file.filename}`; // Ensure correct path
     }
 
-    // Find the seller's ID using email
+    // Find the seller's ID and current profile data using the user ID from the token
     db.query(
-      `SELECT id FROM sellers WHERE email = (SELECT email FROM users WHERE id = ?)`,
+      `SELECT id, shop_name, owner_name, store_address, email, phone_number, image FROM sellers WHERE email = (SELECT email FROM users WHERE id = ?)`,
       [decoded.id],
       (err, sellerResults) => {
         if (err) {
@@ -322,57 +322,144 @@ const updateSeller = (req, res) => {
         }
 
         const sellerId = sellerResults[0].id;
+        const currentProfile = sellerResults[0]; // Current seller data
+        const currentEmail = currentProfile.email;
 
-        // Check if the email is already used by another seller
-        db.query(
-          `SELECT id FROM sellers WHERE email = ? AND id != ?`,
-          [email, sellerId],
-          (err, results) => {
+        // Prepare response data with current values as defaults
+        const updatedData = {
+          shop_name: shop_name !== undefined ? shop_name : currentProfile.shop_name,
+          owner_name: owner_name !== undefined ? owner_name : currentProfile.owner_name,
+          store_address: store_address !== undefined ? store_address : currentProfile.store_address,
+          email: email !== undefined ? email : currentProfile.email,
+          phone_number: phone_number !== undefined ? phone_number : currentProfile.phone_number,
+          image: imagePath ? `http://localhost:3000/${imagePath}` : currentProfile.image
+        };
+
+        // Step 1: If email is provided and changed, check for uniqueness
+        if (email !== undefined && email !== currentEmail) {
+          const checkEmailQuery = `
+            SELECT 'users' AS source, id FROM users WHERE email = ? AND id != ?
+            UNION
+            SELECT 'chefs' AS source, id FROM chefs WHERE email = ?
+            UNION
+            SELECT 'sellers' AS source, id FROM sellers WHERE email = ? AND id != ?
+          `;
+          const checkEmailData = [email, decoded.id, email, email, sellerId];
+
+          db.query(checkEmailQuery, checkEmailData, (err, emailResults) => {
             if (err) {
               console.error("Database Error:", err);
               return res.status(500).json({ message: "Internal server error" });
             }
 
-            if (results.length > 0) {
+            if (emailResults.length > 0) {
               return res.status(409).json({ message: "Email already in use" });
             }
 
-            // Dynamically update SQL query to include image if provided
-            let query = `
-              UPDATE sellers 
-              SET shop_name = ?, owner_name = ?, store_address = ?, email = ?, phone_number = ?
-            `;
-            let data = [shop_name, owner_name, store_address, email, phone_number];
+            // Proceed with update if email is unique
+            updateSellerProfile();
+          });
+        } else {
+          // Proceed with update if email is not changed or not provided
+          updateSellerProfile();
+        }
 
-            if (imagePath) {
-              query += `, image = ?`;
-              data.push(imagePath);
-            }
+        function updateSellerProfile() {
+          // Step 2: Build dynamic SQL query for fields to update
+          const fieldsToUpdate = [];
+          const queryData = [];
 
-            query += ` WHERE id = ?`;
-            data.push(sellerId);
+          if (shop_name !== undefined) {
+            fieldsToUpdate.push('shop_name = ?');
+            queryData.push(shop_name);
+          }
+          if (owner_name !== undefined) {
+            fieldsToUpdate.push('owner_name = ?');
+            queryData.push(owner_name);
+          }
+          if (store_address !== undefined) {
+            fieldsToUpdate.push('store_address = ?');
+            queryData.push(store_address);
+          }
+          if (email !== undefined) {
+            fieldsToUpdate.push('email = ?');
+            queryData.push(email);
+          }
+          if (phone_number !== undefined) {
+            fieldsToUpdate.push('phone_number = ?');
+            queryData.push(phone_number);
+          }
+          if (imagePath) {
+            fieldsToUpdate.push('image = ?');
+            queryData.push(imagePath);
+          }
 
-            db.query(query, data, (error) => {
-              if (error) {
-                console.error("Update Error:", error);
-                return res.status(500).json({ message: "Failed to update profile" });
-              }
-
-              res.status(200).json({
-                success: true,
-                message: "Profile updated successfully",
-                data: {
-                  shop_name,
-                  owner_name,
-                  store_address,
-                  email,
-                  phone_number,
-                  image: imagePath ? `http://localhost:3000/${imagePath}` : null,
-                },
-              });
+          // If no fields to update, return current profile
+          if (fieldsToUpdate.length === 0) {
+            return res.status(200).json({
+              success: true,
+              message: "No changes provided to update",
+              data: updatedData
             });
           }
-        );
+
+          let sellerQuery = `UPDATE sellers SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
+          queryData.push(sellerId);
+
+          db.query(sellerQuery, queryData, (error, sellerResult) => {
+            if (error) {
+              console.error("Update Error:", error);
+              return res.status(500).json({ message: "Failed to update seller profile" });
+            }
+
+            if (sellerResult.affectedRows === 0) {
+              return res.status(404).json({ message: "Seller not found." });
+            }
+
+            // Step 3: If email was updated, update users and chefs tables
+            if (email !== undefined && email !== currentEmail) {
+              // Update users table
+              const updateUserQuery = `
+                UPDATE users 
+                SET email = ? 
+                WHERE email = ?
+              `;
+              db.query(updateUserQuery, [email, currentEmail], (err, userResult) => {
+                if (err) {
+                  console.error("Error updating user email:", err);
+                  // Log error but continue
+                }
+
+                // Update chefs table
+                const updateChefQuery = `
+                  UPDATE chefs 
+                  SET email = ? 
+                  WHERE email = ?
+                `;
+                db.query(updateChefQuery, [email, currentEmail], (err, chefResult) => {
+                  if (err) {
+                    console.error("Error updating chef email:", err);
+                    // Log error but continue
+                  }
+
+                  // Step 4: Respond with success
+                  sendSuccessResponse();
+                });
+              });
+            } else {
+              // Step 4: Respond with success if no email update
+              sendSuccessResponse();
+            }
+          });
+        }
+
+        function sendSuccessResponse() {
+          res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            data: updatedData
+          });
+        }
       }
     );
   } catch (err) {

@@ -209,7 +209,7 @@ const login = async (req, res) => {
 
       // Step 3: Check if the user's account is under verification (isVerified can be used here)
       if (user.isVerified === 0) {
-        return res.status(403).json({ message: "Your account is under verification. Please wait for admin approval." });
+        return res.status(403).json({ message: "Your account is not verified. Please verify by the using code" });
       }
 
       // Step 4: Verify password with bcrypt
@@ -318,85 +318,104 @@ const logout = async (req, res) => {
   );
 };
 
-
 const getUser = (req, res) => {
   try {
     // Check for Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      return res.status(401).send({ message: "Unauthorized: Missing or malformed token." });
+      return res.status(401).send({ message: 'Unauthorized: Missing or malformed token.' });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
     // Query user details
-    db.query("SELECT * FROM users WHERE id = ?", [decoded.id], (error, userResult) => {
+    db.query('SELECT * FROM users WHERE id = ?', [decoded.id], (error, userResult) => {
       if (error) {
-        console.error("Database Error:", error);
-        return res.status(500).send({ message: "Internal server error." });
+        console.error('Database Error:', error);
+        return res.status(500).send({ message: 'Internal server error.' });
       }
 
       if (userResult.length === 0) {
-        return res.status(404).send({ message: "User not found." });
+        return res.status(404).send({ message: 'User not found.' });
       }
 
       const user = userResult[0];
 
       // Correct the `image` URL construction
       if (user.image) {
-        user.image = `http://localhost:3000/uploads/users/${user.image.split("/").pop()}`;
+        user.image = `http://localhost:3000/uploads/users/${user.image.split('/').pop()}`;
       }
 
-      // Check if the user is also a seller
+      // Check premium subscription status
       db.query(
-        "SELECT id AS seller_id FROM sellers WHERE email = ?",
-        [user.email], // Match by email
-        (err, sellerResult) => {
-          if (err) {
-            console.error("Database Error:", err);
-            return res.status(500).send({ message: "Internal server error." });
+        'SELECT * FROM premium_subscriptions WHERE user_id = ? AND status = ? AND start_date <= NOW() AND end_date >= NOW()',
+        [decoded.id, 'active'],
+        (premiumErr, premiumResult) => {
+          if (premiumErr) {
+            console.error('Database Error (Premium):', premiumErr);
+            return res.status(500).send({ message: 'Internal server error.' });
           }
 
-          // Determine if user is a seller
-          const isSeller = sellerResult.length > 0;
-          const sellerId = isSeller ? sellerResult[0].seller_id : null;
+          const isPremium = premiumResult.length > 0;
 
+          // Check if the user is a seller
           db.query(
-            "SELECT id AS chef_id, status AS chef_status FROM chefs WHERE email = ?",
+            'SELECT id AS seller_id FROM sellers WHERE email = ?',
             [user.email],
-            (chefErr, chefResult) => {
-              if (chefErr) {
-                console.error("Database Error (Chef):", chefErr);
-                return res.status(500).send({ message: "Internal server error." });
+            (err, sellerResult) => {
+              if (err) {
+                console.error('Database Error:', err);
+                return res.status(500).send({ message: 'Internal server error.' });
               }
 
-              const isChef = chefResult.length > 0;
-              const chefId = isChef ? chefResult[0].chef_id : null;
-              const chefStatus = isChef ? chefResult[0].chef_status : null;
-          return res.status(200).send({
-            success: true,
-            data: {
-              ...user,
-              is_seller: isSeller,
-              seller_id: sellerId,
-              chef_id: chefId,
-                  chef_status: chefStatus,
-            },
-            message: "Fetch Successful!",
-          });
+              const isSeller = sellerResult.length > 0;
+              const sellerId = isSeller ? sellerResult[0].seller_id : null;
+
+              // Check if the user is a chef
+              db.query(
+                'SELECT id AS chef_id, status AS chef_status FROM chefs WHERE email = ?',
+                [user.email],
+                (chefErr, chefResult) => {
+                  if (chefErr) {
+                    console.error('Database Error (Chef):', chefErr);
+                    return res.status(500).send({ message: 'Internal server error.' });
+                  }
+
+                  const isChef = chefResult.length > 0;
+                  const chefId = isChef ? chefResult[0].chef_id : null;
+                  const chefStatus = isChef ? chefResult[0].chef_status : null;
+
+                  // Send response with all details
+                  return res.status(200).send({
+                    success: true,
+                    data: {
+                      ...user,
+                      is_premium: isPremium,
+                      is_chef: isChef, // Explicitly include is_chef
+                      chef_id: chefId,
+                      chef_status: chefStatus,
+                      is_seller: isSeller,
+                      seller_id: sellerId,
+                    },
+                    message: 'Fetch Successful!',
+                  });
+                }
+              );
+            }
+          );
         }
       );
     });
-  });
   } catch (err) {
-    if (err.name === "JsonWebTokenError") {
-      return res.status(401).send({ message: "Unauthorized: Invalid token." });
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).send({ message: 'Unauthorized: Invalid token.' });
     }
-    console.error("Unexpected Error:", err);
-    return res.status(500).send({ message: "Internal server error." });
+    console.error('Unexpected Error:', err);
+    return res.status(500).send({ message: 'Internal server error.' });
   }
 };
+
 
 const forgetPassword = (req, res) => {
     const { email } = req.body;
@@ -662,63 +681,105 @@ const resetPassword = (req, res) => {
     const userId = req.user.id; // Retrieved from the token middleware
     const { first_name, last_name, address, email, phone_number } = req.body;
 
-    let sql = '';
-    let data = [];
+    // Step 1: Check if the new email already exists in users, chefs, or sellers
+    const checkEmailQuery = `
+        SELECT 'users' AS source, id FROM users WHERE email = ? AND id != ?
+        UNION
+        SELECT 'chefs' AS source, id FROM chefs WHERE email = ?
+        UNION
+        SELECT 'sellers' AS source, id FROM sellers WHERE email = ?
+    `;
+    const checkEmailData = [email, userId, email, email];
 
-    if (req.file) {
-        // If an image is provided, include the `image` field
-        const imagePath = `uploads/users/${req.file.filename}`; // Correct backend path
-        sql = `UPDATE users 
-               SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ?, image = ? 
-               WHERE id = ?`;
-        data = [
-            first_name,
-            last_name,
-            address,
-            email,
-            phone_number,
-            imagePath,
-            userId
-        ];
-    } else {
-        // If no image is provided, update only other fields
-        sql = `UPDATE users 
-               SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ? 
-               WHERE id = ?`;
-        data = [first_name, last_name, address, email, phone_number, userId];
-    }
-
-    // Execute the query
-    db.query(sql, data, (err, result) => {
+    db.query(checkEmailQuery, checkEmailData, (err, emailResults) => {
         if (err) {
-            // Handle duplicate email entry error
-            if (err.code === 'ER_DUP_ENTRY') {
-                return res.status(400).json({
-                    message: 'The email address is already in use. Please use a different email address.',
-                });
-            }
-
-            // Log and return internal server error
-            console.error('Error updating profile:', err.message);
+            console.error('Error checking email:', err.message);
             return res.status(500).json({ message: 'Internal Server Error' });
         }
 
-        // Handle case where no rows are affected
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'User not found.' });
+        // If email exists in any table, return an error
+        if (emailResults.length > 0) {
+            return res.status(400).json({
+                message: 'The email address is already in use. Please use a different email address.',
+            });
         }
 
-        // Respond with success message
-        return res.status(200).json({
-            message: 'Profile updated successfully.',
-            data: {
+        // Step 2: Prepare the update for the users table
+        let userSql = '';
+        let userData = [];
+
+        if (req.file) {
+            // If an image is provided, include the `image` field
+            const imagePath = `uploads/users/${req.file.filename}`; // Correct backend path
+            userSql = `UPDATE users 
+                       SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ?, image = ? 
+                       WHERE id = ?`;
+            userData = [
                 first_name,
                 last_name,
                 address,
                 email,
                 phone_number,
-                image: req.file ? `http://localhost:3000/${imagePath}` : null, // Return the full image URL if updated
-            },
+                imagePath,
+                userId
+            ];
+        } else {
+            // If no image is provided, update only other fields
+            userSql = `UPDATE users 
+                       SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ? 
+                       WHERE id = ?`;
+            userData = [first_name, last_name, address, email, phone_number, userId];
+        }
+
+        // Step 3: Execute the update for the users table
+        db.query(userSql, userData, (err, userResult) => {
+            if (err) {
+                // Handle duplicate email entry error (should be caught by checkEmailQuery, but keep for safety)
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({
+                        message: 'The email address is already in use. Please use a different email address.',
+                    });
+                }
+
+                console.error('Error updating user profile:', err.message);
+                return res.status(500).json({ message: 'Internal Server Error' });
+            }
+
+            // Handle case where no rows are affected
+            if (userResult.affectedRows === 0) {
+                return res.status(404).json({ message: 'User not found.' });
+            }
+
+            // Step 4: Update email in chefs table if the user exists there
+            const updateChefSql = `UPDATE chefs SET email = ? WHERE id = ?`;
+            db.query(updateChefSql, [email, userId], (err, chefResult) => {
+                if (err) {
+                    console.error('Error updating chef email:', err.message);
+                    // Note: We don't return an error here to avoid failing the entire request
+                }
+
+                // Step 5: Update email in sellers table if the user exists there
+                const updateSellerSql = `UPDATE sellers SET email = ? WHERE id = ?`;
+                db.query(updateSellerSql, [email, userId], (err, sellerResult) => {
+                    if (err) {
+                        console.error('Error updating seller email:', err.message);
+                        // Note: We don't return an error here to avoid failing the entire request
+                    }
+
+                    // Step 6: Respond with success message
+                    return res.status(200).json({
+                        message: 'Profile updated successfully.',
+                        data: {
+                            first_name,
+                            last_name,
+                            address,
+                            email,
+                            phone_number,
+                            image: req.file ? `http://localhost:3000/${imagePath}` : null, // Return the full image URL if updated
+                        },
+                    });
+                });
+            });
         });
     });
 };

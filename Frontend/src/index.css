@@ -19,3 +19,22 @@ ul {
   padding: 0;
   list-style: none;
 }
+.Toastify__close-button {
+  display: none !important;
+}
+
+.simple-keyboard {
+  max-width: 800px;
+  position: fixed;
+  bottom: 0;
+  left: 445px;
+  right: 0;
+  background: #f5f5f5;
+  padding: 10px;
+  z-index: 1000;
+}
+
+.simple-keyboard .hg-button {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  font-size: 16px;
+}

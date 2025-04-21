@@ -1,0 +1,225 @@
+/* PoultryChefProfileStyles.css */
+.pcp_container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    color: #333;
+  }
+  
+  .pcp_profile_section {
+    display: flex;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .pcp_info_container {
+    flex: 1;
+    padding: 30px;
+  }
+  
+  .pcp_chef_name {
+    font-size: 28px;
+    margin: 0 0 5px 0;
+    font-weight: 700;
+  }
+  
+  .pcp_chef_title {
+    font-size: 18px;
+    color: #666;
+    font-weight: 400;
+    margin: 0 0 25px 0;
+  }
+  
+  .pcp_section_title {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+  
+  .pcp_chef_description {
+    line-height: 1.6;
+    color: #555;
+  }
+  
+  .pcp_chef_image_container {
+    position: relative;
+    width: 280px;
+    overflow: hidden;
+  }
+  
+  .pcp_chef_image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .pcp_chef_icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .pcp_chef_hat {
+    fill: #fff;
+    stroke: #000;
+    stroke-width: 1;
+  }
+  
+  .pcp_contact_social_row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .pcp_contact_section, 
+  .pcp_social_section {
+    flex: 1;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+  }
+  
+  .pcp_contact_info p {
+    margin: 10px 0;
+  }
+  
+  .pcp_social_icons {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .pcp_social_link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    text-decoration: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  
+  .pcp_social_icon {
+    font-size: 24px;
+  }
+  
+  .pcp_facebook {
+    color: #1877F2;
+  }
+  
+  .pcp_instagram {
+    color: #000;
+  }
+  
+  .pcp_twitter {
+    color: #000;
+  }
+  
+  .pcp_social_link:hover {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+  
+  .pcp_recipes_title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+  }
+  
+  .pcp_recipes_grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  
+  .pcp_recipe_card {
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+  
+  .pcp_recipe_card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .pcp_recipe_image {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+  
+  .pcp_recipe_title {
+    padding: 10px 15px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  
+  .pcp_recipe_meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+  }
+  
+  .pcp_recipe_time,
+  .pcp_recipe_heat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #666;
+  }
+  
+  .pcp_icon {
+    font-size: 12px;
+  }
+  
+  .pcp_recipe_rating {
+    color: #ff9800;
+    letter-spacing: 2px;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 1024px) {
+    .pcp_recipes_grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .pcp_profile_section {
+      flex-direction: column-reverse;
+    }
+    
+    .pcp_chef_image_container {
+      width: 100%;
+      height: 250px;
+    }
+    
+    .pcp_contact_social_row {
+      flex-direction: column;
+    }
+    
+    .pcp_recipes_grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .pcp_recipes_grid {
+      grid-template-columns: 1fr;
+    }
+  }

@@ -594,6 +594,82 @@
   .cuisinemodal-close:hover {
     background: #e0e0e0;
   }
+
+  
+/* Chef Grid */
+.chef-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.chef-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.chef-card:hover {
+  transform: translateY(-5px);
+}
+
+.chef-card-image {
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+}
+
+.chef-card h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 15px 0;
+  color: #333;
+}
+
+.chef-view-button {
+  background: #f4c430;
+  max-width: 300px;
+  color: #333;
+  border: none;
+  padding: 8px 30px;
+  margin-bottom: 15px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.chef-view-button:hover {
+  background: #ffd24c;
+}
+
+/* Chef section heading */
+.recipe-details h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.recipe-lock-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  padding: 5px;
+  cursor: pointer;
+}
   
   /* For smaller screens */
   @media (max-width: 480px) {

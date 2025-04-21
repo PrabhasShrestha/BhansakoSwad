@@ -50,7 +50,23 @@ router.post('/forgot-password', forgetValidation, userController.forgetPassword)
 router.post('/reset-password', userController.resetPassword);
 router.post('/resend-code', userController.resendCode);
 router.post('/change-password', auth.isAuthorize,userController.changePassword);
-
+router.post('/check-verification', async (req, res) => {
+    const { email } = req.body;
+  
+    try {
+      const [rows] = await db.query("SELECT isVerified FROM users WHERE email = ?", [email]);
+  
+      if (rows.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      return res.json({ isVerified: rows[0].isVerified });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+  
 // Handle file uploads and validation in update-profile
 router.post(
     '/update-profile',

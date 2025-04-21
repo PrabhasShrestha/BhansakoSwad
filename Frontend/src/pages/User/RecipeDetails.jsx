@@ -11,16 +11,17 @@ import { toast } from 'react-toastify';
 import translations from "../../components/nepaliTranslations.json";
 
 const RecipeDetails = () => {
-    const { id } = useParams(); 
+    const { id } = useParams();
     const [recipe, setRecipe] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [rating, setRating] = useState(0);
-    const [hover, setHover] = useState(0)
+    const [hover, setHover] = useState(0);
     const isLoggedIn = localStorage.getItem("token") !== null;
     const [creatorName, setCreatorName] = useState("Bhansako Swad Team");
     const [translated, setTranslated] = useState(false);
-    
+    const [showAlternatives, setShowAlternatives] = useState({});
+
     useEffect(() => {
         const fetchRecipeDetails = async () => {
             try {
@@ -33,7 +34,7 @@ const RecipeDetails = () => {
                 setLoading(false);
             }
         };
-    
+
         const fetchRecipeCreator = async () => {
             try {
                 const response = await axios.get(`http://localhost:3000/api/recipe/creator/${id}`);
@@ -44,21 +45,20 @@ const RecipeDetails = () => {
                 console.error("Error fetching creator:", err);
             }
         };
-    
+
         fetchRecipeDetails();
         fetchRecipeCreator();
-    
     }, [id]);
-    
+
     const handleRatingSubmit = async () => {
         const userId = localStorage.getItem("userId");
         console.log("User ID from localStorage:", userId);
-        
+
         if (!userId) {
             toast.error("You must be logged in to submit a rating.");
             return;
         }
-    
+
         try {
             await axios.post("http://localhost:3000/api/recipe/rate", {
                 recipe_id: id,
@@ -81,13 +81,13 @@ const RecipeDetails = () => {
             toast.error("You must be logged in to add to favorites.");
             return;
         }
-    
+
         try {
             const response = await axios.post("http://localhost:3000/api/recipe/favorite", {
                 userId: userId,
                 recipeId: id,
             });
-    
+
             if (response?.data?.message === "Recipe is already in your favorites.") {
                 toast.info(response.data.message);
             } else {
@@ -99,11 +99,77 @@ const RecipeDetails = () => {
             toast.error(errorMsg);
         }
     };
-    
+
     const toggleTranslation = () => {
         setTranslated(!translated);
     };
-    
+
+    const toggleAlternatives = (index) => {
+        setShowAlternatives(prev => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
+    };
+
+    // Function to capitalize the first letter of a string
+    const capitalizeFirstLetter = (str) => {
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    };
+
+    // Function to capitalize the first letter of each word in a string (used for amount)
+    const capitalizeEachWord = (str) => {
+        if (!str) return str;
+        return str
+            .split(' ')
+            .map(word => capitalizeFirstLetter(word))
+            .join(' ');
+    };
+
+    // Function to translate difficulty to Nepali
+    const translateDifficulty = (difficulty) => {
+        if (!translated) return difficulty;
+        const difficultyMap = {
+            Easy: translations.easy,
+            Medium: translations.medium,
+            Hard: translations.hard
+        };
+        return difficultyMap[difficulty] || difficulty;
+    };
+
+    // Function to translate cooking time to Nepali (e.g., "1 hour 20 minutes" to "१ घण्टा २० मिनेट")
+    const translateCookingTime = (cookingTime) => {
+        if (!translated) return cookingTime;
+
+        // Split the cooking time into parts (e.g., "1 hour 20 minutes" -> ["1", "hour", "20", "minutes"])
+        const parts = cookingTime.split(' ');
+        if (parts.length !== 4) return cookingTime; // Ensure the format is "X hours Y minutes"
+
+        const hours = parts[0]; // e.g., "1"
+        const hourUnit = parts[1]; // e.g., "hour" or "hours"
+        const minutes = parts[2]; // e.g., "20"
+        const minuteUnit = parts[3]; // e.g., "minute" or "minutes"
+
+        // Convert numbers to Nepali numerals using the translations object
+        const nepaliHours = translations.nepaliNumbers[hours] || hours;
+        const nepaliMinutes = translations.nepaliNumbers[minutes] || minutes;
+
+        // Normalize units (e.g., "hour" or "hours" -> "hours")
+        const normalizedHourUnit = hourUnit.endsWith('s') ? hourUnit : `${hourUnit}s`;
+        const normalizedMinuteUnit = minuteUnit.endsWith('s') ? minuteUnit : `${minuteUnit}s`;
+
+        // Translate the units using the translations object
+        const unitMap = {
+            hours: translations.hours, // "घण्टा"
+            minutes: translations.minutes // "मिनेट"
+        };
+        const translatedHourUnit = unitMap[normalizedHourUnit] || normalizedHourUnit;
+        const translatedMinuteUnit = unitMap[normalizedMinuteUnit] || normalizedMinuteUnit;
+
+        // Combine the translated parts
+        return `${nepaliHours} ${translatedHourUnit} ${nepaliMinutes} ${translatedMinuteUnit}`;
+    };
+
     if (loading) return <p className="loading-text">Loading recipe...</p>;
     if (error) return <p className="error-text">{error}</p>;
 
@@ -118,18 +184,19 @@ const RecipeDetails = () => {
                 </div>
                 
                 <div className="recipedetails-container">
-                <h1 className="title">
-    {translated ? recipe.title_ne : recipe.title}
-</h1>
+                    <h1 className="title">
+                        {translated ? recipe.title_ne : recipe.title}
+                    </h1>
 
                     <div className="recipedetails">
                         <div className="recipedetails-item">
                             <p><strong>{translated ? translations.level : "Level:"}</strong></p>
-                            <p>{recipe.difficulty}</p>
+                            <p>{translateDifficulty(recipe.difficulty)}</p>
                         </div>
                         <div className="recipedetails-item">
                             <p><strong>{translated ? translations.time : "Time:"}</strong></p>
-                            <p>{recipe.cooking_time}</p>
+                                <p>{translateCookingTime(recipe.cooking_time)}</p>
+                        
                         </div>
                         <div className="recipedetails-item">
                             <p><strong>{translated ? translations.ratings : "Ratings:"}</strong></p>
@@ -151,22 +218,22 @@ const RecipeDetails = () => {
                         <div className="nutrition-wrapper">
                             <div className="nutrition-title">{translated ? translations.nutrition : "Nutrition"}</div>
                             <div className="nutrition-scroll">
-                            {recipe.nutrition.length > 0 ? (
-                            <>
-                                {recipe.nutrition.map((item, index) => (
-                                    <div key={index} className="nutrition-item">
-                                        <span className="nutrition-label">
-                                            {translated ? item.nutrient_ne : item.nutrient}
-                                        </span>
-                                        <span className="nutrition-value">
-                                            {translated ? item.value_ne : item.value}
-                                        </span>
-                                    </div>
-                                ))}
-                            </>
-                        ) : (
-                            <p>{translated ? translations.noNutritionData : "No nutrition data available."}</p>
-                        )}
+                                {recipe.nutrition.length > 0 ? (
+                                    <>
+                                        {recipe.nutrition.map((item, index) => (
+                                            <div key={index} className="nutrition-item">
+                                                <span className="nutrition-label">
+                                                    {translated ? item.nutrient_ne : item.nutrient}
+                                                </span>
+                                                <span className="nutrition-value">
+                                                    {translated ? item.value_ne : item.value}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <p>{translated ? translations.noNutritionData : "No nutrition data available."}</p>
+                                )}
                             </div>
                         </div>
 
@@ -175,7 +242,36 @@ const RecipeDetails = () => {
                             <ul>
                                 {recipe.ingredients.length > 0 ? (
                                     recipe.ingredients.map((item, index) => (
-                                        <li key={index}>{item.name} - {item.amount}</li>
+                                        <li key={index} className="ingredient-item">
+                                            <div className="ingredient-header">
+                                                <div>
+                                                    <strong>{translated ? item.name_ne : capitalizeFirstLetter(item.name)}</strong>
+                                                    {item.amount && ` - ${translated && item.amount_ne ? item.amount_ne : capitalizeEachWord(item.amount)}`}
+                                                </div>
+                                                {item.alternatives && item.alternatives.length > 0 && (
+                                                    <button
+                                                        className="alternatives-btn"
+                                                        onClick={() => toggleAlternatives(index)}
+                                                    >
+                                                        {showAlternatives[index] ? 
+                                                            (translated ? "वैकल्पिक लुकाउनुहोस्" : "Hide Alternatives") : 
+                                                            (translated ? "वैकल्पिक हेर्नुहोस्" : "Show Alternatives")
+                                                        }
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {showAlternatives[index] && item.alternatives && item.alternatives.length > 0 && (
+                                                <div className="alternatives-list">
+                                                    <em>{translated ? "वैकल्पिक सामग्री:" : "Alternatives:"}</em>{" "}
+                                                    {item.alternatives.map((alt, altIndex) => (
+                                                        <span key={altIndex}>
+                                                            {translated ? alt.alternative_name_ne : capitalizeFirstLetter(alt.alternative_name)}
+                                                            {altIndex < item.alternatives.length - 1 ? ", " : ""}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </li>
                                     ))
                                 ) : (
                                     <p>No ingredients available.</p>

@@ -93,18 +93,27 @@
     transition: border-color 0.3s ease;
   }
   
-  .forgot-password {
-    display: block;
-    font-size: 12px;
+
+  .forget-password-re-send {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .left-link,
+  .right-link {
+    font-size: 14px;
     color: #f56b6b;
     margin-bottom: 20px;
     text-decoration: none;
-    text-align: right;
   }
-  
-  .forgot-password:hover {
+
+  .left-link,
+  .right-link:hover {
     text-decoration: underline;
   }
+  
+  
   
   button {
     width: 100%;
@@ -169,36 +178,3 @@
     color: rgb(68, 65, 65); /* Change the color on hover */
   }
 
-/* Dropdown Container */
-.role-dropdown {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.role-dropdown label {
-  display: block;
-  font-size: 14px;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.role-dropdown select {
-  padding: 10px;
-  font-size: 16px;
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  background-color: #fff;
-  outline: none;
-  transition: border-color 0.3s ease;
-}
-
-.role-dropdown select:focus {
-  border-color: #a355d4;
-}
-
-.role-dropdown select option {
-  font-size: 16px;
-  color: #555;
-}

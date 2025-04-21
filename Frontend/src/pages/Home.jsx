@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
+import FooterBefore from '../components/FooterBefore';
 import Navigationbar from '../components/NavBar';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
@@ -18,6 +19,7 @@ import Cusine2Image from '../assets/HomePage/nepali.jpg';
 import Cusine3Image from '../assets/HomePage/pakistani.jpg';
 import Cusine4Image from '../assets/HomePage/indian.jpg';
 import userImage from '../assets/user.png';
+import Navbar from '../components/Header';
 
 const Home = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -45,12 +47,11 @@ const Home = () => {
     fetchTestimonials();
   }, []);
   
- 
+  const isLoggedIn = localStorage.getItem("token") !== null;
 
   return (
     <div className="index-page">
-      {/* Navbar Section */}
-      <Navigationbar />
+      {isLoggedIn ? <Navigationbar/> : <Navbar />}
 
       {/* Hero Section */}
       <section className="hero">
@@ -177,8 +178,7 @@ const Home = () => {
         )}
       </section>
 
-      {/* Footer Section */}
-      <Footer/>
+      {isLoggedIn ? <Footer />: <FooterBefore />}
     </div>
   );
 };

@@ -1,24 +1,31 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import '../../styles/User/Recipe.css'
-// Import the CSS for premium modal
+import '../../styles/User/Recipe.css';
 import { IoFastFoodSharp } from "react-icons/io5";
-import { FaSearch, FaTrash, FaFish, FaDrumstickBite, FaBreadSlice, FaCarrot, FaLeaf, FaHeart, FaPlus, FaUtensils, FaPizzaSlice  } from "react-icons/fa";
+import { FaSearch, FaTrash, FaFish, FaDrumstickBite, FaBreadSlice, FaCarrot, FaLeaf, FaHeart, FaPlus, FaUtensils, FaLock } from "react-icons/fa";
 import { GiChefToque, GiCookingPot } from "react-icons/gi";
 import Navigationbar from "../../components/NavBar";
 import Navbar from "../../components/Header";
 import Footer from "../../components/Footer";
 import FooterBefore from "../../components/FooterBefore";
-import RecipeModal from "./RecipeModal.jsx"; // Import the new RecipeModal
-
+import RecipeModal from "./RecipeModal.jsx";
 import RecipeImage from '../../assets/RecipePage/Recipe1.jpg';
 import NonVegImage from '../../assets/RecipePage/NonVeg.jpg';
 import FishImage from '../../assets/RecipePage/Fish.jpg';
 import VegImage from '../../assets/RecipePage/Veg.jpg';
+import VeganImage from '../../assets/RecipePage/Vegan.jpg';
 import GlutenFreeImage from '../../assets/RecipePage/GlutenFree.jpg';
 import DrinksImage from '../../assets/RecipePage/drinks.jpg';
-import VeganImage from '../../assets/RecipePage/vegan.jpg';
+import DefaultChefImage from '../../assets/RecipePage/vegan.jpg';
+import ItalianImg from "../../assets/cuisines/italian.jpg";
+import ChineseImg from "../../assets/cuisines/chinese.jpg";
+import IndianImg from "../../assets/cuisines/indian.jpg";
+import MexicanImg from "../../assets/cuisines/mexican.jpg";
+import NepaliImg from "../../assets/cuisines/nepali.jpg";
+import ThaiImg from "../../assets/cuisines/thai.jpg";
+import JapaneseImg from "../../assets/cuisines/japanese.jpg";
+import TurkishImg from "../../assets/cuisines/turkish.jpg";
 
 const categoryImages = {
     "Non-Vegetarian": NonVegImage,
@@ -29,15 +36,6 @@ const categoryImages = {
     "Drinks": DrinksImage,
     "Favorites": RecipeImage
 };
-
-import ItalianImg from "../../assets/cuisines/italian.jpg";
-import ChineseImg from "../../assets/cuisines/chinese.jpg";
-import IndianImg from "../../assets/cuisines/indian.jpg";
-import MexicanImg from "../../assets/cuisines/mexican.jpg";
-import NepaliImg from "../../assets/cuisines/nepali.jpg";
-import ThaiImg from "../../assets/cuisines/thai.jpg";
-import JapaneseImg from "../../assets/cuisines/japanese.jpg";
-import TurkishImg from "../../assets/cuisines/turkish.jpg";
 
 const cuisineOptions = [
     { name: "Italian", image: ItalianImg },
@@ -50,85 +48,98 @@ const cuisineOptions = [
     { name: "Turkish", image: TurkishImg },
 ];
 
-
 const MainRecipe = () => {
     const isLoggedIn = localStorage.getItem("token") !== null;
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
     const [showCuisineModal, setShowCuisineModal] = useState(false);
-    const [showPremiumModal, setShowPremiumModal] = useState(false); // State for premium modal
-    const [recipes, setRecipes] = useState([])
-    const [selectedCategory, setSelectedCategory] = useState("All")
-    const [searchTerm, setSearchTerm] = useState(""); 
-    const [searchResults, setSearchResults] = useState([]); 
+    const [showPremiumModal, setShowPremiumModal] = useState(false);
+    const [recipes, setRecipes] = useState([]);
+    const [chefs, setChefs] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("All");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
     const [selectedIngredients, setSelectedIngredients] = useState([]);
-    const [filteredRecipes, setFilteredRecipes] = useState([]); 
+    const [filteredRecipes, setFilteredRecipes] = useState([]);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [isPremium, setIsPremium] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isChef, setIsChef] = useState(false);
     const [favoriteRecipes, setFavoriteRecipes] = useState([]);
     const cuisineList = ["Italian", "Chinese", "Indian", "Mexican", "Nepali", "Thai", "Japanese", "Turkish"];
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         const fetchPremiumStatus = async () => {
             try {
+                if (!token) {
+                    console.warn("No token found in localStorage");
+                    return;
+                }
+
                 const userResponse = await axios.get("http://localhost:3000/api/get-user", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
                 if (userResponse.data.success) {
                     const userData = userResponse.data.data;
-                    console.log("User Data:", userData);
-          
-                    // If your backend returns `is_admin = 1` or `true` for admins:
                     setIsAdmin(userData.is_admin === 1 || userData.is_admin === true);
-                    setIsPremium(userData.is_premium);
-                  }
-    
-                if (userResponse.data.success) {
-                    console.log("User Data:", userResponse.data.data);
-                    setIsPremium(userResponse.data.data.is_premium);
-                }
-    
-                const premiumResponse = await axios.get("http://localhost:3000/api/check-premium-status", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-    
-                if (premiumResponse.data.success) {
-                    console.log("Premium Status:", premiumResponse.data.isPremium);
-                    setIsPremium(premiumResponse.data.isPremium);
+                    setIsPremium(userData.is_premium || false);
+                    setIsChef(userData.is_chef || false);
+                    console.log("User data:", { is_premium: userData.is_premium, is_chef: userData.is_chef, is_admin: userData.is_admin });
+                } else {
+                    console.error("Failed to fetch user data:", userResponse.data.message);
                 }
             } catch (error) {
-                console.error("Error fetching premium status:", error);
+                console.error("Error fetching premium status:", error.response?.data || error.message);
             }
         };
+
         // Fetch search results
         axios.get(`http://localhost:3000/api/recipe/search?query=${searchTerm}`)
-        .then((response) => {
-            setSearchResults(response.data);
-        })
-        .catch((error) => {
-            console.error("Error fetching search results:", error);
-        });
-       
+            .then((response) => {
+                console.log("Search results:", response.data);
+                setSearchResults(response.data);
+            })
+            .catch((error) => {
+                console.error("Error fetching search results:", error);
+            });
+
         // Fetch all recipes
         axios.get("http://localhost:3000/api/recipe/recipes")
             .then((response) => {
+                console.log("Recipes response:", response.data);
                 setRecipes(response.data);
             })
             .catch((error) => {
                 console.error("Error fetching recipes:", error);
             });
-            fetchPremiumStatus();
+
+        // Fetch all chefs
+        axios.get("http://localhost:3000/api/chef/chef")
+            .then((response) => {
+                console.log("Chefs response:", response.data);
+                const chefsData = response.data.map(chef => ({
+                    ...chef,
+                    photo: chef.photo ? `http://localhost:3000${chef.photo}` : null
+                }));
+                setChefs(chefsData);
+            })
+            .catch((error) => {
+                console.error("Error fetching chefs:", error);
+            });
+
+        fetchPremiumStatus();
     }, [searchTerm]);
 
-    const handleCusineClick = (category) => {
+    const handleCuisineClick = (category) => {
         if (category === "Cuisine") {
-            setShowCuisineModal(true); // Show the cuisine modal
+            setShowCuisineModal(true);
         } else {
             setSelectedCategory(category);
         }
     };
+
     const addIngredient = (ingredient) => {
         if (!selectedIngredients.includes(ingredient)) {
             const updatedIngredients = [...selectedIngredients, ingredient];
@@ -145,12 +156,13 @@ const MainRecipe = () => {
 
     const filterRecipesByIngredients = (ingredients) => {
         if (ingredients.length === 0) {
-            setFilteredRecipes([]); 
+            setFilteredRecipes([]);
             return;
         }
-    
+
         axios.post("http://localhost:3000/api/recipe/filterRecipes", { ingredients })
             .then((response) => {
+                console.log("Filtered recipes:", response.data);
                 setFilteredRecipes(response.data);
             })
             .catch((error) => {
@@ -160,19 +172,15 @@ const MainRecipe = () => {
 
     const finalrecipe = (() => {
         if (selectedCategory === "All") {
-          // Show all recipes
-          return recipes;
+            return recipes;
         } else if (cuisineList.includes(selectedCategory)) {
-          // If it's a cuisine name, filter on the `cuisine` column
-          return recipes.filter((recipe) => recipe.cuisine === selectedCategory);
+            return recipes.filter((recipe) => recipe.cuisine === selectedCategory);
         } else {
-          // Otherwise, treat it like a category (e.g., "Vegan", "Gluten-Free")
-          return recipes.filter((recipe) => recipe.category === selectedCategory);
+            return recipes.filter((recipe) => recipe.category === selectedCategory);
         }
-      })();
+    })();
 
     const handleRecipeSubmit = () => {
-        // Optional: Refresh recipes after adding a new recipe
         axios.get("http://localhost:3000/api/recipe/recipes")
             .then((response) => {
                 setRecipes(response.data);
@@ -184,95 +192,101 @@ const MainRecipe = () => {
     };
 
     const handleCategoryClick = (category) => {
-        // Check for "Chef" instead:
-        if (category === "Chef" && !isPremium && !isAdmin) {
-          if (isLoggedIn) {
-            console.log("User is NOT premium, showing upgrade modal.");
-            setShowPremiumModal(true);
-          } else {
-            alert("You must be logged in to access Chef Recipes.");
-          }
+        if (category === "Chef" && !isPremium && !isAdmin && !isChef) {
+            if (isLoggedIn) {
+                setShowPremiumModal(true);
+            } else {
+                alert("You must be logged in to access Chef Recipes.");
+            }
         } else {
-          setSelectedCategory(category);
+            setSelectedCategory(category);
         }
-      };
-      
+    };
+
+    const handleRecipeClick = (recipe) => {
+        if (recipe.is_chef_recipe && !isPremium && !isAdmin && !isChef) {
+            if (isLoggedIn) {
+                setShowPremiumModal(true);
+            } else {
+                alert("You must be logged in to access chef-crafted recipes.");
+            }
+        } else {
+            navigate(`/recipedetails/${recipe.id}`);
+        }
+    };
+
     const handleGoPremium = () => {
         localStorage.setItem("premium_plan", JSON.stringify({
             plan: "Monthly Premium",
             price: 1500
         }));
-    
         navigate("/paymentdetails");
     };
 
     const fetchFavorites = async () => {
         try {
-          const userId = localStorage.getItem("userId");
-          if (!userId) {
-            alert("User ID not found. Please log in again.");
-            return;
-          }
-          const res = await axios.get(`http://localhost:3000/api/recipe/favorites/${userId}`);
-          setFavoriteRecipes(res.data); // An array of recipe objects
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                alert("User ID not found. Please log in again.");
+                return;
+            }
+            const res = await axios.get(`http://localhost:3000/api/recipe/favorites/${userId}`);
+            console.log("Favorite recipes response:", res.data);
+            setFavoriteRecipes(res.data);
         } catch (error) {
-          console.error("Error fetching favorites:", error);
+            console.error("Error fetching favorites:", error);
         }
-      };
+    };
 
-      const handleRemoveFavorite = async (recipeId) => {
+    const handleRemoveFavorite = async (recipeId) => {
         try {
             const userId = localStorage.getItem("userId");
             if (!userId) {
                 alert("No userId found. Please log in again.");
                 return;
             }
-    
+
             await axios.delete("http://localhost:3000/api/recipe/removefavorite", {
                 data: { userId: userId, recipeId: recipeId }
             });
-    
-            // 2) Update local state so the recipe disappears immediately
+
             setFavoriteRecipes((prevFavorites) =>
                 prevFavorites.filter((recipe) => recipe.id !== recipeId)
             );
-    
-            // 3) Show a success alert
+
             alert("Recipe successfully removed from favorites!");
         } catch (error) {
             console.error("Error removing from favorites:", error);
             alert("Failed to remove from favorites.");
         }
     };
-    
-      
-      
-    return(
+
+    return (
         <div className="recipe">
-            {isLoggedIn ? <Navigationbar/> : <Navbar />}
+            {isLoggedIn ? <Navigationbar /> : <Navbar />}
             <div className="recipe-page">
                 <div className="recipe-page-hero">
                     <div className="recipe-page-hero-overlay"></div>
-                    <img 
-                        src={categoryImages[selectedCategory] || RecipeImage} 
-                        className="recipe-page-hero-image" 
+                    <img
+                        src={categoryImages[selectedCategory] || RecipeImage}
+                        className="recipe-page-hero-image"
                         alt="Recipe Hero"
                     />
                     <div className="recipe-page-hero-content">
                         <h1>IT'S ALL ABOUT GOOD FOOD AND TASTE</h1>
                         <div className="recipe-page-divider">
-                            <IoFastFoodSharp className="recipe-page-divider-icon"/>
+                            <IoFastFoodSharp className="recipe-page-divider-icon" />
                         </div>
                         <p>Discover recipes, tips, and the joy of cooking.</p>
                     </div>
                 </div>
-                
+
                 <div className="recipe-search-container">
                     <div className="recipe-search-left">
                         <div className="recipeaddsearch-box">
-                            <input 
-                                type="text" 
-                                placeholder="Search Your Recipe Here" 
+                            <input
+                                type="text"
+                                placeholder="Search Your Recipe Here"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 onFocus={() => setIsSearchFocused(true)}
@@ -280,21 +294,21 @@ const MainRecipe = () => {
                             />
                             <FaSearch className="recipeaddsearch-icon" />
                         </div>
-                        
+
                         {selectedIngredients.length > 0 && (
                             <div className="selected-ingredients">
                                 {selectedIngredients.map((ingredient, index) => (
                                     <div key={index} className="ingredient-tag">
                                         {ingredient}
-                                        <FaTrash 
-                                            className="recipeaddremove-btn" 
-                                            onClick={() => removeIngredient(ingredient)} 
+                                        <FaTrash
+                                            className="recipeaddremove-btn"
+                                            onClick={() => removeIngredient(ingredient)}
                                         />
                                     </div>
                                 ))}
                             </div>
                         )}
-                        
+
                         {isSearchFocused && searchResults.length > 0 && (
                             <div className="recipeaddsearch-results-dropdown">
                                 {searchResults.map((item, index) => (
@@ -302,13 +316,13 @@ const MainRecipe = () => {
                                         {item.type === "ingredient" ? (
                                             <>
                                                 <span>{item.name} (Ingredient)</span>
-                                                <FaPlus 
-                                                    className="recipeaddadd-btn" 
-                                                    onClick={() => addIngredient(item.name)} 
+                                                <FaPlus
+                                                    className="recipeaddadd-btn"
+                                                    onClick={() => addIngredient(item.name)}
                                                 />
                                             </>
                                         ) : (
-                                            <span onClick={() => navigate(`/recipedetails/${item.id}`)}>
+                                            <span onClick={() => handleRecipeClick(item)}>
                                                 {item.title} (Recipe)
                                             </span>
                                         )}
@@ -317,7 +331,7 @@ const MainRecipe = () => {
                             </div>
                         )}
                     </div>
-                    
+
                     <div className="recipe-search-right">
                         <div className="icon-container">
                             <div className="icon-wrapper" data-tooltip="All Recipes" onClick={() => setSelectedCategory("All")}>
@@ -338,7 +352,7 @@ const MainRecipe = () => {
                             <div className="icon-wrapper" data-tooltip="Vegan" onClick={() => setSelectedCategory("Vegan")}>
                                 <FaLeaf className="icon" />
                             </div>
-                            <div className="icon-wrapper" data-tooltip="Cuisine" onClick={() => handleCusineClick("Cuisine")}>
+                            <div className="icon-wrapper" data-tooltip="Cuisine" onClick={() => handleCuisineClick("Cuisine")}>
                                 <GiCookingPot className="icon" />
                             </div>
                             <div
@@ -351,173 +365,206 @@ const MainRecipe = () => {
                                     }
                                     handleCategoryClick("Chef");
                                 }}
-                                >
-                                <GiChefToque  className="icon" />
+                            >
+                                <GiChefToque className="icon" />
                             </div>
-                            <div className="icon-wrapper"
+                            <div
+                                className="icon-wrapper"
                                 data-tooltip="Favorites"
                                 onClick={() => {
-                                if (!isLoggedIn) {
-                                    alert("You must be logged in to view Favorites.");
-                                    return;
-                                }
-                                fetchFavorites();
-                                setSelectedCategory("Favorites");
+                                    if (!isLoggedIn) {
+                                        alert("You must be logged in to view Favorites.");
+                                        return;
+                                    }
+                                    fetchFavorites();
+                                    setSelectedCategory("Favorites");
                                 }}
                             >
-                            <FaHeart className="icon" />
+                                <FaHeart className="icon" />
                             </div>
-                            <div className="icon-wrapper" data-tooltip="Add Recipe" onClick={() => {
-                                    
+                            <div
+                                className="icon-wrapper"
+                                data-tooltip="Add Recipe"
+                                onClick={() => {
                                     if (!isLoggedIn) {
-                                        
-                                        alert("You must be logged in to add a recipe."); 
+                                        alert("You must be logged in to add a recipe.");
                                         return;
-                                        }
-                                        setShowModal(true);
-                                    }}
-                                    >
+                                    }
+                                    setShowModal(true);
+                                }}
+                            >
                                 <FaPlus className="icon" />
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="recipe-details">
-          <h1>
-            {selectedCategory === "All" ? "Crowd-Pleasing Recipes" : selectedCategory} Recipes
-          </h1>
-          <div className="recipe-grid">
-            {/* If Favorites is selected, show favoriteRecipes instead of normal logic */}
-            {selectedCategory === "Favorites" ? (
-              favoriteRecipes.length > 0 ? (
-                favoriteRecipes.map((recipe) => (
-                  <div className="recipe-card" key={recipe.id}>
-                    <img
-                      src={recipe.image_url || RecipeImage}
-                      alt={recipe.title}
-                      className="recipe-card-image"
-                      onClick={() => navigate(`/recipedetails/${recipe.id}`)}
-                    />
-                    <div className="recipe-card-content">
-                      <h2>{recipe.title}</h2>
-                      <div className="recipe-info">
-                        <span>⏱ {recipe.cooking_time}</span>
-                        <span>⚡ {recipe.difficulty}</span>
-                        <span>⭐ {parseFloat(recipe.average_rating).toFixed(1)}</span>
-                      </div>
-                      <button
-              className="remove-fav-btn"
-              onClick={() => handleRemoveFavorite(recipe.id)}
-            >
-              Remove
-            </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>No favorite recipes yet.</p>
-              )
-            ) : (
-              // Otherwise show either filteredRecipes or finalrecipe
-              (filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).length > 0 ? (
-                (filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).map((recipe) => (
-                  <div className="recipe-card" key={recipe.id}>
-                    <img
-                      src={recipe.image_url || RecipeImage}
-                      alt={recipe.title}
-                      className="recipe-card-image"
-                      onClick={() => navigate(`/recipedetails/${recipe.id}`)}
-                    />
-                    <div className="recipe-card-content">
-                      <h2>{recipe.title}</h2>
-                      <div className="recipe-info">
-                        <span>⏱ {recipe.cooking_time}</span>
-                        <span>⚡ {recipe.difficulty}</span>
-                        <span>⭐ {parseFloat(recipe.average_rating).toFixed(1)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>No recipes found in {selectedCategory} category.</p>
-              )
-            )}
-          </div>
-        </div>
-      </div>
-            
-            {/* Recipe Modal */}
-            <RecipeModal 
-                isOpen={showModal} 
+                    {selectedCategory === "Chef" ? (
+                        <>
+                            <h1>Our Chefs</h1>
+                            <div className="chef-grid">
+                                {chefs.length > 0 ? (
+                                    chefs.map((chef) => (
+                                        <div className="chef-card" key={chef.id}>
+                                            <img
+                                                src={chef.photo || DefaultChefImage}
+                                                alt={chef.name}
+                                                className="chef-card-image"
+                                            />
+                                            <h2>{chef.name}</h2>
+                                            <button
+                                                className="chef-view-button"
+                                                onClick={() => navigate(`/chef/${chef.id}`)}
+                                            >
+                                                View
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No chefs found.</p>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <h1>
+                                {selectedCategory === "All" ? "Crowd-Pleasing Recipes" : selectedCategory} Recipes
+                            </h1>
+                            <div className="recipe-grid">
+                                {selectedCategory === "Favorites" ? (
+                                    favoriteRecipes.length > 0 ? (
+                                        favoriteRecipes.map((recipe) => (
+                                            <div className="recipe-card" key={recipe.id}>
+                                                <div className="recipe-card-image-container">
+                                                    <img
+                                                        src={recipe.image_url || RecipeImage}
+                                                        alt={recipe.title}
+                                                        className="recipe-card-image"
+                                                        onClick={() => handleRecipeClick(recipe)}
+                                                    />
+                                                    {recipe.is_chef_recipe && !isPremium && !isAdmin && !isChef && (
+                                                        <FaLock className="recipe-lock-icon" onClick={() => handleRecipeClick(recipe)} />
+                                                    )}
+                                                </div>
+                                                <div className="recipe-card-content">
+                                                    <h2>{recipe.title}</h2>
+                                                    <div className="recipe-info">
+                                                        <span>⏱ {recipe.cooking_time}</span>
+                                                        <span>⚡ {recipe.difficulty}</span>
+                                                        <span>⭐ {recipe.average_rating ? parseFloat(recipe.average_rating).toFixed(1) : 'N/A'}</span>
+                                                    </div>
+                                                    <button
+                                                        className="remove-fav-btn"
+                                                        onClick={() => handleRemoveFavorite(recipe.id)}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p>No favorite recipes yet.</p>
+                                    )
+                                ) : (
+                                    (filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).length > 0 ? (
+                                        (filteredRecipes.length > 0 ? filteredRecipes : finalrecipe).map((recipe) => (
+                                            <div className="recipe-card" key={recipe.id}>
+                                                <div className="recipe-card-image-container">
+                                                    <img
+                                                        src={recipe.image_url || RecipeImage}
+                                                        alt={recipe.title}
+                                                        className="recipe-card-image"
+                                                        onClick={() => handleRecipeClick(recipe)}
+                                                    />
+                                                    {recipe.is_chef_recipe && !isPremium && !isAdmin && !isChef && (
+                                                        <FaLock className="recipe-lock-icon" onClick={() => handleRecipeClick(recipe)} />
+                                                    )}
+                                                </div>
+                                                <div className="recipe-card-content">
+                                                    <h2>{recipe.title}</h2>
+                                                    <div className="recipe-info">
+                                                        <span>⏱ {recipe.cooking_time}</span>
+                                                        <span>⚡ {recipe.difficulty}</span>
+                                                        <span>⭐ {recipe.rating ? parseFloat(recipe.rating).toFixed(1) : 'N/A'}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p>No recipes found in {selectedCategory} category.</p>
+                                    )
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <RecipeModal
+                isOpen={showModal}
                 onClose={() => setShowModal(false)}
                 onSubmit={handleRecipeSubmit}
             />
-                    {showCuisineModal && (
-                    <div className="cuisinemodal-overlay">
-                        <div className="cuisinemodal-container">
-                            <h2>Select Cuisine</h2>
-                            <div className="cuisinemodal-content">
-                           
-                                {cuisineOptions.map((cuisine, index) => (
-                                    <button  className="cuisine-option"
+
+            {showCuisineModal && (
+                <div className="cuisinemodal-overlay">
+                    <div className="cuisinemodal-container">
+                        <h2>Select Cuisine</h2>
+                        <div className="cuisinemodal-content">
+                            {cuisineOptions.map((cuisine, index) => (
+                                <button
+                                    className="cuisine-option"
                                     onClick={() => {
-                                      setSelectedCategory(cuisine.name); 
-                                      setShowCuisineModal(false);
+                                        setSelectedCategory(cuisine.name);
+                                        setShowCuisineModal(false);
                                     }}
-                                  >
-                                    <img src={cuisine.image} alt={cuisine.name} className="cuisine-image"/>
+                                    key={index}
+                                >
+                                    <img src={cuisine.image} alt={cuisine.name} className="cuisine-image" />
                                     <span>{cuisine.name}</span>
-                                  </button>
-                                  
-                                ))}
-                            </div>
-                            <button className="cuisinemodal-close" onClick={() => setShowCuisineModal(false)}>Close</button>
+                                </button>
+                            ))}
                         </div>
+                        <button className="cuisinemodal-close" onClick={() => setShowCuisineModal(false)}>
+                            Close
+                        </button>
                     </div>
-                )}
-            
+                </div>
+            )}
+
             {showPremiumModal && (
                 <div className="premium-modal-overlay">
                     <div className="premium-modal-container">
                         <div className="premium-modal-content">
                             <h2 className="premium-modal-title">Premium</h2>
                             <p className="premium-modal-description">
-                                Unlock the full potential of your culinary journey with our
-                                Premium Membership!
+                                Unlock the full potential of your culinary journey with our Premium Membership!
                             </p>
-                            
                             <div className="premium-modal-price">
                                 <span>Rs 1500/month</span>
                             </div>
-                            
                             <button className="premium-modal-button" onClick={handleGoPremium}>
                                 Go Premium
                             </button>
-                            
                             <div className="premium-modal-features">
                                 <h3 className="premium-modal-features-title">Exclusive Chef Access</h3>
-                                
                                 <div className="premium-modal-feature">
                                     <div className="premium-modal-check">✓</div>
                                     <p>Access exclusive, chef-crafted recipes tailored to your tastes and dietary needs</p>
                                 </div>
-                                
                                 <div className="premium-modal-feature">
                                     <div className="premium-modal-check">✓</div>
                                     <p>Be the first to try new features and seasonal recipe collection</p>
                                 </div>
-                                
                                 <div className="premium-modal-feature">
                                     <div className="premium-modal-check">✓</div>
                                     <p>Unlock all these benefits for just Rs1500/month, with no hidden fees.</p>
                                 </div>
-                                
                                 <div className="premium-modal-feature">
                                     <div className="premium-modal-check">✓</div>
                                     <p>Explore a growing library of chef-exclusive recipes designed to inspire your cooking.</p>
                                 </div>
-                                
                                 <div className="premium-modal-feature">
                                     <div className="premium-modal-check">✓</div>
                                     <p>Discover secret ingredients and methods used by professional chefs in their recipes.</p>
@@ -530,8 +577,8 @@ const MainRecipe = () => {
                     </div>
                 </div>
             )}
-            
-            {isLoggedIn ? <Footer/> : <FooterBefore />}
+
+            {isLoggedIn ? <Footer /> : <FooterBefore />}
         </div>
     );
 };

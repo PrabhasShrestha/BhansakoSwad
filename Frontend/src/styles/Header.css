@@ -265,3 +265,15 @@
 .user-dropdown-menu .dropdown-item:hover {
   background-color: #f2f2f2;
 }
+.nav-cart-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 18px;
+  color: #a64dff; /* Match notification bell color */
+  transition: color 0.3s ease-in-out;
+}
+.nav-cart-button:hover {
+  background: none;
+  color: #d580ff;
+}

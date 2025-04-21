@@ -1,0 +1,588 @@
+/* Chef Dashboard Styles */
+.chef-dashboard {
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background-color: #f5f7fb;
+  min-height: 100vh;
+}
+
+/* Header */
+.chef-dashboard-dashboard-header {
+  background-color: #fff;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.chef-dashboard-dashboard-header h1 {
+  margin: 0;
+  color: #3a3a3a;
+  font-size: 1.5rem;
+}
+
+.chef-dashboard-user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chef-dashboard-user-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #d580ff;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/* Dashboard Layout */
+.chef-dashboard-dashboard-container {
+  display: flex;
+  height: calc(100vh - 70px);
+}
+
+/* Sidebar */
+.chef-dashboard-sidebar {
+  width: 240px;
+  background-color: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+}
+
+.chef-dashboard-sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.chef-dashboard-logo {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #d580ff;
+}
+
+.chef-dashboard-sidebar-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chef-dashboard-sidebar-nav li {
+  margin: 0;
+}
+
+.chef-dashboard-sidebar-nav li button,
+.chef-dashboard-view-website {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #555;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.chef-dashboard-sidebar-nav li button:hover,
+.chef-dashboard-view-website:hover {
+  background-color: #f5f7fb;
+  color: #d580ff;
+}
+
+.chef-dashboard-sidebar-nav li.chef-dashboard-active button {
+  background-color: #f3e6ff;
+  color: #d580ff;
+  border-left: 3px solid #d580ff;
+}
+
+.chef-dashboard-nav-icon {
+  margin-right: 10px;
+  font-size: 1.1rem;
+}
+
+/* Main Content */
+.chef-dashboard-dashboard-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* Dashboard Overview Stats */
+.chef-dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.chef-dashboard-stat-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chef-dashboard-stat-icon {
+  background-color: #f3e6ff;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #d580ff;
+  margin-right: 1rem;
+}
+
+.chef-dashboard-stat-info h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.chef-dashboard-stat-info p {
+  margin: 5px 0 0;
+  color: #777;
+  font-size: 0.875rem;
+}
+
+/* Recent Activity */
+.chef-dashboard-recent-activity {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chef-dashboard-recent-activity h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.chef-dashboard-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chef-dashboard-activity-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.chef-dashboard-activity-icon {
+  margin-right: 1rem;
+  font-size: 1.5rem;
+}
+
+.chef-dashboard-activity-details p {
+  margin: 0 0 5px;
+}
+
+.chef-dashboard-activity-time {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+/* Recipes Table */
+.chef-dashboard-recipe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.chef-dashboard-add-recipe-btn {
+  background-color: #d580ff;
+  max-width: 200px;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.chef-dashboard-add-recipe-btn:hover {
+  background-color: #c266ff;
+}
+
+.chef-dashboard-recipes-table-container {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+.chef-dashboard-recipes-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.chef-dashboard-recipes-table th,
+.chef-dashboard-recipes-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.chef-dashboard-recipes-table th {
+  font-weight: 600;
+  color: #555;
+  background-color: #f9f9f9;
+}
+
+.chef-dashboard-recipe-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chef-dashboard-action-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chef-dashboard-view-btn {
+  color: #2196f3;
+  background-color: #e3f2fd;
+}
+
+.chef-dashboard-edit-btn {
+  color: #ff9800;
+  background-color: #fff3e0;
+}
+
+.chef-dashboard-delete-btn {
+  color: #f44336;
+  background-color: #ffebee;
+}
+
+.chef-dashboard-action-btn:hover {
+  opacity: 0.8;
+}
+
+/* Profile Section */
+.chef-dashboard-profile-content h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.chef-dashboard-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+
+.chef-dashboard-profile-image-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chef-dashboard-profile-image-container {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background-color: #f3e6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #d580ff;
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.chef-dashboard-chef-initials {
+  font-weight: bold;
+}
+
+.chef-dashboard-chef-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #d580ff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: 3px solid white;
+}
+
+.chef-dashboard-chef-hat {
+  width: 30px;
+  height: 30px;
+  fill: white;
+}
+
+.chef-dashboard-upload-photo-btn {
+  background-color: transparent;
+  border: 1px solid #d580ff;
+  color: #d580ff;
+  padding: 0.7rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.chef-dashboard-upload-photo-btn:hover {
+  background-color: #f3e6ff;
+}
+
+.chef-dashboard-profile-details-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chef-dashboard-profile-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.chef-dashboard-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.chef-dashboard-form-group.chef-dashboard-full-width {
+  grid-column: span 2;
+}
+
+.chef-dashboard-form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.chef-dashboard-form-group input,
+.chef-dashboard-form-group textarea {
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.chef-dashboard-documents-group {
+  grid-column: span 2;
+}
+
+.chef-dashboard-document-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.chef-dashboard-view-document-btn {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.chef-dashboard-view-document-btn:hover {
+  background-color: #1976d2;
+}
+
+.chef-dashboard-profile-buttons {
+  grid-column: span 2;
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.chef-dashboard-save-profile-btn {
+  background-color: #d580ff;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.chef-dashboard-save-profile-btn:hover {
+  background-color: #c266ff;
+}
+
+.chef-dashboard-cancel-btn {
+  background-color: #f5f5f5;
+  color: #555;
+  border: 1px solid #ddd;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.chef-dashboard-cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Ensure the profile image container is circular and appropriately sized */
+.chef-dashboard-profile-image-container {
+  position: relative;
+  width: 120px; /* Adjust size as needed */
+  height: 120px;
+  border-radius: 50%; /* Makes it circular */
+  overflow: hidden; /* Ensures the image doesn't overflow the circle */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0; /* Fallback background color */
+}
+
+/* Style the profile photo */
+.chef-dashboard-profile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image fills the circle without distortion */
+  border-radius: 50%; /* Reinforce circular shape */
+}
+
+/* Style the initials if no photo is present */
+.chef-dashboard-chef-initials {
+  font-size: 48px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #4CAF50;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+/* Position the chef hat icon */
+.chef-dashboard-chef-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #fff;
+  border-radius: 50%;
+  padding: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Style the chef hat SVG */
+.chef-dashboard-chef-hat {
+  width: 30px;
+  height: 30px;
+  fill: #4CAF50;
+}
+
+/* Adjust the upload button */
+.chef-dashboard-upload-photo-btn {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Hide the actual file input */
+.chef-dashboard-upload-photo-input {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 1024px) {
+  .chef-dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .chef-dashboard-profile-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chef-dashboard-profile-image-section {
+    margin-bottom: 2rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .chef-dashboard-dashboard-container {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .chef-dashboard-sidebar {
+    width: 100%;
+    height: auto;
+  }
+  
+  .chef-dashboard-sidebar-nav ul {
+    display: flex;
+    overflow-x: auto;
+  }
+  
+  .chef-dashboard-sidebar-nav li button,
+  .chef-dashboard-view-website {
+    padding: 1rem;
+  }
+  
+  .chef-dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chef-dashboard-profile-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .chef-dashboard-form-group.chef-dashboard-full-width {
+    grid-column: 1;
+  }
+  
+  .chef-dashboard-documents-group {
+    grid-column: 1;
+  }
+  
+  .chef-dashboard-profile-buttons {
+    grid-column: 1;
+  }
+}

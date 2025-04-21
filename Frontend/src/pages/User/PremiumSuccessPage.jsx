@@ -8,7 +8,7 @@ const PremiumSuccessPage = () => {
     useEffect(() => {
         const premiumData = JSON.parse(localStorage.getItem("premiumData"));
         if (!premiumData) {
-            navigate("/home"); // Redirect if no premium data found
+            navigate("/"); // Redirect if no premium data found
             return;
         }
 
@@ -39,7 +39,7 @@ const PremiumSuccessPage = () => {
                     console.log("✅ Premium activated successfully.");
                     alert("Premium activated! Enjoy exclusive features.");
                     localStorage.removeItem("premiumData"); // Clean up storage
-                    navigate("/home"); // Redirect
+                    navigate("/"); // Redirect
                 } else {
                     console.error("❌ Failed to activate premium:", result.message);
                     alert(`Activation failed: ${result.message}`);

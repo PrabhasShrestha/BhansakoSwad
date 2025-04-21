@@ -1,0 +1,474 @@
+.manage-ingredient-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  
+  .manage-ingredient-modal {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .manage-ingredient-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .manage-ingredient-modal-header h2 {
+    margin: 0;
+    color: #212529;
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+  
+  .manage-ingredient-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #6c757d;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+  
+  .manage-ingredient-close-btn:hover {
+    background-color: #e9ecef;
+    color: #343a40;
+  }
+  
+  .manage-ingredient-modal-content {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
+  }
+  
+  @media (max-width: 992px) {
+    .manage-ingredient-modal-content {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Form Section Styles */
+  .manage-ingredient-form-section {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+  }
+  
+  .manage-ingredient-form-section h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #343a40;
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+  
+  .manage-ingredient-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .manage-ingredient-form-row {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .manage-ingredient-form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .manage-ingredient-form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 6px;
+  }
+  
+  .manage-ingredient-form-group input {
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #212529;
+    background-color: #fff;
+  }
+  
+  .manage-ingredient-form-group input:focus {
+    outline: none;
+    border-color: #4dabf7;
+    box-shadow: 0 0 0 3px rgba(77, 171, 247, 0.15);
+  }
+  
+  .manage-ingredient-alternatives-section {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+  
+  .manage-ingredient-alternatives-section h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1rem;
+    color: #343a40;
+  }
+  
+  .manage-ingredient-alternatives-form {
+    margin-bottom: 16px;
+  }
+  
+  .manage-ingredient-add-alternative-btn {
+    background-color: #20c997;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+  }
+  
+  .manage-ingredient-add-alternative-btn:hover {
+    background-color: #1ab88c;
+  }
+  
+  .manage-ingredient-alternatives-list {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+  }
+  
+  .manage-ingredient-alternatives-list h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #495057;
+  }
+  
+  .manage-ingredient-alternatives-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .manage-ingredient-alternative-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background-color: #fff;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .manage-ingredient-alternative-info {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .manage-ingredient-alternative-nepali {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 3px;
+  }
+  
+  .manage-ingredient-remove-alternative-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+  
+  .manage-ingredient-remove-alternative-btn:hover {
+    background-color: #f8d7da;
+  }
+  
+  .manage-ingredient-form-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .manage-ingredient-submit-btn {
+    background-color: #228be6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+  }
+  
+  .manage-ingredient-submit-btn:hover {
+    background-color: #1c7ed6;
+  }
+  
+  /* Ingredients List Section */
+  .manage-ingredient-list-section {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .manage-ingredient-list-section h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #343a40;
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+  
+  .manage-ingredient-filters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .manage-ingredient-search-container {
+    flex: 1;
+  }
+  
+  .manage-ingredient-search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  
+  .manage-ingredient-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+    overflow-y: auto;
+    max-height: 60vh;
+    padding-right: 8px;
+  }
+  
+  .manage-ingredient-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .manage-ingredient-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+  
+  .manage-ingredient-card.manage-ingredient-editing {
+    background-color: #f8f9fa;
+  }
+  
+  .manage-ingredient-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+  
+  .manage-ingredient-name {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+  }
+  
+  .manage-ingredient-nepali {
+    color: #495057;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+  
+  .manage-ingredient-alternatives {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e9ecef;
+  }
+  
+  .manage-ingredient-alternatives h5 {
+    margin: 0 0 6px 0;
+    font-size: 0.85rem;
+    color: #495057;
+    font-weight: 600;
+  }
+  
+  .manage-ingredient-alternatives ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .manage-ingredient-alternatives li {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+    font-size: 0.85rem;
+  }
+  
+  .manage-ingredient-info {
+    flex: 1;
+  }
+  
+  .manage-ingredient-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  
+  .manage-ingredient-edit-btn, .manage-ingredient-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 6px;
+  }
+  
+  .manage-ingredient-edit-btn {
+    color: #228be6;
+  }
+  
+  .manage-ingredient-edit-btn:hover {
+    background-color: #e7f5ff;
+  }
+  
+  .manage-ingredient-delete-btn {
+    color: #fa5252;
+  }
+  
+  .manage-ingredient-delete-btn:hover {
+    background-color: #fff5f5;
+  }
+  
+  /* Edit Form Styles */
+  .manage-ingredient-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .manage-ingredient-edit-alternatives {
+    background-color: #f1f3f5;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+  }
+  
+  .manage-ingredient-edit-alternatives h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #343a40;
+  }
+  
+  .manage-ingredient-edit-alternative-item {
+    margin-bottom: 8px;
+  }
+  
+  .manage-ingredient-remove-btn {
+    background: none;
+    border: none;
+    color: #fa5252;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  }
+  
+  .manage-ingredient-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .manage-ingredient-save-btn, .manage-ingredient-cancel-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .manage-ingredient-save-btn {
+    background-color: #40c057;
+    color: white;
+  }
+  
+  .manage-ingredient-save-btn:hover {
+    background-color: #37b24d;
+  }
+  
+  .manage-ingredient-cancel-btn {
+    background-color: #adb5bd;
+    color: white;
+  }
+  
+  .manage-ingredient-cancel-btn:hover {
+    background-color: #868e96;
+  }
+  
+  .manage-ingredient-loading-indicator {
+    text-align: center;
+    padding: 30px;
+    color: #6c757d;
+  }
+  
+  .manage-ingredient-no-ingredients {
+    text-align: center;
+    padding: 30px;
+    color: #6c757d;
+  }

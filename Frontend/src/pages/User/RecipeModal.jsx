@@ -1,226 +1,249 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Toast from "../../components/ToastNoti";
-import { FaPlus, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaTrash, FaTimes } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import '../../styles/RecipeModal.css'; // Ensure the CSS file path is correct
 
 const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     const [recipeName, setRecipeName] = useState('');
     const [recipeNameNepali, setRecipeNameNepali] = useState('');
     const [difficulty, setDifficulty] = useState('');
-    const [cookingTime, setCookingTime] = useState('');
+    const [hours, setHours] = useState('');
+    const [minutes, setMinutes] = useState('');
     const [category, setCategory] = useState('');
     const [image, setImage] = useState(null);
     const [cuisine, setCuisine] = useState('');
-    const [toast, setToast] = useState(null);
     const [ingredients, setIngredients] = useState([]);
     const [availableIngredients, setAvailableIngredients] = useState([]);
     const [currentIngredient, setCurrentIngredient] = useState({
         name: '',
-        amount: ''
+        name_ne: '',
+        amount: '',
+        amount_ne: ''
     });
-    const [newIngredientName, setNewIngredientName] = useState('');
+    const [newIngredient, setNewIngredient] = useState({
+        name: '',
+        name_ne: ''
+    });
     const [showNewIngredientInput, setShowNewIngredientInput] = useState(false);
-
-    // Methods state
     const [methods, setMethods] = useState([
         { step_number: 1, description: '', nepali_description: '' }
     ]);
-
-    // Nutrition state
     const [nutrition, setNutrition] = useState([
-        { nutrient: '', value: '', nepali_nutrient: '', nepali_value: '' } // Added nepali_value
+        { nutrient: '', value: '', nepali_nutrient: '', nepali_value: '' }
     ]);
 
-    // Fetch available ingredients on component mount
+    // Utility function to capitalize the first letter of a string
+    const capitalizeFirstLetter = (str) => {
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    };
+
     useEffect(() => {
         if (isOpen) {
             axios.get("http://localhost:3000/api/recipe/ingredients")
                 .then(response => {
-                    setAvailableIngredients(response.data);
+                    // Capitalize the ingredient names when fetched
+                    const capitalizedIngredients = response.data.map(ing => ({
+                        ...ing,
+                        name: capitalizeFirstLetter(ing.name),
+                        name_ne: capitalizeFirstLetter(ing.name_ne)
+                    }));
+                    setAvailableIngredients(capitalizedIngredients);
                 })
                 .catch(error => {
                     console.error("Error fetching ingredients:", error);
-                    showToast("Failed to load ingredients", "error");
+                    toast.error("Failed to load ingredients");
                 });
         }
     }, [isOpen]);
 
-    // Toast helper function
-    const showToast = (message, type) => {
-        setToast({ message, type });
-        setTimeout(() => {
-            setToast(null);
-        }, 3000);
-    };
-
-    // Add a new ingredient to the list
     const addIngredient = () => {
         if (currentIngredient.name && currentIngredient.amount) {
             const isIngredientExists = ingredients.some(ing => ing.name === currentIngredient.name);
             if (!isIngredientExists) {
-                setIngredients([...ingredients, currentIngredient]);
-                setCurrentIngredient({ name: '', amount: '' });
+                setIngredients([...ingredients, {
+                    ...currentIngredient,
+                    name: capitalizeFirstLetter(currentIngredient.name),
+                    name_ne: capitalizeFirstLetter(currentIngredient.name_ne)
+                }]);
+                setCurrentIngredient({ name: '', name_ne: '', amount: '', amount_ne: '' });
+                setShowNewIngredientInput(false);
             } else {
-                showToast("Ingredient already added to the recipe", "info");
+                toast.info("Ingredient already added to the recipe");
             }
         } else {
-            showToast("Please select an ingredient and specify amount", "info");
+            toast.info("Please select an ingredient and specify amount");
         }
     };
 
-    // Remove an ingredient from the list
     const removeIngredient = (index) => {
         const updatedIngredients = [...ingredients];
         updatedIngredients.splice(index, 1);
         setIngredients(updatedIngredients);
     };
 
-    // Add a new custom ingredient to the database
     const addNewIngredient = () => {
-        if (newIngredientName) {
-            axios.post("http://localhost:3000/api/recipe/ingredients/create", { name: newIngredientName })
+        if (newIngredient.name && newIngredient.name_ne) {
+            const capitalizedNewIngredient = {
+                name: capitalizeFirstLetter(newIngredient.name),
+                name_ne: capitalizeFirstLetter(newIngredient.name_ne)
+            };
+            axios.post("http://localhost:3000/api/recipe/ingredients/create", capitalizedNewIngredient)
                 .then(response => {
-                    setAvailableIngredients([...availableIngredients, { name: newIngredientName }]);
-                    setNewIngredientName('');
-                    showToast(`Ingredient "${newIngredientName}" added successfully`, "success");
+                    setAvailableIngredients([...availableIngredients, capitalizedNewIngredient]);
+                    setNewIngredient({ name: '', name_ne: '' });
+                    toast.success(`Ingredient "${capitalizedNewIngredient.name}" added successfully`);
                     setShowNewIngredientInput(false);
+                    setCurrentIngredient({
+                        ...currentIngredient,
+                        name: capitalizedNewIngredient.name,
+                        name_ne: capitalizedNewIngredient.name_ne
+                    });
                 })
                 .catch(error => {
                     console.error("Error adding new ingredient:", error);
-                    showToast("Failed to add new ingredient", "error");
+                    toast.error("Failed to add new ingredient");
                 });
         } else {
-            showToast("Please enter an ingredient name", "info");
+            toast.info("Please enter both English and Nepali names for the new ingredient");
         }
     };
 
-    // Toggle new ingredient input
-    const toggleNewIngredientInput = () => {
-        setShowNewIngredientInput(!showNewIngredientInput);
+    const handleIngredientChange = (e) => {
+        const selectedName = e.target.value;
+        if (selectedName === 'other') {
+            setShowNewIngredientInput(true);
+            setCurrentIngredient({ ...currentIngredient, name: '', name_ne: '' });
+        } else {
+            const selectedIngredient = availableIngredients.find(ing => ing.name === selectedName);
+            setCurrentIngredient({
+                ...currentIngredient,
+                name: selectedName,
+                name_ne: selectedIngredient?.name_ne || ''
+            });
+            setShowNewIngredientInput(false);
+        }
     };
 
-    // Add a new method step
     const addMethodStep = () => {
         setMethods([
-            ...methods, 
+            ...methods,
             { step_number: methods.length + 1, description: '', nepali_description: '' }
         ]);
     };
 
-    // Update a method step
     const updateMethodStep = (index, field, value) => {
         const updatedMethods = [...methods];
         updatedMethods[index][field] = value;
         setMethods(updatedMethods);
     };
 
-    // Add a new nutrition entry
     const addNutritionEntry = () => {
         setNutrition([
-            ...nutrition, 
+            ...nutrition,
             { nutrient: '', value: '', nepali_nutrient: '', nepali_value: '' }
         ]);
     };
 
-    // Update nutrition entry
     const updateNutritionEntry = (index, field, value) => {
         const updatedNutrition = [...nutrition];
         updatedNutrition[index][field] = value;
         setNutrition(updatedNutrition);
     };
 
-    // Handle image upload
     const handleImageUpload = (e) => {
         setImage(e.target.files[0]);
     };
 
-    // Submit recipe
     const handleSubmitRecipe = () => {
-        // Validate required fields
-        if (!recipeName || !difficulty || !cookingTime || !category) {
-            showToast("Please fill in all required fields", "error");
+        if (!recipeName || !difficulty || (!hours && !minutes) || !category) {
+            toast.error("Please fill in all required fields");
             return;
         }
-    
-        // Validate ingredients
+
         if (ingredients.length === 0) {
-            showToast("Please add at least one ingredient", "error");
+            toast.error("Please add at least one ingredient");
             return;
         }
-    
-        // Validate methods
+
         const validMethods = methods.filter(method => method.description.trim() !== '');
         if (validMethods.length === 0) {
-            showToast("Please add at least one cooking method step", "error");
+            toast.error("Please add at least one cooking method step");
             return;
         }
-    
+
+        const formattedHours = hours || "0";
+        const formattedMinutes = minutes || "0";
+        const cookingTime = `${formattedHours} hour${formattedHours === "1" ? "" : "s"} ${formattedMinutes} minute${formattedMinutes === "1" ? "" : "s"}`;
+
         const recipeData = {
             title: recipeName,
-            title_ne: recipeNameNepali, // Changed from title_nepali to title_ne
-            difficulty: difficulty,
+            title_ne: recipeNameNepali,
+            difficulty,
             cooking_time: cookingTime,
-            category: category,
-            ingredients: ingredients,
-            cuisine: cuisine,
+            category,
+            ingredients,
+            cuisine,
             methods: validMethods.map(method => ({
                 description: method.description,
-                nepali_description: method.nepali_description // Already matches backend
+                nepali_description: method.nepali_description
             })),
             nutrition: nutrition.filter(n => n.nutrient && n.value).map(item => ({
                 nutrient: item.nutrient,
                 value: item.value,
                 nepali_nutrient: item.nepali_nutrient,
-                value_ne: item.nepali_value || item.value // Use nepali_value if provided, else use value
+                value_ne: item.nepali_value || item.value
             }))
         };
-    
+
         const formData = new FormData();
-        
-        // Append all recipe data fields
-        Object.keys(recipeData).forEach(key => {
-            formData.append(key, JSON.stringify(recipeData[key]));
-        });
-        
-        // Append image if exists
+        formData.append('title', JSON.stringify(recipeData.title));
+        formData.append('title_ne', JSON.stringify(recipeData.title_ne));
+        formData.append('difficulty', JSON.stringify(recipeData.difficulty));
+        formData.append('cooking_time', JSON.stringify(recipeData.cooking_time));
+        formData.append('category', JSON.stringify(recipeData.category));
+        formData.append('cuisine', JSON.stringify(recipeData.cuisine));
+        formData.append('ingredients', JSON.stringify(recipeData.ingredients));
+        formData.append('methods', JSON.stringify(recipeData.methods));
+        formData.append('nutrition', JSON.stringify(recipeData.nutrition));
         if (image) {
-            const filename = `recipe_${Date.now()}_${image.name}`;
-            formData.append('image_url', filename);
             formData.append('image', image);
         }
-    
+
         axios.post("http://localhost:3000/api/recipe/addrecipe", formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
                 'Authorization': `Bearer ${localStorage.getItem("token")}`,
             }
         })
-        .then(response => {
-            console.log("Recipe added successfully", response.data);
-            resetForm();
-        
-            if (response.data.approval_status === 'pending') {
-                showToast("Recipe submitted and awaiting admin approval.", "info");
-            } else {
-                showToast("Recipe created successfully!", "success"); // Aligned with backend message
-            }
-        
-            setTimeout(() => {
-                onClose();
-                onSubmit();
-            }, 1000);
-        })
-        .catch(error => {
-            console.error("Error adding recipe:", error.response?.data || error);
-            showToast("Failed to add recipe. Please check your inputs.", "error");
-        });
+            .then(response => {
+                console.log("Recipe added successfully", response.data);
+                resetForm();
+
+                if (response.data.approval_status === 'pending') {
+                    toast.info("Recipe submitted and awaiting admin approval.");
+                } else {
+                    toast.success("Recipe created successfully!");
+                }
+
+                setTimeout(() => {
+                    onClose();
+                    onSubmit();
+                }, 1000);
+            })
+            .catch(error => {
+                console.error("Error adding recipe:", error.response?.data || error);
+                toast.error("Failed to add recipe: " + (error.response?.data?.message || "Please check your inputs."));
+            });
     };
 
     const resetForm = () => {
         setRecipeName('');
         setRecipeNameNepali('');
         setDifficulty('');
-        setCookingTime('');
+        setHours('');
+        setMinutes('');
         setCategory('');
         setImage(null);
         setIngredients([]);
@@ -233,153 +256,219 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
 
     return (
         <div className="recipemodal-overlay">
-            {toast && (
-                <Toast
-                    type={toast.type}
-                    message={toast.message}
-                    onClose={() => setToast(null)}
-                />
-            )}
-            
             <div className="recipemodal-content">
+                <button className="recipemodal-close-btn" onClick={onClose} aria-label="Close modal">
+                    <FaTimes />
+                </button>
                 <h2>Add New Recipe</h2>
+                
                 <div className="recipe-form-section">
                     <h3>Recipe Basics</h3>
-                    <input 
-                        type="text" 
-                        placeholder="Recipe Name" 
-                        value={recipeName} 
-                        onChange={(e) => setRecipeName(e.target.value)} 
-                    />
-                    <input 
-                        type="text" 
-                        placeholder="Recipe Name in Nepali" 
-                        value={recipeNameNepali} 
-                        onChange={(e) => setRecipeNameNepali(e.target.value)} 
-                    />
-                    <select 
-                        value={difficulty} 
-                        onChange={(e) => setDifficulty(e.target.value)}
-                    >
-                        <option value="">Select Difficulty</option>
-                        <option value="Easy">Easy</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Hard">Hard</option>
-                    </select>
-                    <input 
-                        type="text" 
-                        placeholder="Cooking Time (e.g., 30 mins)" 
-                        value={cookingTime} 
-                        onChange={(e) => setCookingTime(e.target.value)} 
-                    />
-                    <select 
-                        value={category} 
-                        onChange={(e) => setCategory(e.target.value)}
-                    >
-                        <option value="">Select Category</option>
-                        <option value="Vegetarian">Vegetarian</option>
-                        <option value="Pescatarian">Pescatarian</option>
-                        <option value="Non-Vegetarian">Non-Vegetarian</option>
-                        <option value="Vegan">Vegan</option>
-                        <option value="Gluten-Free">Gluten-Free</option>
-                    </select>
-                    <select 
-                        value={cuisine} 
-                        onChange={(e) => setCuisine(e.target.value)}
-                    >
-                        <option value="">(Optional) Select Cuisine</option>
-                        <option value="Italian">Italian</option>
-                        <option value="Mexican">Mexican</option>
-                        <option value="Japanese">Japanese</option>
-                        <option value="Indian">Indian</option>
-                        <option value="Nepali">Nepali</option>
-                        <option value="Thai">Thai</option>
-                        <option value="Turkish">Turkish</option>
-                        <option value="Chinese">Chinese</option>
-                    </select>
+                    <div className="input-group">
+                        <span className="input-label">Recipe Name</span>
+                        <input
+                            type="text"
+                            placeholder="Enter recipe name"
+                            value={recipeName}
+                            onChange={(e) => setRecipeName(e.target.value)}
+                        />
+                    </div>
+                    
+                    <div className="input-group">
+                        <span className="input-label">Recipe Name in Nepali</span>
+                        <input
+                            type="text"
+                            placeholder="Enter recipe name in Nepali"
+                            value={recipeNameNepali}
+                            onChange={(e) => setRecipeNameNepali(e.target.value)}
+                        />
+                    </div>
+                    
+                    <div className="input-group">
+                        <span className="input-label">Difficulty Level</span>
+                        <select
+                            value={difficulty}
+                            onChange={(e) => setDifficulty(e.target.value)}
+                        >
+                            <option value="">Select Difficulty</option>
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                        </select>
+                    </div>
+                    
+                    <div className="cooking-time-input">
+                        <div className="time-input-wrapper">
+                            <span className="input-label">Hours</span>
+                            <input
+                                type="number"
+                                placeholder="0"
+                                value={hours}
+                                onChange={(e) => setHours(e.target.value)}
+                                min="0"
+                            />
+                        </div>
+                        <span>hours</span>
+                        
+                        <div className="time-input-wrapper">
+                            <span className="input-label">Minutes</span>
+                            <input
+                                type="number"
+                                placeholder="0"
+                                value={minutes}
+                                onChange={(e) => setMinutes(e.target.value)}
+                                min="0"
+                            />
+                        </div>
+                        <span>minutes</span>
+                    </div>
+                    
+                    <div className="input-group">
+                        <span className="input-label">Category</span>
+                        <select
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                        >
+                            <option value="">Select Category</option>
+                            <option value="Vegetarian">Vegetarian</option>
+                            <option value="Pescatarian">Pescatarian</option>
+                            <option value="Non-Vegetarian">Non-Vegetarian</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Gluten-Free">Gluten-Free</option>
+                        </select>
+                    </div>
+                    
+                    <div className="input-group">
+                        <span className="input-label">Cuisine (Optional)</span>
+                        <select
+                            value={cuisine}
+                            onChange={(e) => setCuisine(e.target.value)}
+                        >
+                            <option value="">Select Cuisine</option>
+                            <option value="Italian">Italian</option>
+                            <option value="Mexican">Mexican</option>
+                            <option value="Japanese">Japanese</option>
+                            <option value="Indian">Indian</option>
+                            <option value="Nepali">Nepali</option>
+                            <option value="Thai">Thai</option>
+                            <option value="Turkish">Turkish</option>
+                            <option value="Chinese">Chinese</option>
+                        </select>
+                    </div>
                 </div>
 
-                {/* Ingredients Section */}
                 <div className="recipe-form-section">
                     <h3>Ingredients</h3>
                     <div className="ingredient-input">
-                        <select 
-                            value={currentIngredient.name} 
-                            onChange={(e) => setCurrentIngredient({
-                                ...currentIngredient, 
-                                name: e.target.value
-                            })}
-                        >
-                            <option value="">Select Ingredient</option>
-                            {availableIngredients.map((ing, index) => (
-                                <option key={index} value={ing.name}>
-                                    {ing.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input 
-                            type="text" 
-                            placeholder="Amount (e.g., 2 cups)" 
-                            value={currentIngredient.amount} 
-                            onChange={(e) => setCurrentIngredient({
-                                ...currentIngredient, 
-                                amount: e.target.value
-                            })}
-                        />
-                        <button className='add-recipe-ingridients' onClick={addIngredient}>
+                        <div className="ingredient-select-wrapper">
+                            <span className="input-label">Select Ingredient</span>
+                            <select
+                                value={currentIngredient.name}
+                                onChange={handleIngredientChange}
+                            >
+                                <option value="">Select Ingredient</option>
+                                {availableIngredients.map((ing, index) => (
+                                    <option key={index} value={ing.name}>
+                                        {ing.name}
+                                    </option>
+                                ))}
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div className="ingredient-amount-wrapper">
+                            <span className="input-label">Amount (e.g., 2 cups)</span>
+                            <input
+                                type="text"
+                                value={currentIngredient.amount}
+                                onChange={(e) => setCurrentIngredient({
+                                    ...currentIngredient,
+                                    amount: e.target.value
+                                })}
+                            />
+                        </div>
+
+                        <div className="ingredient-amount-wrapper">
+                            <span className="input-label">Amount in Nepali</span>
+                            <input
+                                type="text"
+                                value={currentIngredient.amount_ne}
+                                onChange={(e) => setCurrentIngredient({
+                                    ...currentIngredient,
+                                    amount_ne: e.target.value
+                                })}
+                            />
+                        </div>
+
+                        <button className="add-recipe-ingredients" onClick={addIngredient}>
                             <FaPlus /> Add Ingredient
-                        </button>
-                        
-                        <button className='create-ingredient-btn' onClick={toggleNewIngredientInput}>
-                            {showNewIngredientInput ? 'Hide' : 'Add New Ingredient'}
                         </button>
                     </div>
 
-                    {/* New Ingredient Creation */}
                     {showNewIngredientInput && (
                         <div className="new-ingredient-input">
-                            <input 
-                                type="text" 
-                                placeholder="Add New Ingredient" 
-                                value={newIngredientName} 
-                                onChange={(e) => setNewIngredientName(e.target.value)} 
-                            />
-                            <button className='create-recipe-ingridient' onClick={addNewIngredient}>
+                            <div className="new-ingredient-wrapper">
+                                <span className="input-label">New Ingredient (English)</span>
+                                <input
+                                    type="text"
+                                    value={newIngredient.name}
+                                    onChange={(e) => setNewIngredient({
+                                        ...newIngredient,
+                                        name: e.target.value
+                                    })}
+                                />
+                            </div>
+                            <div className="new-ingredient-wrapper">
+                                <span className="input-label">New Ingredient (Nepali)</span>
+                                <input
+                                    type="text"
+                                    value={newIngredient.name_ne}
+                                    onChange={(e) => setNewIngredient({
+                                        ...newIngredient,
+                                        name_ne: e.target.value
+                                    })}
+                                />
+                            </div>
+                            <button className="create-recipe-ingredient" onClick={addNewIngredient}>
                                 <FaPlus /> Create Ingredient
                             </button>
                         </div>
                     )}
 
-                    {/* Ingredients List */}
                     <div className="ingredients-list">
                         {ingredients.map((ing, index) => (
                             <div key={index} className="ingredient-tag">
-                                {ing.name} - {ing.amount}
-                                <FaTrash 
-                                    className="remove-btn" 
-                                    onClick={() => removeIngredient(index)} 
+                                {ing.name} - {ing.amount} {ing.amount_ne && `(${ing.amount_ne})`}
+                                <FaTrash
+                                    className="addrecipe-remove-btn"
+                                    onClick={() => removeIngredient(index)}
                                 />
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Methods/Steps Section */}
                 <div className="recipe-form-section">
                     <h3>Cooking Methods</h3>
                     {methods.map((step, index) => (
                         <div key={index} className="method-step">
                             <label>Step {step.step_number}</label>
-                            <textarea 
-                                value={step.description} 
-                                onChange={(e) => updateMethodStep(index, 'description', e.target.value)}
-                                placeholder={`Describe step ${step.step_number}`}
-                            />
-                            <textarea 
-                                value={step.nepali_description} 
-                                onChange={(e) => updateMethodStep(index, 'nepali_description', e.target.value)}
-                                placeholder={`Describe step ${step.step_number} in Nepali`}
-                            />
+                            <div className="input-group">
+                                <span className="input-label">Description</span>
+                                <textarea
+                                    value={step.description}
+                                    onChange={(e) => updateMethodStep(index, 'description', e.target.value)}
+                                    placeholder={`Describe step ${step.step_number}`}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <span className="input-label">Description in Nepali</span>
+                                <textarea
+                                    value={step.nepali_description}
+                                    onChange={(e) => updateMethodStep(index, 'nepali_description', e.target.value)}
+                                    placeholder={`Describe step ${step.step_number} in Nepali`}
+                                />
+                            </div>
                         </div>
                     ))}
                     <button onClick={addMethodStep}>
@@ -387,35 +476,42 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                     </button>
                 </div>
 
-                {/* Nutrition Section */}
                 <div className="recipe-form-section">
                     <h3>Nutrition Information</h3>
                     {nutrition.map((item, index) => (
                         <div key={index} className="nutrition-entry">
-                            <input 
-                                type="text" 
-                                placeholder="Nutrient (e.g., Calories)" 
-                                value={item.nutrient}
-                                onChange={(e) => updateNutritionEntry(index, 'nutrient', e.target.value)}
-                            />
-                            <input 
-                                type="text" 
-                                placeholder="Nutrient in Nepali" 
-                                value={item.nepali_nutrient}
-                                onChange={(e) => updateNutritionEntry(index, 'nepali_nutrient', e.target.value)}
-                            />
-                            <input 
-                                type="text" 
-                                placeholder="Value (e.g., 250)" 
-                                value={item.value}
-                                onChange={(e) => updateNutritionEntry(index, 'value', e.target.value)}
-                            />
-                            <input 
-                                type="text" 
-                                placeholder="Value in Nepali" 
-                                value={item.nepali_value}
-                                onChange={(e) => updateNutritionEntry(index, 'nepali_value', e.target.value)}
-                            />
+                            <div className="nutrition-field">
+                                <label>Nutrient (e.g., Calories)</label>
+                                <input
+                                    type="text"
+                                    value={item.nutrient}
+                                    onChange={(e) => updateNutritionEntry(index, 'nutrient', e.target.value)}
+                                />
+                            </div>
+                            <div className="nutrition-field">
+                                <label>Nutrient in Nepali</label>
+                                <input
+                                    type="text"
+                                    value={item.nepali_nutrient}
+                                    onChange={(e) => updateNutritionEntry(index, 'nepali_nutrient', e.target.value)}
+                                />
+                            </div>
+                            <div className="nutrition-field">
+                                <label>Value (e.g., 250)</label>
+                                <input
+                                    type="text"
+                                    value={item.value}
+                                    onChange={(e) => updateNutritionEntry(index, 'value', e.target.value)}
+                                />
+                            </div>
+                            <div className="nutrition-field">
+                                <label>Value in Nepali</label>
+                                <input
+                                    type="text"
+                                    value={item.nepali_value}
+                                    onChange={(e) => updateNutritionEntry(index, 'nepali_value', e.target.value)}
+                                />
+                            </div>
                         </div>
                     ))}
                     <button onClick={addNutritionEntry}>
@@ -423,17 +519,18 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
                     </button>
                 </div>
 
-                {/* Image Upload */}
                 <div className="recipe-form-section">
                     <h3>Recipe Image</h3>
-                    <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleImageUpload} 
-                    />
+                    <div className="input-group">
+                        <span className="input-label">Upload Image</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                        />
+                    </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="recipemodal-actions">
                     <button onClick={handleSubmitRecipe}>
                         Submit Recipe

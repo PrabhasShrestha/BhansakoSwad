@@ -6,7 +6,6 @@ import VerificationCode from "./pages/User/VerificationCode";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgetPass";
 import CreateNewPassword from "./pages/NewPass";
-import Index from "./components/Index";
 import Home from "./pages/Home";
 import AboutUs from "./pages/User/AboutUs";
 import SellerSignUp from "./pages/SellerSignUp";
@@ -36,6 +35,8 @@ import AdminProducts from "./pages/Admin/AdminProducts";
 import AdminUserPanel from "./pages/Admin/AdminUser";
 import AdminRecipePanel from "./pages/Admin/AdminRecipe";
 import ChefApproval from "./pages/Admin/AdminChef";
+import ChefDetails from "./pages/User/ChefDetails";
+import ChefDashboard from "./pages/ChefDahboard";
 
 
 
@@ -51,8 +52,7 @@ function App() {
   <Route path="/ForgotPass" element={<ForgotPassword />} />
   <Route path="/NewPass" element={<CreateNewPassword />} />
   <Route path="/NewSellerPass" element={<CreateNewSellerPassword />} />
-  <Route path="/" element={<Index />} />
-  <Route path="/home" element={<Home />} />
+  <Route path="/" element={<Home />} />
   <Route path="/aboutus" element={<AboutUs />} />
   <Route path="/contact" element={<ContactSection />} />
   <Route path="/recipes" element={<MainRecipe/>} />
@@ -78,6 +78,8 @@ function App() {
   <Route path="/adminuserpanel" element={<AdminUserPanel/>}/>
   <Route path="/adminrecipes" element={<AdminRecipePanel/>}/>
   <Route path="/adminchef" element={<ChefApproval/>}/>
+  <Route path="/chef/:id" element={<ChefDetails/>}/>
+  <Route path="/chefdashboard" element={<ChefDashboard/>}/>
 </Routes>
   <ToastContainer />
   </>

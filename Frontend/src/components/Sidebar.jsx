@@ -20,7 +20,7 @@ const Sidebar = () => {
             <a href="/sellerprofile">Account</a>
           </li>
           <li className="dashboard-menu-item">
-            <a href="/vendor/store">View your Store</a>
+            <a href="/">View Website</a>
           </li>
         </ul>
       </nav>

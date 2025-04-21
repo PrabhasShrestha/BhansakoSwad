@@ -19,7 +19,7 @@ const AdminSidebar = () => {
     { path: '/adminrecipes', icon: '🍲', label: 'Recipes' },
     { path: '/admintestimonials', icon: '💬', label: 'Testimonials' },
     { path: '/adminchef', icon: '👨‍🍳', label: 'Chef Administration' },
-    { path: '/home', icon: '<-', label: 'View Website' },
+    { path: '/', icon: '<-', label: 'View Website' },
   ];
 
   return (
