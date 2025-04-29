@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../../styles/UserSignUp.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Importing new eye icons
-
+import { FaEye, FaEyeSlash } from "react-icons/fa"; 
 function UserSignUp() {
   const [formData, setFormData] = useState({
     first_name: "",
@@ -15,8 +14,8 @@ function UserSignUp() {
   });
 
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false); // Toggle visibility of password
-  const navigate = useNavigate(); // Use navigate hook
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate(); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,13 +59,13 @@ function UserSignUp() {
           password: "",
         });
         setErrors({});
-        navigate("/verify"); // Navigate to the verification page
+        navigate("/verify"); 
       } catch (error) {
         if (error.response?.status === 409) {
-          // Handle duplicate email error
+          
           setErrors({ email: "This email is already registered" });
         } else {
-          // Handle other API errors
+          
           console.error(
             "Error during registration:",
             error.response?.data?.message || error.message
@@ -81,7 +80,6 @@ function UserSignUp() {
 
   return (
     <div className="container">
-      {/* Left Section: Sign Up Form */}
       <div className="form-section">
         <h2>HEY! WELCOME</h2>
         <h1>SIGN UP</h1>
@@ -189,7 +187,7 @@ function UserSignUp() {
         </p>
       </div>
 
-      {/* Right Section: Information Section */}
+
       <div className="info-section">
         <h1>CREATE ACCOUNT</h1>
         <h1 style={{ fontSize: "30px" }}>What Will You Get?</h1>

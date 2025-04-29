@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { ToastContainer, toast } from 'react-toastify';
 import "../styles/Login.css";
 
 const Login = () => {
@@ -14,7 +15,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // Debug state changes
   useEffect(() => {
     console.log("isUnverified:", isUnverified);
   }, [isUnverified]);
@@ -28,11 +28,14 @@ const Login = () => {
     const newErrors = {};
     if (!formData.email) {
       newErrors.email = "Email is required";
+      toast.error("Email is required");
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Valid email is required";
+      toast.error("Valid email is required");
     }
     if (!formData.password) {
       newErrors.password = "Password is required";
+      toast.error("Password is required");
     }
     return newErrors;
   };
@@ -54,6 +57,7 @@ const Login = () => {
       const user = response.data.user;
       if (user.isVerified === 0) {
         setIsUnverified(true);
+        toast.error("Your account is not verified. Please verify your email by resending the code");
         return;
       }
 
@@ -90,32 +94,37 @@ const Login = () => {
         localStorage.setItem("userId", user.id);
       }
 
+      toast.success("User successfully logged in!");
       navigate("/");
     } catch (error) {
       if (error.response?.status === 401) {
         setErrors({ password: "Invalid password. Please try again." });
+        toast.error("Invalid password. Please try again.");
       } else if (error.response?.status === 404) {
         setErrors({ email: "Account not found. Please register first." });
+        toast.error("Account not found. Please register first.");
       } else if (error.response?.status === 409) {
         setErrors({
           api: "Your account has been deactivated by the admin. Please contact support.",
         });
+        toast.error("Your account has been deactivated by the admin. Please contact support.");
       } else if (error.response?.status === 403) {
         setErrors({
           api: "Your account is not verified. Please verify your email by resending the code",
         });
-        setIsUnverified(true); 
+        setIsUnverified(true);
+        toast.error("Your account is not verified. Please verify your email by resending the code");
       } else {
         setErrors({ api: "Login failed. Please try again later." });
+        toast.error("Login failed. Please try again later.");
       }
     }
   };
 
   const handleResendCodeNavigation = () => {
-    // Store the email in localStorage before navigating
     localStorage.setItem("email", formData.email);
-    // Navigate to /verify with the email as route state
     navigate("/verify", { state: { email: formData.email } });
+    toast.info("Navigating to verification page");
   };
 
   const togglePasswordVisibility = () => {
@@ -124,6 +133,7 @@ const Login = () => {
 
   return (
     <div className="login-container">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="login-left">
         <h2>Bhansako Swad</h2>
       </div>
@@ -140,7 +150,6 @@ const Login = () => {
             placeholder="Enter your email"
             className={errors.email ? "error-input" : ""}
           />
-          {errors.email && <span className="error-message">{errors.email}</span>}
 
           <label htmlFor="password">Password:</label>
           <div className="password-input-container">
@@ -156,8 +165,6 @@ const Login = () => {
               {showPassword ? <AiFillEye /> : <AiFillEyeInvisible />}
             </div>
           </div>
-          {errors.password && <span className="error-message">{errors.password}</span>}
-          {errors.api && <span className="error-message">{errors.api}</span>}
 
           <div className="forget-password-re-send">
             {isUnverified && (

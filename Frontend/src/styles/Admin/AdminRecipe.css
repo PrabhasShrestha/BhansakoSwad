@@ -853,45 +853,44 @@ p {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-  .admin-layout {
-    flex-direction: column;
-  }
-  
-  .admin-form-row {
-    flex-direction: column;
-  }
-  
   .admin-search-container {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: stretch; /* Stretch elements to full width */
   }
-  
+
   .admin-search-input-wrapper {
-    width: 100%;
-    margin-right: 0;
+    min-width: 100%; /* Take full width on smaller screens */
   }
-  
+
   .admin-button-group {
-    justify-content: space-between;
+    justify-content: center; /* Center buttons */
+    margin-top: 0.5rem; /* Add spacing above buttons */
   }
-  
-  .admin-ingredients-list {
-    grid-template-columns: 1fr;
+
+  .admin-dashboard-add-recipe-btn,
+  .admin-dashboard-manage-recipe-btn {
+    width: 100%; /* Make buttons full-width */
+    max-width: none; /* Remove max-width restriction */
+    justify-content: center; /* Center text in buttons */
   }
-  
+}
+
+@media (max-width: 480px) {
   .admin-search-section {
-    flex-direction: column;
-    gap: 1rem;
+    padding: 1rem; /* Reduce padding on very small screens */
   }
-  
-  .admin-view-recipe-modal .admin-view-modal-content {
-    flex-direction: column;
+
+  .admin-search-input-wrapper {
+    min-width: 100%; /* Ensure full width */
   }
-  
-  .admin-view-recipe-image {
-    flex: 0 0 auto;
-    margin-right: 0;
-    margin-bottom: 20px;
+
+  .admin-button-group {
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 0.5rem; /* Adjust gap between buttons */
+  }
+
+  .admin-dashboard-add-recipe-btn,
+  .admin-dashboard-manage-recipe-btn {
+    padding: 0.5rem; /* Adjust padding for smaller buttons */
   }
 }

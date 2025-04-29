@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEdit, FaPlus, FaTrash, FaEye, FaChartBar, FaUsers, FaGlobe, FaUtensils, FaStar } from 'react-icons/fa';
+import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import { toast } from 'react-toastify';
 import RecipeModal from './User/RecipeModal';
 import EditRecipeModal from './EditRecipeModal';
@@ -28,6 +29,20 @@ const ChefDashboard = () => {
   const [recipeImagePreview, setRecipeImagePreview] = useState(null);
   const [allIngredients, setAllIngredients] = useState([]);
   const [translated, setTranslated] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showPassword, setShowPassword] = useState({
+    oldPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -38,7 +53,6 @@ const ChefDashboard = () => {
           return;
         }
 
-        // Fetch chef data
         const chefResponse = await axios.get('http://localhost:3000/api/chef/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -48,19 +62,16 @@ const ChefDashboard = () => {
         }
         setChef(chefData);
 
-        // Fetch recipes for the chef
         const recipesResponse = await axios.get('http://localhost:3000/api/chef/recipes', {
           headers: { Authorization: `Bearer ${token}` },
         });
         let fetchedRecipes = recipesResponse.data;
 
-        // Fetch ratings
         const ratingsResponse = await axios.get('http://localhost:3000/api/chef/ratings', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const ratings = ratingsResponse.data;
 
-        // Map ratings to recipes
         fetchedRecipes = fetchedRecipes.map(recipe => {
           const recipeRatings = ratings.filter(rating => rating.recipe_id === recipe.id);
           const avgRating = recipeRatings.length
@@ -69,13 +80,12 @@ const ChefDashboard = () => {
           return {
             ...recipe,
             rating: avgRating,
-            views: 0, // Placeholder: Backend does not provide views
+            views: 0,
           };
         });
 
         setRecipes(fetchedRecipes);
 
-        // Calculate stats
         const totalRecipes = fetchedRecipes.length;
         const totalViews = fetchedRecipes.reduce((sum, recipe) => sum + recipe.views, 0);
         const averageRating = totalRecipes
@@ -84,7 +94,6 @@ const ChefDashboard = () => {
 
         setStats({ totalRecipes, totalViews, averageRating });
 
-        // Fetch all ingredients
         const ingredientsResponse = await axios.get('http://localhost:3000/api/recipe/ingredients', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -119,7 +128,7 @@ const ChefDashboard = () => {
         return {
           ...recipe,
           rating: avgRating,
-          views: 0, // Placeholder: Backend does not provide views
+          views: 0,
         };
       });
 
@@ -140,7 +149,6 @@ const ChefDashboard = () => {
 
   const openEditModal = async (recipe) => {
     try {
-      console.log("Opening edit modal for recipe:", recipe);
       const token = localStorage.getItem('token');
       const response = await axios.get(`http://localhost:3000/api/recipe/recipe/${recipe.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -188,7 +196,6 @@ const ChefDashboard = () => {
 
   const viewRecipe = async (recipeId) => {
     try {
-      console.log("Fetching recipe with ID:", recipeId);
       const token = localStorage.getItem('token');
       const response = await axios.get(`http://localhost:3000/api/recipe/recipe/${recipeId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -224,7 +231,7 @@ const ChefDashboard = () => {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-
+  
     const formData = new FormData();
     formData.append('title', selectedRecipe.title);
     formData.append('title_ne', selectedRecipe.title_ne || '');
@@ -232,26 +239,29 @@ const ChefDashboard = () => {
     formData.append('cooking_time', selectedRecipe.cooking_time);
     formData.append('category', selectedRecipe.category);
     formData.append('cuisine', selectedRecipe.cuisine || '');
-
-    const finalIngredients = ingredients.map(({ ingredient, amount, customIngredient }) => ({
+  
+    const finalIngredients = ingredients.map(({ id, ingredient, amount, amount_ne, customIngredient }) => ({
+      id: id || undefined, // Include the ID for existing ingredients, undefined for new ones
       name: ingredient === 'Other' && customIngredient.trim() !== '' ? customIngredient : ingredient,
       amount: amount,
+      amount_ne: amount_ne || undefined, // Include the Nepali amount
     }));
     formData.append('ingredients', JSON.stringify(finalIngredients));
-
-    const finalMethods = cookingSteps.map(({ step, step_ne }, index) => ({
+  
+    const finalMethods = cookingSteps.map(({ id, step, step_ne }, index) => ({
+      id: id || undefined, // Include the ID for existing methods, undefined for new ones
       step_number: index + 1,
       description: step,
-      nepali_description: step_ne || null,
+      description_ne: step_ne || null, // Rename to match backend expectation
     }));
     formData.append('methods', JSON.stringify(finalMethods));
-
+  
     formData.append('nutrition', JSON.stringify(nutritionInfo));
-
+  
     if (recipeImageFile) {
       formData.append('image', recipeImageFile);
     }
-
+  
     try {
       const token = localStorage.getItem('token');
       await axios.post(
@@ -264,7 +274,7 @@ const ChefDashboard = () => {
           },
         }
       );
-
+  
       toast.success('Recipe updated successfully');
       handleRecipeAdded();
       setIsEditModalOpen(false);
@@ -306,11 +316,12 @@ const ChefDashboard = () => {
         .then(response => {
           const photoUrl = `http://localhost:3000${response.data.photoUrl}`;
           setChef({ ...chef, photo: photoUrl });
-          toast.success('Profile photo uploaded successfully');
+          setSuccessMessage('Profile photo uploaded successfully');
+          setTimeout(() => setSuccessMessage(''), 3000);
         })
         .catch(error => {
           console.error('Error uploading photo:', error);
-          toast.error('Failed to upload photo');
+          setErrorMessage('Failed to upload photo');
         });
     }
   };
@@ -327,16 +338,84 @@ const ChefDashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.put('http://localhost:3000/api/chef/profile', updatedProfile, {
+      await axios.post('http://localhost:3000/api/chef/profile', updatedProfile, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setChef({ ...chef, ...updatedProfile });
-      toast.success('Profile updated successfully');
+      setSuccessMessage('Profile updated successfully');
+      setEditMode(false);
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       console.error('Error updating profile:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.msg || 'Server error';
-      toast.error(`Failed to update profile: ${errorMessage}`);
+      const errorMsg = error.response?.data?.msg || 'Server error';
+      setErrorMessage(`Failed to update profile: ${errorMsg}`);
     }
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({ ...passwordData, [name]: value });
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPassword((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  const handleSubmitPasswordChange = (e) => {
+    e.preventDefault();
+
+    if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setErrorMessage('All fields are required.');
+      setSuccessMessage('');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setErrorMessage('New password and confirm password do not match.');
+      setSuccessMessage('');
+      return;
+    }
+
+    axios
+      .post(
+        'http://localhost:3000/api/change-password',
+        {
+          oldPassword: passwordData.oldPassword,
+          newPassword: passwordData.newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      )
+      .then((response) => {
+        setSuccessMessage(response.data.message || 'Password updated successfully.');
+        setErrorMessage('');
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setTimeout(() => {
+          setIsChangePasswordOpen(false);
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+        }, 2000);
+      })
+      .catch((error) => {
+        setErrorMessage(error.response?.data?.message || 'Failed to change password. Please try again.');
+        setSuccessMessage('');
+      });
+  };
+
+  const handleEditClick = () => {
+    setEditMode(true);
+  };
+
+  const handleCancelClick = () => {
+    setEditMode(false);
+    setErrorMessage('');
+    setSuccessMessage('');
   };
 
   const addIngredient = () => {
@@ -532,57 +611,107 @@ const ChefDashboard = () => {
           <div className="chef-dashboard-profile-content">
             <h2>My Profile</h2>
             {chef ? (
-              <form onSubmit={handleProfileUpdate} className="chef-dashboard-profile-grid">
-                <div className="chef-dashboard-profile-image-section">
-                  <div className="chef-dashboard-profile-image-container">
-                    {chef.photo ? (
-                      <img src={chef.photo} alt="Profile" className="chef-dashboard-profile-photo" />
-                    ) : (
-                      <div className="chef-dashboard-chef-initials">
-                        {chef.name?.split(' ').map(n => n[0]).join('') || 'C'}
+              <div className="profile-wrapper">
+                <div className="profile-info">
+                  <div className="chef-dashboard-profile-image-section">
+                    <div className="chef-dashboard-profile-image-container">
+                      {chef.photo ? (
+                        <img src={chef.photo} alt="Profile" className="profile-avatar" />
+                      ) : (
+                        <div className="chef-dashboard-chef-initials">
+                          {chef.name?.split(' ').map(n => n[0]).join('') || 'C'}
+                        </div>
+                      )}
+                      <div className="chef-dashboard-chef-icon">
+                        <svg viewBox="0 0 50 50" className="chef-dashboard-chef-hat">
+                          <path d="M10,25C10,15,20,10,25,10c5,0,15,5,15,15c0,5-2,10-7,10h-16C12,35,10,30,10,25z" />
+                          <ellipse cx="25" cy="7" rx="12" ry="3" />
+                        </svg>
+                      </div>
+                    </div>
+                    {editMode && (
+                      <div className="image-actions">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePhotoUpload}
+                          className="chef-dashboard-upload-photo-input"
+                          id="profile-photo-upload"
+                          style={{ display: 'none' }}
+                        />
+                        <div style={{display: 'flex'}}>
+                        <button
+                          type="button"
+                          className="image-btns"
+                          onClick={() => document.getElementById('profile-photo-upload').click()}
+                        >
+                          Set
+                        </button>
+                        <button
+                          type="button"
+                          className="image-btn-cancels"
+                          onClick={() => setChef({ ...chef, photo: null })}
+                        >
+                          Remove
+                        </button>
+                        </div>
                       </div>
                     )}
-                    <div className="chef-dashboard-chef-icon">
-                      <svg viewBox="0 0 50 50" className="chef-dashboard-chef-hat">
-                        <path d="M10,25C10,15,20,10,25,10c5,0,15,5,15,15c0,5-2,10-7,10h-16C12,35,10,30,10,25z" />
-                        <ellipse cx="25" cy="7" rx="12" ry="3" />
-                      </svg>
-                    </div>
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleProfilePhotoUpload}
-                    className="chef-dashboard-upload-photo-input"
-                    id="profile-photo-upload"
-                  />
-                  <label htmlFor="profile-photo-upload" className="chef-dashboard-upload-photo-btn">
-                    Upload Photo
-                  </label>
                 </div>
-                <div className="chef-dashboard-profile-details-section">
-                  <div className="chef-dashboard-profile-form">
-                    <div className="chef-dashboard-form-group">
+                <div className="profile-details">
+                  <h2 className="details-title">General Information</h2>
+                  {errorMessage && <div className="error-message">{errorMessage}</div>}
+                  {successMessage && <div className="success-message">{successMessage}</div>}
+                  <form onSubmit={handleProfileUpdate}>
+                    <div className="input-group">
                       <label>Name</label>
-                      <input type="text" name="name" defaultValue={chef.name || ''} required />
+                      <input
+                        type="text"
+                        name="name"
+                        defaultValue={chef.name || ''}
+                        disabled={!editMode}
+                        required
+                      />
                     </div>
-                    <div className="chef-dashboard-form-group">
+                    <div className="input-group">
                       <label>Email</label>
-                      <input type="email" name="email" defaultValue={chef.email || ''} required />
+                      <input
+                        type="email"
+                        name="email"
+                        defaultValue={chef.email || ''}
+                        disabled={!editMode}
+                        required
+                      />
                     </div>
-                    <div className="chef-dashboard-form-group">
+                    <div className="input-group">
                       <label>Phone Number</label>
-                      <input type="text" name="phone_number" defaultValue={chef.phone_number || ''} />
+                      <input
+                        type="text"
+                        name="phone_number"
+                        defaultValue={chef.phone_number || ''}
+                        disabled={!editMode}
+                      />
                     </div>
-                    <div className="chef-dashboard-form-group">
+                    <div className="input-group">
                       <label>Nationality</label>
-                      <input type="text" name="nationality" defaultValue={chef.nationality || ''} />
+                      <input
+                        type="text"
+                        name="nationality"
+                        defaultValue={chef.nationality || ''}
+                        disabled={!editMode}
+                      />
                     </div>
                     <div className="chef-dashboard-form-group chef-dashboard-full-width">
                       <label>About You</label>
-                      <textarea name="about_you" rows="4" defaultValue={chef.about_you || ''}></textarea>
+                      <textarea
+                        name="about_you"
+                        rows="4"
+                        defaultValue={chef.about_you || ''}
+                        disabled={!editMode}
+                      ></textarea>
                     </div>
-                    <div className="chef-dashboard-form-group chef-dashboard-documents-group">
+                    <div className="input-group chef-dashboard-documents-group">
                       <label>Certificates</label>
                       <div className="chef-dashboard-document-display">
                         <span className="chef-dashboard-document-name">{chef.certificate || 'None'}</span>
@@ -598,21 +727,128 @@ const ChefDashboard = () => {
                         )}
                       </div>
                     </div>
-                    <div className="chef-dashboard-profile-buttons">
-                      <button type="submit" className="chef-dashboard-save-profile-btn">
-                        Save Changes
-                      </button>
-                      <button
-                        type="button"
-                        className="chef-dashboard-cancel-btn"
-                        onClick={() => setActiveTab('dashboard')}
-                      >
-                        Cancel
-                      </button>
+                    {editMode ? (
+                      <div className="button-container">
+                        <button type="submit" className="secondary-btn">
+                          Save Changes
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-btn cancel-btns"
+                          onClick={handleCancelClick}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          onClick={handleEditClick}
+                        >
+                          Edit Profile
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary-btn"
+                          onClick={() => setIsChangePasswordOpen(true)}
+                        >
+                          Change Password
+                        </button>
+                      </>
+                    )}
+                  </form>
+                  {isChangePasswordOpen && (
+                    <div className="password-modal-overlay">
+                      <div className="password-modal">
+                        <form onSubmit={handleSubmitPasswordChange}>
+                          <h2>Change Password</h2>
+                          <div className="input-group">
+                            <label>Old Password</label>
+                            <div className="password-input">
+                              <input
+                                type={showPassword.oldPassword ? 'text' : 'password'}
+                                name="oldPassword"
+                                value={passwordData.oldPassword}
+                                onChange={handlePasswordChange}
+                                required
+                              />
+                              {showPassword.oldPassword ? (
+                                <AiFillEyeInvisible
+                                  onClick={() => togglePasswordVisibility('oldPassword')}
+                                />
+                              ) : (
+                                <AiFillEye
+                                  onClick={() => togglePasswordVisibility('oldPassword')}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          <div className="input-group">
+                            <label>New Password</label>
+                            <div className="password-input">
+                              <input
+                                type={showPassword.newPassword ? 'text' : 'password'}
+                                name="newPassword"
+                                value={passwordData.newPassword}
+                                onChange={handlePasswordChange}
+                                required
+                              />
+                              {showPassword.newPassword ? (
+                                <AiFillEyeInvisible
+                                  onClick={() => togglePasswordVisibility('newPassword')}
+                                />
+                              ) : (
+                                <AiFillEye
+                                  onClick={() => togglePasswordVisibility('newPassword')}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          <div className="input-group">
+                            <label>Confirm Password</label>
+                            <div className="password-input">
+                              <input
+                                type={showPassword.confirmPassword ? 'text' : 'password'}
+                                name="confirmPassword"
+                                value={passwordData.confirmPassword}
+                                onChange={handlePasswordChange}
+                                required
+                              />
+                              {showPassword.confirmPassword ? (
+                                <AiFillEyeInvisible
+                                  onClick={() => togglePasswordVisibility('confirmPassword')}
+                                />
+                              ) : (
+                                <AiFillEye
+                                  onClick={() => togglePasswordVisibility('confirmPassword')}
+                                />
+                              )}
+                            </div>
+                          </div>
+                          {errorMessage && <div className="error-message">{errorMessage}</div>}
+                          {successMessage && <div className="success-message">{successMessage}</div>}
+                          <div className="button-group">
+                            <button type="submit">Submit</button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setErrorMessage('');
+                                setSuccessMessage('');
+                                setIsChangePasswordOpen(false);
+                              }}
+                              disabled={!!successMessage}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              </form>
+              </div>
             ) : (
               <p>Loading profile...</p>
             )}

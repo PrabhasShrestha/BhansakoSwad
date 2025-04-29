@@ -32,23 +32,69 @@ exports.forgetValidation = [
 ];
 
 exports.updateProfileValidation = [
-  check('first_name', 'This field is required').not().isEmpty(),
-  check('last_name', 'This field is required').not().isEmpty(),
-  check('address', 'This field is required').not().isEmpty(),
-  check('email', 'This field is required').not().isEmpty().isEmail().normalizeEmail({ gmail_remove_dots: true }),
-  check('phone_number', 'Invalid phone number format for Nepal').isMobilePhone('ne-NP').isLength({ min: 10, max: 10 }),
-  check('image').custom((value, { req }) => {
-    // If no file is provided, skip validation for the image
-    if (!req.file) {
-      return true;
-    }
+  check('first_name')
+    .optional() // Make the field optional
+    .trim()
+    .notEmpty()
+    .withMessage('First name cannot be empty if provided')
+    .isLength({ max: 50 })
+    .withMessage('First name cannot exceed 50 characters'),
 
-    // Validate if file exists
-    if (req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/png') {
+  check('last_name')
+    .optional() // Make the field optional
+    .trim()
+    .notEmpty()
+    .withMessage('Last name cannot be empty if provided')
+    .isLength({ max: 50 })
+    .withMessage('Last name cannot exceed 50 characters'),
+
+  check('address')
+    .optional() // Make the field optional
+    .trim()
+    .notEmpty()
+    .withMessage('Address cannot be empty if provided')
+    .isLength({ max: 200 })
+    .withMessage('Address cannot exceed 200 characters'),
+
+  check('email')
+    .optional() // Make the field optional
+    .trim()
+    .notEmpty()
+    .withMessage('Email cannot be empty if provided')
+    .isEmail()
+    .withMessage('Invalid email format')
+    .normalizeEmail({ gmail_remove_dots: true }),
+
+  check('phone_number')
+    .optional() // Make the field optional
+    .trim()
+    .notEmpty()
+    .withMessage('Phone number cannot be empty if provided')
+    .custom((value) => {
+      const cleaned = value.replace(/\D/g, '');
+      if (cleaned.length !== 10) {
+        throw new Error('Phone number must be exactly 10 digits');
+      }
+      if (!cleaned.startsWith('98') && !cleaned.startsWith('97')) {
+        throw new Error('Invalid phone number format for Nepal (must start with 98 or 97)');
+      }
       return true;
-    }
-    throw new Error('Please upload an image of type JPG or PNG');
-  }),
+    }),
+
+  check('image')
+    .custom((value, { req }) => {
+      if (!req.file) {
+        return true; // Image is already optional
+      }
+      if (req.file.mimetype !== 'image/jpeg' && req.file.mimetype !== 'image/png') {
+        throw new Error('Please upload an image of type JPG or PNG');
+      }
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (req.file.size > maxSize) {
+        throw new Error('Image size cannot exceed 5MB');
+      }
+      return true;
+    }),
 ];
 
 

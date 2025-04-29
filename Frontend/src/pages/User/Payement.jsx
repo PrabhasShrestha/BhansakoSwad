@@ -19,7 +19,7 @@ const TotalPayement = () => {
     }
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem("token"); // Ensure token is available
+        const token = localStorage.getItem("token"); 
         if (!token) {
           console.error("No token found! User must log in.");
           setLoading(false);
@@ -29,7 +29,7 @@ const TotalPayement = () => {
         const response = await fetch("http://localhost:3000/api/get-user", {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Attach JWT token
+            Authorization: `Bearer ${token}`, 
             "Content-Type": "application/json",
           },
         });
@@ -93,7 +93,7 @@ const TotalPayement = () => {
 
         const orderId = orderData.orderId; 
 
-        const cartItems = JSON.parse(localStorage.getItem("cart")) || []; // Get cart items
+        const cartItems = JSON.parse(localStorage.getItem("cart")) || []; 
         console.log(localStorage.getItem("cart"));
         if (cartItems.length === 0) {
             alert("No items in the cart.");
@@ -105,7 +105,7 @@ const TotalPayement = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 order_id: orderId,
-                items: cartItems // Send all items
+                items: cartItems 
             })
         });
 
@@ -120,7 +120,7 @@ const TotalPayement = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 totalAmount,
-                orderId,  // ✅ Use the `order_id` from the database
+                orderId,  
                 customerInfo: {
                     user_id: user.user_id,
                     name: user.name,
@@ -137,10 +137,10 @@ const TotalPayement = () => {
                 amount: totalAmount,
                 payment_date: new Date().toISOString(),
                 email: user.email,
-                order_id: orderId  // ✅ Store `order_id` for later use
+                order_id: orderId  
             }));
 
-            window.location.href = data.paymentUrl; // Redirect user to Khalti payment
+            window.location.href = data.paymentUrl; 
         } else {
             alert("Payment initiation failed. Try again.");
         }

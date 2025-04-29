@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaPlus, FaTrash, FaTimes } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import '../../styles/RecipeModal.css'; // Ensure the CSS file path is correct
+import '../../styles/RecipeModal.css'; 
 
 const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     const [recipeName, setRecipeName] = useState('');
@@ -33,7 +33,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
         { nutrient: '', value: '', nepali_nutrient: '', nepali_value: '' }
     ]);
 
-    // Utility function to capitalize the first letter of a string
+
     const capitalizeFirstLetter = (str) => {
         if (!str) return str;
         return str.charAt(0).toUpperCase() + str.slice(1);
@@ -43,7 +43,7 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
         if (isOpen) {
             axios.get("http://localhost:3000/api/recipe/ingredients")
                 .then(response => {
-                    // Capitalize the ingredient names when fetched
+                    
                     const capitalizedIngredients = response.data.map(ing => ({
                         ...ing,
                         name: capitalizeFirstLetter(ing.name),
@@ -257,9 +257,9 @@ const RecipeModal = ({ isOpen, onClose, onSubmit }) => {
     return (
         <div className="recipemodal-overlay">
             <div className="recipemodal-content">
-                <button className="recipemodal-close-btn" onClick={onClose} aria-label="Close modal">
+                <span className="recipemodal-close-btn" onClick={onClose} aria-label="Close modal">
                     <FaTimes />
-                </button>
+                </span>
                 <h2>Add New Recipe</h2>
                 
                 <div className="recipe-form-section">

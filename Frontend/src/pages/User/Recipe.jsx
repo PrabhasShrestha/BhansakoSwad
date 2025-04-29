@@ -65,6 +65,7 @@ const MainRecipe = () => {
     const [isPremium, setIsPremium] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isChef, setIsChef] = useState(false);
+    const [chefStatus, setChefStatus] = useState(null);
     const [favoriteRecipes, setFavoriteRecipes] = useState([]);
     const cuisineList = ["Italian", "Chinese", "Indian", "Mexican", "Nepali", "Thai", "Japanese", "Turkish"];
 
@@ -73,7 +74,6 @@ const MainRecipe = () => {
         const fetchPremiumStatus = async () => {
             try {
                 if (!token) {
-                    console.warn("No token found in localStorage");
                     return;
                 }
 
@@ -86,48 +86,32 @@ const MainRecipe = () => {
                     setIsAdmin(userData.is_admin === 1 || userData.is_admin === true);
                     setIsPremium(userData.is_premium || false);
                     setIsChef(userData.is_chef || false);
-                    console.log("User data:", { is_premium: userData.is_premium, is_chef: userData.is_chef, is_admin: userData.is_admin });
-                } else {
-                    console.error("Failed to fetch user data:", userResponse.data.message);
+                    setChefStatus(userData.status || null);
                 }
-            } catch (error) {
-                console.error("Error fetching premium status:", error.response?.data || error.message);
-            }
+            } catch (error) {}
         };
 
-        // Fetch search results
         axios.get(`http://localhost:3000/api/recipe/search?query=${searchTerm}`)
             .then((response) => {
-                console.log("Search results:", response.data);
                 setSearchResults(response.data);
             })
-            .catch((error) => {
-                console.error("Error fetching search results:", error);
-            });
+            .catch((error) => {});
 
-        // Fetch all recipes
         axios.get("http://localhost:3000/api/recipe/recipes")
             .then((response) => {
-                console.log("Recipes response:", response.data);
                 setRecipes(response.data);
             })
-            .catch((error) => {
-                console.error("Error fetching recipes:", error);
-            });
+            .catch((error) => {});
 
-        // Fetch all chefs
         axios.get("http://localhost:3000/api/chef/chef")
             .then((response) => {
-                console.log("Chefs response:", response.data);
                 const chefsData = response.data.map(chef => ({
                     ...chef,
                     photo: chef.photo ? `http://localhost:3000${chef.photo}` : null
                 }));
                 setChefs(chefsData);
             })
-            .catch((error) => {
-                console.error("Error fetching chefs:", error);
-            });
+            .catch((error) => {});
 
         fetchPremiumStatus();
     }, [searchTerm]);
@@ -162,12 +146,9 @@ const MainRecipe = () => {
 
         axios.post("http://localhost:3000/api/recipe/filterRecipes", { ingredients })
             .then((response) => {
-                console.log("Filtered recipes:", response.data);
                 setFilteredRecipes(response.data);
             })
-            .catch((error) => {
-                console.error("Error filtering recipes:", error.response?.data || error);
-            });
+            .catch((error) => {});
     };
 
     const finalrecipe = (() => {
@@ -186,13 +167,11 @@ const MainRecipe = () => {
                 setRecipes(response.data);
                 setShowModal(false);
             })
-            .catch((error) => {
-                console.error("Error refreshing recipes:", error);
-            });
+            .catch((error) => {});
     };
 
     const handleCategoryClick = (category) => {
-        if (category === "Chef" && !isPremium && !isAdmin && !isChef) {
+        if (category === "Chef" && !isPremium && !isAdmin && !(isChef && chefStatus === "approved")) {
             if (isLoggedIn) {
                 setShowPremiumModal(true);
             } else {
@@ -204,7 +183,7 @@ const MainRecipe = () => {
     };
 
     const handleRecipeClick = (recipe) => {
-        if (recipe.is_chef_recipe && !isPremium && !isAdmin && !isChef) {
+        if (recipe.is_chef_recipe && !isPremium && !isAdmin && !(isChef && chefStatus === "approved")) {
             if (isLoggedIn) {
                 setShowPremiumModal(true);
             } else {
@@ -231,11 +210,8 @@ const MainRecipe = () => {
                 return;
             }
             const res = await axios.get(`http://localhost:3000/api/recipe/favorites/${userId}`);
-            console.log("Favorite recipes response:", res.data);
             setFavoriteRecipes(res.data);
-        } catch (error) {
-            console.error("Error fetching favorites:", error);
-        }
+        } catch (error) {}
     };
 
     const handleRemoveFavorite = async (recipeId) => {
@@ -256,7 +232,6 @@ const MainRecipe = () => {
 
             alert("Recipe successfully removed from favorites!");
         } catch (error) {
-            console.error("Error removing from favorites:", error);
             alert("Failed to remove from favorites.");
         }
     };
@@ -405,23 +380,28 @@ const MainRecipe = () => {
                             <h1>Our Chefs</h1>
                             <div className="chef-grid">
                                 {chefs.length > 0 ? (
-                                    chefs.map((chef) => (
-                                        <div className="chef-card" key={chef.id}>
-                                            <img
-                                                src={chef.photo || DefaultChefImage}
-                                                alt={chef.name}
-                                                className="chef-card-image"
-                                            />
-                                            <h2>{chef.name}</h2>
-                                            <button
-                                                className="chef-view-button"
-                                                onClick={() => navigate(`/chef/${chef.id}`)}
-                                            >
-                                                View
-                                            </button>
-                                        </div>
-                                    ))
+                                    chefs
+                                        .filter((chef) => chef.status === "approved") 
+                                        .map((chef) => (
+                                            <div className="chef-card" key={chef.id}>
+                                                <img
+                                                    src={chef.photo || DefaultChefImage}
+                                                    alt={chef.name}
+                                                    className="chef-card-image"
+                                                />
+                                                <h2>{chef.name}</h2>
+                                                <button
+                                                    className="chef-view-button"
+                                                    onClick={() => navigate(`/chef/${chef.id}`)}
+                                                >
+                                                    View
+                                                </button>
+                                            </div>
+                                        ))
                                 ) : (
+                                    <p>No chefs found.</p>
+                                )}
+                                {chefs.filter((chef) => chef.status === "approved").length === 0 && chefs.length > 0 && (
                                     <p>No chefs found.</p>
                                 )}
                             </div>
@@ -443,7 +423,7 @@ const MainRecipe = () => {
                                                         className="recipe-card-image"
                                                         onClick={() => handleRecipeClick(recipe)}
                                                     />
-                                                    {recipe.is_chef_recipe && !isPremium && !isAdmin && !isChef && (
+                                                    {recipe.is_chef_recipe && !isPremium && !isAdmin && !(isChef && chefStatus === "approved") && (
                                                         <FaLock className="recipe-lock-icon" onClick={() => handleRecipeClick(recipe)} />
                                                     )}
                                                 </div>
@@ -477,7 +457,7 @@ const MainRecipe = () => {
                                                         className="recipe-card-image"
                                                         onClick={() => handleRecipeClick(recipe)}
                                                     />
-                                                    {recipe.is_chef_recipe && !isPremium && !isAdmin && !isChef && (
+                                                    {recipe.is_chef_recipe && !isPremium && !isAdmin && !(isChef && chefStatus === "approved") && (
                                                         <FaLock className="recipe-lock-icon" onClick={() => handleRecipeClick(recipe)} />
                                                     )}
                                                 </div>

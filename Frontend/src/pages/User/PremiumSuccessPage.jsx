@@ -8,24 +8,22 @@ const PremiumSuccessPage = () => {
     useEffect(() => {
         const premiumData = JSON.parse(localStorage.getItem("premiumData"));
         if (!premiumData) {
-            navigate("/"); // Redirect if no premium data found
+            navigate("/"); 
             return;
         }
 
         setSubscriptionDetails(premiumData);
-
-        // ✅ Confirm Payment & Activate Subscription
         const activatePremium = async () => {
             try {
                 const premiumData = JSON.parse(localStorage.getItem("premiumData"));
         
                 if (!premiumData || !premiumData.user_id || !premiumData.email) {
-                    console.error("❌ Missing required premium data:", premiumData);
+                    console.error("Missing required premium data:", premiumData);
                     alert("Error: Missing user details. Please try again.");
                     return;
                 }
         
-                console.log("✅ Sending Premium Activation Data:", premiumData); // Debugging log
+                console.log("Sending Premium Activation Data:", premiumData);
         
                 const response = await fetch("http://localhost:3000/api/confirm-premium", {
                     method: "POST",
@@ -36,16 +34,16 @@ const PremiumSuccessPage = () => {
                 const result = await response.json();
         
                 if (result.success) {
-                    console.log("✅ Premium activated successfully.");
+                    console.log(" Premium activated successfully.");
                     alert("Premium activated! Enjoy exclusive features.");
-                    localStorage.removeItem("premiumData"); // Clean up storage
-                    navigate("/"); // Redirect
+                    localStorage.removeItem("premiumData"); 
+                    navigate("/"); 
                 } else {
-                    console.error("❌ Failed to activate premium:", result.message);
+                    console.error("Failed to activate premium:", result.message);
                     alert(`Activation failed: ${result.message}`);
                 }
             } catch (error) {
-                console.error("❌ Error activating premium:", error);
+                console.error("Error activating premium:", error);
                 alert("An error occurred. Please try again.");
             }
         };

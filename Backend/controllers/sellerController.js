@@ -11,11 +11,8 @@ const registerSeller = (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-
-    
         const { shop_name, owner_name, store_address, email, phone_number, password } = req.body;
         console.log("Incoming request data:", req.body);
-        // Check if email already exists
         const nameParts = owner_name.split(" ");
         const first_name = nameParts[0];
         const last_name = nameParts.slice(1).join(" ") || "";
@@ -48,8 +45,7 @@ const registerSeller = (req, res) => {
                 }
               );
             }
-      
-            // Check if seller already exists
+    
             db.query(
               `SELECT * FROM sellers WHERE LOWER(email) = LOWER(?)`,
               [email],
@@ -61,8 +57,6 @@ const registerSeller = (req, res) => {
                 const verificationCode = randomstring.generate({ length: 6, charset: "numeric" });
                 const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000);
 
-                            // Insert seller into the database
-                            // Insert seller
               db.query(
                 `INSERT INTO sellers (shop_name, owner_name, store_address, email, phone_number, password, verificationCode, verificationCodeExpiryAT) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -80,7 +74,6 @@ const registerSeller = (req, res) => {
                   if (err)
                     return res.status(500).send({ msg: "Error saving seller to database" });
 
-                                // Send verification email
                                 const mailSubject = 'Verify Your Seller Account';
                                 const content = `
                                   <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9;">

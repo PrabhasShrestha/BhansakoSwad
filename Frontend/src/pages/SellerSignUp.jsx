@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/UserSignUp.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Importing new eye icons
+import { FaEye, FaEyeSlash } from "react-icons/fa"; 
 
 function SellerSignUp() {
   const [formData, setFormData] = useState({
@@ -15,8 +15,8 @@ function SellerSignUp() {
   });
 
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false); // Toggle visibility of password
-  const navigate = useNavigate(); // Use navigate hook
+  const [showPassword, setShowPassword] = useState(false); 
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,12 +45,12 @@ function SellerSignUp() {
     if (validateForm()) {
       try {
         const response = await axios.post(
-          "http://localhost:3000/api/registerseller", // Backend endpoint
+          "http://localhost:3000/api/registerseller", 
           formData
         );
         console.log("Response from backend:", response.data);
   
-        localStorage.setItem("email", formData.email); // Store email for verification
+        localStorage.setItem("email", formData.email); 
         setFormData({
           shop_name: "",
           owner_name: "",
@@ -60,11 +60,11 @@ function SellerSignUp() {
           password: "",
         });
         setErrors({});
-        navigate("/SellerVerificationCode"); // Redirect to seller verification
+        navigate("/SellerVerificationCode"); 
       }  catch (error) {
         if (error.response) {
             if (error.response.status === 400) {
-                setErrors({ password: error.response.data.msg }); // Show password mismatch error
+                setErrors({ password: error.response.data.msg }); 
             } else if (error.response.status === 409) {
                 setErrors({ email: "This email is already registered as a seller." });
             } else {
@@ -79,7 +79,6 @@ function SellerSignUp() {
 
   return (
     <div className="container">
-      {/* Left Section: Sign Up Form */}
       <div className="form-section">
         <h2>HEY! WELCOME</h2>
         <h1>SIGN UP</h1>
@@ -190,7 +189,6 @@ function SellerSignUp() {
         </p>
       </div>
 
-      {/* Right Section: Information Section */}
       <div className="info-section">
         <h1>CREATE ACCOUNT</h1>
         <h1 style={{ fontSize: "30px" }}>What Will You Get?</h1>

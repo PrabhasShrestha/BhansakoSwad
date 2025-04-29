@@ -98,7 +98,7 @@ const ManageIngredientsModal = ({ isOpen, onClose }) => {
         }))
       };
 
-      await axios.post('http://localhost:3000/api/admin/ingredients', payload, {
+      await axios.post('http://localhost:3000/api/recipe/ingredients/create', payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
@@ -179,14 +179,17 @@ const ManageIngredientsModal = ({ isOpen, onClose }) => {
         name_ne: editIngredient.name_ne,
         alternatives: editIngredient.alternatives.map(alt => ({
           name: alt.name,
-          name_ne: alt.name_ne,
-          id: alt.id
+          name_ne: alt.name_ne
         }))
       };
 
-      await axios.put(`http://localhost:3000/api/admin/ingredients/${editIngredient.id}`, payload, {
+      console.log('Updating ingredient with payload:', payload);
+
+      const response = await axios.post(`http://localhost:3000/api/recipe/updateingredients/${editIngredient.id}`, payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
+
+      console.log('Update response:', response.data);
 
       toast.success('Ingredient updated successfully');
       setEditMode(null);
@@ -194,7 +197,12 @@ const ManageIngredientsModal = ({ isOpen, onClose }) => {
       fetchIngredients();
     } catch (error) {
       console.error('Error updating ingredient:', error);
-      toast.error('Failed to update ingredient');
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        toast.error(`Failed to update ingredient: ${error.response.data.message || 'Unknown error'}`);
+      } else {
+        toast.error('Failed to update ingredient');
+      }
     }
   };
 
@@ -204,7 +212,7 @@ const ManageIngredientsModal = ({ isOpen, onClose }) => {
     }
 
     try {
-      await axios.delete(`http://localhost:3000/api/admin/ingredients/${id}`, {
+      await axios.delete(`http://localhost:3000/api/recipe/ingredients/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 

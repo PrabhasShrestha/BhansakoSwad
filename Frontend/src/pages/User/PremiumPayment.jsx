@@ -14,7 +14,7 @@ const PremiumPayment = () => {
     const storedPremiumPlan = localStorage.getItem("premium_plan");
 
     if (!storedPremiumPlan) {
-      navigate("/recipes"); // Redirect to recipes if no premium plan is found
+      navigate("/recipes"); 
       return;
     }
 
@@ -32,7 +32,7 @@ const PremiumPayment = () => {
         const response = await fetch("http://localhost:3000/api/get-user", {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Attach JWT token
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
@@ -70,11 +70,11 @@ const PremiumPayment = () => {
       const paymentData = {
         totalAmount: premiumPlan.price,
         userId: user.user_id,
-        email: user.email, // ✅ Ensure email is included
+        email: user.email,
         customerInfo: user,
     };
 
-    console.log("✅ Sending Payment Data:", paymentData);
+    console.log("Sending Payment Data:", paymentData);
         const paymentResponse = await fetch("http://localhost:3000/api/initiate-premium", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -83,10 +83,10 @@ const PremiumPayment = () => {
 
         const data = await paymentResponse.json();
         if (data.success) {
-          console.log("✅ Payment Initiated:", data);
+          console.log("Payment Initiated:", data);
             localStorage.setItem("premiumData", JSON.stringify({
                 user_id: user.user_id,
-                amount: premiumPlan.price,  // ✅ Fix here too
+                amount: premiumPlan.price, 
                 payment_date: new Date().toISOString(),
                 email: user.email
             }));
@@ -133,7 +133,7 @@ const PremiumPayment = () => {
           <h1 className="Total-summary-title">Subscription Summary</h1>
           <div className="Total-summary-item">
           <span>Plan:</span>
-          <span>{premiumPlan ? premiumPlan.plan : "Loading..."}</span>  {/* ✅ Fix Here */}
+          <span>{premiumPlan ? premiumPlan.plan : "Loading..."}</span> 
           </div>
           <div className="Total-summary-total">
             <span>Total</span>

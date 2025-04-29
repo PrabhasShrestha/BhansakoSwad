@@ -26,11 +26,10 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate()
 
-  // Fetch testimonials from the backend
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/getapprovedtestimonials'); // Adjust URL as necessary
+        const response = await fetch('http://localhost:3000/api/getapprovedtestimonials'); 
         if (response.ok) {
           const data = await response.json();
           setTestimonials(data.testimonials);
@@ -53,7 +52,6 @@ const Home = () => {
     <div className="index-page">
       {isLoggedIn ? <Navigationbar/> : <Navbar />}
 
-      {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
           <h1>
@@ -73,8 +71,6 @@ const Home = () => {
           <img src={IndexpageImage} alt="Healthy food" />
         </div>
       </section>
-
-      {/* Diet Preference Section */}
       <section className="diet-preference">
         <h2>Discover Recipes by Diet Preference</h2>
         <p>
@@ -110,8 +106,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* Cuisine Type Section */}
       <section className="cuisine-type">
         <h2>Explore By Cuisine Type</h2>
         <p>
@@ -138,8 +132,6 @@ const Home = () => {
         </div>
         <button className="cuisine-button">Explore More Cuisine</button>
       </section>
-
-      {/* Testimonials Section */}
       <section className="testimonials">
         <h2>Testimonials</h2>
         {loading ? (
@@ -163,8 +155,8 @@ const Home = () => {
                   <img
                 src={
                   testimonial.user_image
-                    ? `http://localhost:3000${testimonial.user_image}` // Use user's profile image if available
-                    : userImage // Fallback to default user image (imported)
+                    ? `http://localhost:3000${testimonial.user_image}` 
+                    : userImage 
                 }
                 alt={`${testimonial.user_name}'s profile`}
                 className="author-image"

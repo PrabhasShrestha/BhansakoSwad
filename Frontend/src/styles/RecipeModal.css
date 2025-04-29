@@ -26,13 +26,12 @@
   }
   
   .recipemodal-close-btn {
+    background-color: transparent !important;
     position: absolute;
     top: 15px;
     right: 15px;
-    background: none;
-    border: none;
     font-size: 24px;
-    color: #d580ff;
+    color: black !important;
     cursor: pointer;
     transition: all 0.3s ease;
     width: 40px;
@@ -428,7 +427,6 @@
     }
   }
   
-  /* Custom Scrollbar */
   .recipemodal-content::-webkit-scrollbar {
     width: 8px;
   }
@@ -513,7 +511,6 @@
     padding-right: 30px;
   }
   
-  /* Recipe Modal Button Styling */
   .recipemodal-content button {
     background-color: #d580ff;
     color: white;

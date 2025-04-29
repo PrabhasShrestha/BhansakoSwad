@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from "react-router-dom";
 import Navigationbar from "../../components/NavBar";
 import Footer from "../../components/Footer";
-import "../../styles/User/Carts.css"; // External CSS
+import "../../styles/User/Carts.css"; 
 
 const ShoppingCart = () => {
   const navigate = useNavigate();
@@ -29,7 +29,6 @@ const ShoppingCart = () => {
       .catch((error) => console.error("Error fetching cart items:", error));
   }, [cartItems]);
 
-  // Calculate totals
   const calculateTotal = () => {
     const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
     const tax = subtotal * 0.13;
@@ -39,9 +38,8 @@ const ShoppingCart = () => {
 
   const { subtotal, tax, total } = calculateTotal();
 
-  // Update Quantity
   const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return; // Prevent negative quantity
+    if (newQuantity < 1) return; 
   
     fetch("http://localhost:3000/api/cart/update-quantity", {
       method: "POST",
@@ -52,10 +50,8 @@ const ShoppingCart = () => {
       body: JSON.stringify({ productdetails_id: id, quantity: newQuantity }),
     })
       .then(async (res) => {
-        // If the response is not OK (e.g., status 400), throw an error
         const data = await res.json();
         if (!res.ok) {
-          // Throw the backend error message so we can catch it below
           throw new Error(data.message || "Failed to update cart quantity.");
         }
         return data;
@@ -66,12 +62,11 @@ const ShoppingCart = () => {
             item.productdetails_id === id ? { ...item, quantity: newQuantity } : item
           );
           setCartItems(updatedCart);
-          localStorage.setItem("cart", JSON.stringify(updatedCart)); // ✅ Update localStorage
+          localStorage.setItem("cart", JSON.stringify(updatedCart)); 
         }
       })
       .catch((error) => {
         console.error("Error updating cart quantity:", error);
-        // Moved toast inside the catch block
         toast.error(error.message || "Error updating cart quantity.");
       });
   };  
@@ -90,7 +85,7 @@ const ShoppingCart = () => {
         if (data.success) {
           const updatedCart = cartItems.filter((item) => item.productdetails_id !== id);
           setCartItems(updatedCart);
-          localStorage.setItem("cart", JSON.stringify(updatedCart)); // ✅ Sync localStorage
+          localStorage.setItem("cart", JSON.stringify(updatedCart));
         }
       })
       .catch((error) => console.error("Error removing item from cart:", error));
@@ -166,7 +161,7 @@ const ShoppingCart = () => {
               </div>
               <button className="cartPage_checkoutButton" onClick={() => {
                 localStorage.setItem("total", total.toFixed(2));
-                localStorage.setItem("cart", JSON.stringify(cartItems)); // ✅ Store cart items
+                localStorage.setItem("cart", JSON.stringify(cartItems)); 
                 navigate("/orderdetails");
               }}>
                 Proceed to Checkout

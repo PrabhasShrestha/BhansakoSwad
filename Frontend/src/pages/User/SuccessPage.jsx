@@ -11,10 +11,7 @@ const SuccessPage = () => {
             navigate("/");
             return;
         }
-    
         setOrderDetails(paymentData);
-    
-        // ✅ Step 3: Store Payment in Database After Successful Transaction
         const storePayment = async () => {
             try {
                 const token = localStorage.getItem("token"); 

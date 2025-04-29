@@ -2,13 +2,12 @@ const db = require('../config/dbConnection');
 
 const addToCart = (req, res) => {
     const { productdetails_id, quantity } = req.body;
-    const user_id = req.user.id; // Extract user ID from JWT
+    const user_id = req.user.id;
 
     if (!user_id || !productdetails_id || quantity <= 0) {
         return res.status(400).json({ message: "Invalid cart data." });
     }
 
-    // Check stock availability first
     db.query(
         `SELECT in_stock FROM productdetails WHERE id = ?`,
         [productdetails_id],
@@ -28,7 +27,6 @@ const addToCart = (req, res) => {
                 return res.status(400).json({ message: "Not enough stock available." });
             }
 
-            // Check if the item is already in the cart
             db.query(
                 `SELECT quantity FROM cart_items WHERE user_id = ? AND productdetails_id = ?`,
                 [user_id, productdetails_id],
@@ -93,14 +91,13 @@ const getCart = (req, res) => {
                 return res.status(500).json({ message: "Internal server error." });
             }
 
-            // Format product image URLs correctly
             const cartItems = result.map((item) => ({
                 ...item,
                 image: item.image
-                    ? item.image.startsWith("uploads/products/")  // Avoid duplicate paths
+                    ? item.image.startsWith("uploads/products/")  
                         ? `http://localhost:3000/${item.image}`
                         : `http://localhost:3000/uploads/products/${item.image}`
-                    : "http://localhost:3000/uploads/default-product.png", // Fallback image
+                    : "http://localhost:3000/uploads/default-product.png",
             }));
             
 
@@ -132,7 +129,6 @@ const updateCartQuantity = (req, res) => {
     const { productdetails_id, quantity } = req.body;
     const user_id = req.user.id;
   
-    // Basic validation
     if (!productdetails_id || quantity == null) {
       return res.status(400).json({ message: "Product details ID and quantity are required." });
     }
@@ -141,7 +137,6 @@ const updateCartQuantity = (req, res) => {
       return res.status(400).json({ message: "Quantity must be greater than zero." });
     }
   
-    // 1) Check the available stock for the given productdetails_id
     const checkStockQuery = `SELECT in_stock FROM productdetails WHERE id = ?`;
   
     db.query(checkStockQuery, [productdetails_id], (err, results) => {
@@ -150,21 +145,18 @@ const updateCartQuantity = (req, res) => {
         return res.status(500).json({ message: "Internal server error." });
       }
   
-      // If no matching productdetails found
       if (results.length === 0) {
         return res.status(404).json({ message: "Product not found." });
       }
   
       const in_stock = results[0].in_stock;
   
-      // 2) If the requested quantity exceeds in_stock, respond with an error
       if (quantity > in_stock) {
         return res.status(400).json({
           message: `Cannot set quantity to ${quantity}. Only ${in_stock} items in stock.`,"success": false
         });
       }
   
-      // 3) Update the cart quantity if it's within the stock limit
       const updateCartQuery = `
         UPDATE cart_items
         SET quantity = ?
@@ -191,7 +183,6 @@ const deleteCart = (req, res) => {
       return res.status(400).json({ message: "User ID is required." });
     }
   
-    // First, update the stock by subtracting the quantity for each cart item
     const updateStockQuery = `
       UPDATE productdetails p
         JOIN cart_items c ON p.id = c.productdetails_id
@@ -205,7 +196,6 @@ const deleteCart = (req, res) => {
         return res.status(500).json({ message: "Failed to update stock." });
       }
   
-      // Next, remove the cart items for the user
       const deleteCartQuery = `DELETE FROM cart_items WHERE user_id = ?`;
       db.query(deleteCartQuery, [user_id], (err, deleteResult) => {
         if (err) {

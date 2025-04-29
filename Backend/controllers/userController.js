@@ -25,15 +25,14 @@ const register = (req, res) => {
                     if (err) {
                         return res.status(400).send({ msg: err });
                     } else {
-                        // Generate a random verification code
                         const verificationCode = randomstring.generate({ length: 6, charset: 'numeric' });
-                        const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000); // Expires in 10 minutes
+                        const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000); 
 
                         db.query(
                             `INSERT INTO users(first_name, last_name, address, email, phone_number, password, verificationCode, verificationCodeExpiryAT, isVerified) 
                             VALUES(${db.escape(req.body.first_name)}, ${db.escape(req.body.last_name)}, ${db.escape(req.body.address)}, 
                             ${db.escape(req.body.email)}, ${db.escape(req.body.phone_number)}, ${db.escape(hash)}, 
-                            ${db.escape(verificationCode)}, ${db.escape(verificationCodeExpiryAT)}, 0);`, // isVerified is initially 0
+                            ${db.escape(verificationCode)}, ${db.escape(verificationCodeExpiryAT)}, 0);`,
                             (err, result) => {
                                 if (err) {
                                     return res.status(400).send({ msg: err });
@@ -85,7 +84,6 @@ const verifyCode = (req, res) => {
                 return res.status(400).send({ msg: 'Verification code has expired. Please enter a new code' });
             }
 
-            // Update user status to verified
             db.query(
                 `UPDATE users SET isVerified = 1 WHERE email = ${db.escape(email)};`,
                 (err, result) => {
@@ -93,7 +91,6 @@ const verifyCode = (req, res) => {
                         return res.status(400).send({ msg: err });
                     }
 
-                    // Send email confirming verification
                     const mailSubject = 'Email Successfully Verified';
                     const content = `
                     <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; text-align: center; border-radius: 8px; max-width: 600px; margin: auto;">
@@ -123,7 +120,6 @@ const verifyCode = (req, res) => {
 const resendCode = (req, res) => {
   const { email } = req.body;
 
-  // Check if the email exists in the database
   db.query(
       `SELECT * FROM users WHERE email = ${db.escape(email)};`,
       (err, result) => {
@@ -137,16 +133,13 @@ const resendCode = (req, res) => {
 
           const user = result[0];
 
-          // Check if the user is already verified
           if (user.isVerified) {
               return res.status(400).send({ msg: "User is already verified." });
           }
 
-          // Generate a new verification code
           const verificationCode = randomstring.generate({ length: 6, charset: "numeric" });
-          const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000); // Expires in 10 minutes
+          const verificationCodeExpiryAT = new Date(Date.now() + 60 * 10000); 
 
-          // Update the new code in the database
           db.query(
               `UPDATE users SET verificationCode = ${db.escape(verificationCode)}, verificationCodeExpiryAT = ${db.escape(
                   verificationCodeExpiryAT
@@ -156,7 +149,6 @@ const resendCode = (req, res) => {
                       return res.status(500).send({ msg: "Internal Server Error" });
                   }
 
-                  // Send the new verification code via email
                   const mailSubject = "Your New Verification Code";
                   const content = `
                   <div style="font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f9f9f9;">
@@ -188,7 +180,6 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Step 1: Check if the user exists
     const userQuery = `SELECT * FROM users WHERE email = ?`;
     db.query(userQuery, [email], async (err, userResult) => {
       if (err) {
@@ -202,24 +193,20 @@ const login = async (req, res) => {
 
       const user = userResult[0];
 
-      // Step 2: Check if the user's account is deactivated
       if (user.activity_status === 'deactivated') {
         return res.status(409).json({ message: "Your account has been deactivated by the admin. Please contact support." });
       }
 
-      // Step 3: Check if the user's account is under verification (isVerified can be used here)
       if (user.isVerified === 0) {
         return res.status(403).json({ message: "Your account is not verified. Please verify by the using code" });
       }
 
-      // Step 4: Verify password with bcrypt
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Step 5: Check seller status
       const sellerQuery = `SELECT id AS seller_id FROM sellers WHERE email = ?`;
       db.query(sellerQuery, [email], (err, sellerResult) => {
         if (err) {
@@ -229,7 +216,6 @@ const login = async (req, res) => {
 
         const sellerId = sellerResult.length > 0 ? sellerResult[0].seller_id : null;
 
-        // Step 6: Check chef status
         const chefQuery = `SELECT id AS chef_id, status AS chef_status FROM chefs WHERE email = ?`;
         db.query(chefQuery, [email], (err, chefResult) => {
           if (err) {
@@ -244,16 +230,15 @@ const login = async (req, res) => {
           if (sellerId && chefId && chefStatus === 'approved') {
             role = 'all';
           } else if (sellerId && chefId && chefStatus !== 'approved') {
-            role = 'user_seller'; // Chef pending or rejected
+            role = 'user_seller'; 
           } else if (sellerId) {
             role = 'seller';
           } else if (chefId && chefStatus === 'approved') {
             role = 'chef';
           } else if (chefId && chefStatus !== 'approved') {
-            role = 'user'; // Chef pending or rejected
+            role = 'user'; 
           }
 
-          // Step 7: Generate JWT after successful verification
           const token = jwt.sign(
             {
               id: user.id,
@@ -320,7 +305,6 @@ const logout = async (req, res) => {
 
 const getUser = (req, res) => {
   try {
-    // Check for Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).send({ message: 'Unauthorized: Missing or malformed token.' });
@@ -329,7 +313,6 @@ const getUser = (req, res) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // Query user details
     db.query('SELECT * FROM users WHERE id = ?', [decoded.id], (error, userResult) => {
       if (error) {
         console.error('Database Error:', error);
@@ -342,12 +325,10 @@ const getUser = (req, res) => {
 
       const user = userResult[0];
 
-      // Correct the `image` URL construction
       if (user.image) {
         user.image = `http://localhost:3000/uploads/users/${user.image.split('/').pop()}`;
       }
 
-      // Check premium subscription status
       db.query(
         'SELECT * FROM premium_subscriptions WHERE user_id = ? AND status = ? AND start_date <= NOW() AND end_date >= NOW()',
         [decoded.id, 'active'],
@@ -359,7 +340,6 @@ const getUser = (req, res) => {
 
           const isPremium = premiumResult.length > 0;
 
-          // Check if the user is a seller
           db.query(
             'SELECT id AS seller_id FROM sellers WHERE email = ?',
             [user.email],
@@ -372,7 +352,6 @@ const getUser = (req, res) => {
               const isSeller = sellerResult.length > 0;
               const sellerId = isSeller ? sellerResult[0].seller_id : null;
 
-              // Check if the user is a chef
               db.query(
                 'SELECT id AS chef_id, status AS chef_status FROM chefs WHERE email = ?',
                 [user.email],
@@ -386,13 +365,12 @@ const getUser = (req, res) => {
                   const chefId = isChef ? chefResult[0].chef_id : null;
                   const chefStatus = isChef ? chefResult[0].chef_status : null;
 
-                  // Send response with all details
                   return res.status(200).send({
                     success: true,
                     data: {
                       ...user,
                       is_premium: isPremium,
-                      is_chef: isChef, // Explicitly include is_chef
+                      is_chef: isChef,
                       chef_id: chefId,
                       chef_status: chefStatus,
                       is_seller: isSeller,
@@ -540,13 +518,12 @@ const resetPassword = (req, res) => {
 
   const saveTestimonial = (req, res) => {
     const { text } = req.body;
-    const userId = req.user.id; // Retrieved from the token middleware
+    const userId = req.user.id; 
   
     if (!text) {
       return res.status(400).json({ message: 'Review text is required.' });
     }
   
-    // Fetch user's name from the database
     db.query(
       'SELECT CONCAT(first_name, " ", last_name) AS user_name FROM users WHERE id = ?',
       [userId],
@@ -562,7 +539,6 @@ const resetPassword = (req, res) => {
   
         const userName = results[0].user_name;
   
-        // Insert the review into the testimonials table with a default status of 'pending'
         const query = 'INSERT INTO testimonials (user_id, user_name, text, status) VALUES (?, ?, ?, ?)';
         db.query(query, [userId, userName, text, 'pending'], (err) => {
           if (err) {
@@ -642,7 +618,6 @@ const resetPassword = (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
   
-    // Validate that the status is one of the accepted values
     if (!['pending', 'approved', 'rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status.' });
     }
@@ -671,118 +646,180 @@ const resetPassword = (req, res) => {
   
   
   const updateProfile = (req, res) => {
+    console.log('Request Body:', req.body);
+    console.log('Uploaded File:', req.file);
+  
     const errors = validationResult(req);
-
-    // Handle validation errors
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+      console.log('Validation Errors:', errors.array());
+      return res.status(400).json({ 
+        message: 'Validation failed', 
+        errors: errors.array() 
+      });
     }
-
-    const userId = req.user.id; // Retrieved from the token middleware
+  
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ 
+        message: 'Unauthorized: Invalid or missing token' 
+      });
+    }
+  
+    const userId = req.user.id;
     const { first_name, last_name, address, email, phone_number } = req.body;
-
-    // Step 1: Check if the new email already exists in users, chefs, or sellers
-    const checkEmailQuery = `
-        SELECT 'users' AS source, id FROM users WHERE email = ? AND id != ?
-        UNION
-        SELECT 'chefs' AS source, id FROM chefs WHERE email = ?
-        UNION
-        SELECT 'sellers' AS source, id FROM sellers WHERE email = ?
-    `;
-    const checkEmailData = [email, userId, email, email];
-
-    db.query(checkEmailQuery, checkEmailData, (err, emailResults) => {
-        if (err) {
+  
+    // Step 1: Get the current user data to compare email and fill in missing fields
+    const getCurrentUserQuery = `SELECT first_name, last_name, address, email, phone_number, image FROM users WHERE id = ?`;
+    db.query(getCurrentUserQuery, [userId], (err, currentUserResult) => {
+      if (err) {
+        console.error('Error fetching current user:', err.message);
+        return res.status(500).json({ message: 'Internal Server Error' });
+      }
+  
+      if (currentUserResult.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      const currentUser = currentUserResult[0];
+      const isEmailChanged = email && email !== currentUser.email;
+  
+      // Step 2: Check if the new email already exists (only if email is provided and changed)
+      if (isEmailChanged) {
+        const checkEmailQuery = `
+          SELECT 'users' AS source, id FROM users WHERE email = ? AND id != ?
+          UNION
+          SELECT 'chefs' AS source, id FROM chefs WHERE email = ?
+          UNION
+          SELECT 'sellers' AS source, id FROM sellers WHERE email = ?
+        `;
+        const checkEmailData = [email, userId, email, email];
+  
+        db.query(checkEmailQuery, checkEmailData, (err, emailResults) => {
+          if (err) {
             console.error('Error checking email:', err.message);
             return res.status(500).json({ message: 'Internal Server Error' });
-        }
-
-        // If email exists in any table, return an error
-        if (emailResults.length > 0) {
+          }
+  
+          if (emailResults.length > 0) {
             return res.status(400).json({
-                message: 'The email address is already in use. Please use a different email address.',
+              message: 'The email address is already in use. Please use a different email address.',
             });
+          }
+  
+          updateUserProfile();
+        });
+      } else {
+        updateUserProfile();
+      }
+  
+      // Step 3: Update the user profile with provided fields only
+      function updateUserProfile() {
+        // Build the SQL query dynamically based on provided fields
+        const fieldsToUpdate = [];
+        const values = [];
+  
+        // Use provided values or fall back to current values
+        if (first_name !== undefined) {
+          fieldsToUpdate.push('first_name = ?');
+          values.push(first_name);
         }
-
-        // Step 2: Prepare the update for the users table
-        let userSql = '';
-        let userData = [];
-
+        if (last_name !== undefined) {
+          fieldsToUpdate.push('last_name = ?');
+          values.push(last_name);
+        }
+        if (address !== undefined) {
+          fieldsToUpdate.push('address = ?');
+          values.push(address);
+        }
+        if (email !== undefined) {
+          fieldsToUpdate.push('email = ?');
+          values.push(email);
+        }
+        if (phone_number !== undefined) {
+          fieldsToUpdate.push('phone_number = ?');
+          values.push(phone_number);
+        }
+        let imagePath = currentUser.image;
         if (req.file) {
-            // If an image is provided, include the `image` field
-            const imagePath = `uploads/users/${req.file.filename}`; // Correct backend path
-            userSql = `UPDATE users 
-                       SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ?, image = ? 
-                       WHERE id = ?`;
-            userData = [
-                first_name,
-                last_name,
-                address,
-                email,
-                phone_number,
-                imagePath,
-                userId
-            ];
-        } else {
-            // If no image is provided, update only other fields
-            userSql = `UPDATE users 
-                       SET first_name = ?, last_name = ?, address = ?, email = ?, phone_number = ? 
-                       WHERE id = ?`;
-            userData = [first_name, last_name, address, email, phone_number, userId];
+          imagePath = `uploads/users/${req.file.filename}`;
+          fieldsToUpdate.push('image = ?');
+          values.push(imagePath);
         }
-
-        // Step 3: Execute the update for the users table
-        db.query(userSql, userData, (err, userResult) => {
-            if (err) {
-                // Handle duplicate email entry error (should be caught by checkEmailQuery, but keep for safety)
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.status(400).json({
-                        message: 'The email address is already in use. Please use a different email address.',
-                    });
-                }
-
-                console.error('Error updating user profile:', err.message);
-                return res.status(500).json({ message: 'Internal Server Error' });
+  
+        // If no fields to update, return early
+        if (fieldsToUpdate.length === 0) {
+          return res.status(200).json({
+            message: 'No changes provided to update',
+            data: {
+              first_name: currentUser.first_name,
+              last_name: currentUser.last_name,
+              address: currentUser.address,
+              email: currentUser.email,
+              phone_number: currentUser.phone_number,
+              image: imagePath ? `http://localhost:3000/${imagePath}` : null,
+            },
+          });
+        }
+  
+        // Add userId to the values for the WHERE clause
+        values.push(userId);
+  
+        const userSql = `UPDATE users SET ${fieldsToUpdate.join(', ')} WHERE id = ?`;
+  
+        db.query(userSql, values, (err, userResult) => {
+          if (err) {
+            if (err.code === 'ER_DUP_ENTRY') {
+              return res.status(400).json({
+                message: 'The email address is already in use. Please use a different email address.',
+              });
             }
-
-            // Handle case where no rows are affected
-            if (userResult.affectedRows === 0) {
-                return res.status(404).json({ message: 'User not found.' });
-            }
-
-            // Step 4: Update email in chefs table if the user exists there
+            console.error('Error updating user profile:', err.message);
+            return res.status(500).json({ message: 'Internal Server Error' });
+          }
+  
+          if (userResult.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+          }
+  
+          // Step 4: If email changed, update chefs and sellers tables
+          if (isEmailChanged) {
             const updateChefSql = `UPDATE chefs SET email = ? WHERE id = ?`;
             db.query(updateChefSql, [email, userId], (err, chefResult) => {
+              if (err) {
+                console.error('Error updating chef email:', err.message);
+              }
+  
+              const updateSellerSql = `UPDATE sellers SET email = ? WHERE id = ?`;
+              db.query(updateSellerSql, [email, userId], (err, sellerResult) => {
                 if (err) {
-                    console.error('Error updating chef email:', err.message);
-                    // Note: We don't return an error here to avoid failing the entire request
+                  console.error('Error updating seller email:', err.message);
                 }
-
-                // Step 5: Update email in sellers table if the user exists there
-                const updateSellerSql = `UPDATE sellers SET email = ? WHERE id = ?`;
-                db.query(updateSellerSql, [email, userId], (err, sellerResult) => {
-                    if (err) {
-                        console.error('Error updating seller email:', err.message);
-                        // Note: We don't return an error here to avoid failing the entire request
-                    }
-
-                    // Step 6: Respond with success message
-                    return res.status(200).json({
-                        message: 'Profile updated successfully.',
-                        data: {
-                            first_name,
-                            last_name,
-                            address,
-                            email,
-                            phone_number,
-                            image: req.file ? `http://localhost:3000/${imagePath}` : null, // Return the full image URL if updated
-                        },
-                    });
-                });
+  
+                sendSuccessResponse();
+              });
             });
+          } else {
+            sendSuccessResponse();
+          }
+  
+          // Step 5: Send success response
+          function sendSuccessResponse() {
+            return res.status(200).json({
+              message: 'Profile updated successfully',
+              data: {
+                first_name: first_name !== undefined ? first_name : currentUser.first_name,
+                last_name: last_name !== undefined ? last_name : currentUser.last_name,
+                address: address !== undefined ? address : currentUser.address,
+                email: email !== undefined ? email : currentUser.email,
+                phone_number: phone_number !== undefined ? phone_number : currentUser.phone_number,
+                image: imagePath ? `http://localhost:3000/${imagePath}` : null,
+              },
+            });
+          }
         });
+      }
     });
-};
+  };
+  
 
 
 const removeImage = (req, res) => {
@@ -1060,7 +1097,6 @@ const initiatePremiumPayment = async (req, res) => {
     try {
         const { totalAmount, userId, customerInfo } = req.body;
 
-        // Step 1: Insert a pending subscription entry before payment
         db.query(
             "INSERT INTO premium_subscriptions (user_id, amount, status) VALUES (?, ?, 'pending')",
             [userId, totalAmount],
@@ -1069,15 +1105,13 @@ const initiatePremiumPayment = async (req, res) => {
                     console.error("Database Error:", err);
                     return res.status(500).json({ success: false, message: "Failed to insert pending subscription" });
                 }
-
-                // Step 2: Initiate Khalti Payment
                 const response = await axios.post(
                     "https://a.khalti.com/api/v2/epayment/initiate/",
                     {
                         return_url: "http://localhost:5173/premiumsuccess",
                         website_url: "http://localhost:5173/",
                         amount: totalAmount * 100,
-                        purchase_order_id: userId,  // Using user ID as reference
+                        purchase_order_id: userId,  
                         purchase_order_name: "Premium Subscription",
                         customer_info: customerInfo
                     },
@@ -1102,9 +1136,8 @@ const initiatePremiumPayment = async (req, res) => {
     }
 };
 
-// 🔹 Confirm Premium Payment & Activate Subscription
 const confirmPremiumPayment = (req, res) => {
-  console.log("Received Payment Confirmation Data:", req.body); // ✅ Log Request Data
+  console.log("Received Payment Confirmation Data:", req.body);
 
   const { user_id, payment_date, amount, email } = req.body;
 
@@ -1119,7 +1152,7 @@ const confirmPremiumPayment = (req, res) => {
 
   const startDate = new Date(payment_date);
   const endDate = new Date(startDate);
-  endDate.setMonth(endDate.getMonth() + 1);  // 1-month premium subscription
+  endDate.setMonth(endDate.getMonth() + 1); 
 
   db.query(
       "UPDATE premium_subscriptions SET start_date = ?, end_date = ?, status = 'active' WHERE user_id = ? AND status = 'pending'",
@@ -1174,7 +1207,7 @@ const expireSubscriptions = () => {
 };
 const PremiumStatus = async (req, res) => {
   try {
-      const userId = req.user?.id; // Ensure user ID exists
+      const userId = req.user?.id; 
 
       if (!userId) {
           return res.status(400).json({ success: false, message: "User ID is required" });

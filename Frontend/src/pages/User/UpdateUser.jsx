@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { toast, ToastContainer } from "react-toastify";
 import "../../styles/User/UpdateUser.css";
 import Footer from "../../components/Footer";
 import Navigationbar from "../../components/NavBar";
@@ -20,12 +21,9 @@ const ProfilePage = () => {
     image: null,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState("");
-  const [passwordChangeError, setPasswordChangeError] = useState("");
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
     oldPassword: "",
     newPassword: "",
@@ -58,7 +56,7 @@ const ProfilePage = () => {
         setLoading(false);
       })
       .catch((error) => {
-        setError(error.response?.data?.message || "Failed to fetch user data");
+        toast.error(error.response?.data?.message || "Failed to fetch user data");
         setLoading(false);
       });
   }, []);
@@ -77,20 +75,17 @@ const ProfilePage = () => {
 
   const handleSubmitPasswordChange = (e) => {
     e.preventDefault();
-  
+
     if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setPasswordChangeError("All fields are required.");
-      setPasswordChangeSuccess(""); // Clear success message
+      toast.error("All fields are required.");
       return;
     }
-  
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordChangeError("New password and confirm password do not match.");
-      setPasswordChangeSuccess(""); // Clear success message
+      toast.error("New password and confirm password do not match.");
       return;
     }
-  
-    // Send the API request to change the password
+
     axios
       .post(
         "http://localhost:3000/api/change-password",
@@ -100,28 +95,23 @@ const ProfilePage = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // Attach the JWT token
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       )
       .then((response) => {
-        // Display success message
-        setPasswordChangeSuccess(response.data.message || "Password updated successfully.");
-        setPasswordChangeError(""); // Clear error message
+        toast.success(response.data.message || "Password updated successfully.");
         setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
         setTimeout(() => {
           setIsChangePasswordOpen(false);
-          localStorage.removeItem("token"); // Clear the token
-          navigate("/login"); // Redirect to login page
-        }, 2000); // Clear form
+          localStorage.removeItem("token");
+          navigate("/login");
+        }, 2000);
       })
       .catch((error) => {
-        // Display error message
-        setPasswordChangeError(error.response?.data?.message || "Failed to change password. Please try again.");
-        setPasswordChangeSuccess(""); // Clear success message
+        toast.error(error.response?.data?.message || "Failed to change password. Please try again.");
       });
   };
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -146,38 +136,36 @@ const ProfilePage = () => {
         },
       })
       .then(() => {
-        setSuccessMessage("Profile updated successfully!");
-        setEditMode(false); // Disable edit mode after saving
-        setTimeout(() => setSuccessMessage(""), 3000);
+        toast.success("Profile updated successfully!");
+        setEditMode(false);
         setTimeout(() => {
-          window.location.reload(); // Reload the page after 3 seconds
-        }, 3000); // Clear message after 3 seconds
+          window.location.reload();
+        }, 2000);
       })
       .catch((error) => {
-        setError(error.response?.data?.message || "Failed to update profile");
+        const errorMessage = error.response?.data?.message || "Failed to update profile";
         if (errorMessage.includes("Duplicate entry")) {
-          setError("The email address is already in use. Please try a different one.");
+          toast.error("The email address is already in use. Please try a different one.");
         } else {
-          setError(errorMessage);
+          toast.error(errorMessage);
         }
       });
   };
 
   const handleEditClick = () => {
-    setEditMode(true); // Enable edit mode
+    setEditMode(true);
   };
 
   const handleCancelClick = () => {
-    setEditMode(false); // Disable edit mode
-    setError(null); // Clear any errors
-    setFormData({ ...user }); // Reset form data to the original user data
+    setEditMode(false);
+    setFormData({ ...user });
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("image", file);
-  
+
     axios
       .post("http://localhost:3000/api/upload-image", formData, {
         headers: {
@@ -186,22 +174,18 @@ const ProfilePage = () => {
         },
       })
       .then((response) => {
-        const uploadedImagePath = response.data.image; // Use the backend's response
+        const uploadedImagePath = response.data.image;
         setFormData((prevData) => ({
           ...prevData,
-          image: `http://localhost:3000${uploadedImagePath}`, // Prepend the base URL for immediate rendering
+          image: `http://localhost:3000${uploadedImagePath}`,
         }));
-        setSuccessMessage("Image uploaded successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000); // Clear success message
+        toast.success("Image uploaded successfully!");
       })
       .catch((error) => {
-        console.error("Image upload failed:", error.response?.data || error.message);
-        alert("Image upload failed. Please try again.");
+        toast.error("Image upload failed. Please try again.");
       });
   };
-  
-  
-  
+
   const handleRemoveImage = () => {
     axios
       .delete("http://localhost:3000/api/remove-image", {
@@ -214,269 +198,319 @@ const ProfilePage = () => {
           ...prevData,
           image: null,
         }));
-        setSuccessMessage("Image removed successfully!");
-        setTimeout(() => setSuccessMessage(""), 3000);
+        toast.success("Image removed successfully!");
       })
       .catch((error) => {
-        console.error("Error removing image:", error.response?.data || error.message);
-        setError(error.response?.data?.message || "Failed to remove the image");
+        toast.error(error.response?.data?.message || "Failed to remove the image");
       });
   };
-  
+
+  const handleGoPremium = () => {
+    localStorage.setItem("premium_plan", JSON.stringify({
+      plan: "Monthly Premium",
+      price: 1500,
+    }));
+    navigate("/paymentdetails");
+  };
+
   if (loading) {
     return <div>Loading your profile...</div>;
   }
 
-  if (error && !editMode) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
     <div className="Update Profile">
-      <Navigationbar/>
-    <div className="profile-page-container">
-      <h1 className="profile-title">User Profile</h1>
-      <p className="profile-subtitle">Manage your details and update your information.</p>
+      <Navigationbar />
+      <div className="profile-page-container">
+        <h1 className="profile-title">User Profile</h1>
+        <p className="profile-subtitle">Manage your details and update your information.</p>
 
-      <div className="profile-wrapper">
-        <div className="profile-info">
-        <img
-          src={formData.image ? formData.image : userImage}
-          alt="Profile Avatar"
-          className="profile-avatar"
-          
-        />
+        <div className="profile-wrapper">
+          <div className="profile-info">
+            <img
+              src={formData.image ? formData.image : userImage}
+              alt="Profile Avatar"
+              className="profile-avatar"
+            />
 
-          {editMode && (
-            <div className="image-actions">
-              <input
-                type="file"
-                id="file-input"
-                style={{ display: "none" }}
-                onChange={handleImageUpload}
-              />
-              <button
-                type="button"
-                className="image-btns"
-                onClick={() => document.getElementById("file-input").click()}
-              >
-                Set
-              </button>
-              <button
-                type="button"
-                className="image-btn-cancels"
-                onClick={handleRemoveImage}
-              >
-                Remove
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="profile-details">
-          <h2 className="details-title">General Information</h2>
-          <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-            <div className="input-group">
-              <label>First Name:</label>
-              <input
-                type="text"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                disabled={!editMode}
-                required
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Last Name:</label>
-              <input
-                type="text"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                disabled={!editMode}
-                required
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Email:</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={!editMode}
-                required
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Phone Number:</label>
-              <input
-                type="text"
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleChange}
-                disabled={!editMode}
-                required
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Address:</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                disabled={!editMode}
-                required
-              />
-            </div>
-
-            {editMode ? (
-              <div className="button-container">
-                <button type="submit" className="secondary-btn">
-                  Save Changes
+            {editMode && (
+              <div className="image-actions">
+                <input
+                  type="file"
+                  id="file-input"
+                  style={{ display: "none" }}
+                  onChange={handleImageUpload}
+                />
+                <button
+                  type="button"
+                  className="image-btns"
+                  onClick={() => document.getElementById("file-input").click()}
+                >
+                  Set
                 </button>
                 <button
                   type="button"
-                  className="secondary-btn cancel-btns"
-                  onClick={handleCancelClick}
+                  className="image-btn-cancels"
+                  onClick={handleRemoveImage}
                 >
-                  Cancel
+                  Remove
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                className="secondary-btn"
-                onClick={handleEditClick}
-              >
-                Edit Profile
-              </button>
-              
-
             )}
-          {!editMode && (
-            <button
-              type="button"
-              className="secondary-btn"
-              onClick={() => setIsChangePasswordOpen(true)}>
-              Change Password
-            </button>
-          )}
-      </form>
-            {isChangePasswordOpen && (
-        <div className="password-modal-overlay">
-          <div className="password-modal">
-            <form onSubmit={handleSubmitPasswordChange}>
-              <h2>Change Password</h2>
+          </div>
+
+          <div className="profile-details">
+            <h2 className="details-title">General Information</h2>
+            <form onSubmit={handleSubmit}>
               <div className="input-group">
-                <label>Old Password</label>
-                <div className="password-input">
-                  <input
-                    type={showPassword.oldPassword ? "text" : "password"}
-                    name="oldPassword"
-                    value={passwordData.oldPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  {showPassword.oldPassword ? (
-                    <AiFillEyeInvisible
-                      onClick={() => togglePasswordVisibility("oldPassword")}
-                    />
-                  ) : (
-                    <AiFillEye
-                      onClick={() => togglePasswordVisibility("oldPassword")}
-                    />
-                  )}
-                </div>
+                <label>First Name:</label>
+                <input
+                  type="text"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  disabled={!editMode}
+                  required
+                />
               </div>
+
               <div className="input-group">
-                <label>New Password</label>
-                <div className="password-input">
-                  <input
-                    type={showPassword.newPassword ? "text" : "password"}
-                    name="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  {showPassword.newPassword ? (
-                    <AiFillEyeInvisible
-                      onClick={() => togglePasswordVisibility("newPassword")}
-                    />
-                  ) : (
-                    <AiFillEye
-                      onClick={() => togglePasswordVisibility("newPassword")}
-                    />
-                  )}
-                </div>
+                <label>Last Name:</label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  disabled={!editMode}
+                  required
+                />
               </div>
+
               <div className="input-group">
-                <label>Confirm Password</label>
-                <div className="password-input">
-                  <input
-                    type={showPassword.confirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  {showPassword.confirmPassword ? (
-                    <AiFillEyeInvisible
-                      onClick={() => togglePasswordVisibility("confirmPassword")}
-                    />
-                  ) : (
-                    <AiFillEye
-                      onClick={() => togglePasswordVisibility("confirmPassword")}
-                    />
-                  )}
-                </div>
+                <label>Email:</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  disabled={!editMode}
+                  required
+                />
               </div>
-              {/* Success and Error Messages */}
-              {passwordChangeError && (
-                <div className="error-message">{passwordChangeError}</div>
-              )}
-              {passwordChangeSuccess && (
-                <div className="success-message">{passwordChangeSuccess}</div>
-              )}
-              <div className="button-group">
-                <button type="submit">Submit</button>
+
+              <div className="input-group">
+                <label>Phone Number:</label>
+                <input
+                  type="text"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                  disabled={!editMode}
+                  required
+                />
+              </div>
+
+              <div className="input-group">
+              <label>Account Status:</label>
+                <div className="account-status-container">
+                <p className="account-status">
+                  {user.is_premium ? "Premium User" : "Normal User"}
+                </p>
+                {!user.is_premium && !editMode && (
+                  <button
+                    type="button"
+                    className="go-premium-btn"
+                    onClick={() => setShowPremiumModal(true)}
+                  >
+                    Go Premium
+                  </button>
+                )}
+              </div>
+              </div>
+
+              <div className="input-group">
+                <label>Address:</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  disabled={!editMode}
+                  required
+                />
+              </div>
+
+              {editMode ? (
+                <div className="button-container">
+                  <button type="submit" className="secondary-btn">
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-btn cancel-btns"
+                    onClick={handleCancelClick}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    setPasswordChangeError(""); // Clear error message
-                    setPasswordChangeSuccess(""); // Clear success message
-                    setIsChangePasswordOpen(false);
-                  }}
-                  disabled={!!passwordChangeSuccess} 
+                  className="secondary-btn"
+                  onClick={handleEditClick}
                 >
-                  Cancel
+                  Edit Profile
                 </button>
-              </div>
+              )}
+              {!editMode && (
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => setIsChangePasswordOpen(true)}
+                >
+                  Change Password
+                </button>
+              )}
             </form>
+            {isChangePasswordOpen && (
+              <div className="password-modal-overlay">
+                <div className="password-modal">
+                  <form onSubmit={handleSubmitPasswordChange}>
+                    <h2>Change Password</h2>
+                    <div className="input-group">
+                      <label>Old Password</label>
+                      <div className="password-input">
+                        <input
+                          type={showPassword.oldPassword ? "text" : "password"}
+                          name="oldPassword"
+                          value={passwordData.oldPassword}
+                          onChange={handlePasswordChange}
+                          required
+                        />
+                        {showPassword.oldPassword ? (
+                          <AiFillEyeInvisible
+                            onClick={() => togglePasswordVisibility("oldPassword")}
+                          />
+                        ) : (
+                          <AiFillEye
+                            onClick={() => togglePasswordVisibility("oldPassword")}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="input-group">
+                      <label>New Password</label>
+                      <div className="password-input">
+                        <input
+                          type={showPassword.newPassword ? "text" : "password"}
+                          name="newPassword"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          required
+                        />
+                        {showPassword.newPassword ? (
+                          <AiFillEyeInvisible
+                            onClick={() => togglePasswordVisibility("newPassword")}
+                          />
+                        ) : (
+                          <AiFillEye
+                            onClick={() => togglePasswordVisibility("newPassword")}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="input-group">
+                      <label>Confirm Password</label>
+                      <div className="password-input">
+                        <input
+                          type={showPassword.confirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          required
+                        />
+                        {showPassword.confirmPassword ? (
+                          <AiFillEyeInvisible
+                            onClick={() => togglePasswordVisibility("confirmPassword")}
+                          />
+                        ) : (
+                          <AiFillEye
+                            onClick={() => togglePasswordVisibility("confirmPassword")}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="button-group">
+                      <button type="submit">Submit</button>
+                      <button
+                        type="button"
+                        onClick={() => setIsChangePasswordOpen(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
-      {successMessage && <div className="success-message">{successMessage}</div>}
-        </div>
+        <p
+          className="logout-text"
+          onClick={() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("userId");
+            window.location.href = "/login";
+          }}
+        >
+          <FiLogOut className="logout-icon" /> Logout
+        </p>
+        {showPremiumModal && (
+          <div className="premium-modal-overlay">
+            <div className="premium-modal-container">
+              <div className="premium-modal-content">
+                <h2 className="premium-modal-title">Premium</h2>
+                <p className="premium-modal-description">
+                  Unlock the full potential of your culinary journey with our Premium Membership!
+                </p>
+                <div className="premium-modal-price">
+                  <span>Rs 1500/month</span>
+                </div>
+                <button className="premium-modal-button" onClick={handleGoPremium}>
+                  Go Premium
+                </button>
+                <div className="premium-modal-features">
+                  <h3 className="premium-modal-features-title">Exclusive Chef Access</h3>
+                  <div className="premium-modal-feature">
+                    <div className="premium-modal-check">✓</div>
+                    <p>Access exclusive, chef-crafted recipes tailored to your tastes and dietary needs</p>
+                  </div>
+                  <div className="premium-modal-feature">
+                    <div className="premium-modal-check">✓</div>
+                    <p>Be the first to try new features and seasonal recipe collection</p>
+                  </div>
+                  <div className="premium-modal-feature">
+                    <div className="premium-modal-check">✓</div>
+                    <p>Unlock all these benefits for just Rs1500/month, with no hidden fees.</p>
+                  </div>
+                  <div className="premium-modal-feature">
+                    <div className="premium-modal-check">✓</div>
+                    <p>Explore a growing library of chef-exclusive recipes designed to inspire your cooking.</p>
+                  </div>
+                  <div className="premium-modal-feature">
+                    <div className="premium-modal-check">✓</div>
+                    <p>Discover secret ingredients and methods used by professional chefs in their recipes.</p>
+                  </div>
+                </div>
+              </div>
+              <button className="back-modal-button" onClick={() => setShowPremiumModal(false)}>
+                Back
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-      <p className="logout-text" onClick={() => {
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("userId"); // Clear the token
-                    window.location.href = "/login"; // Redirect to the login page
-                  }}
-                >
-              <FiLogOut className="logout-icon" /> Logout
-              </p>
-      
-      </div>
-      <Footer/>
+      <Footer />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
     </div>
   );
 };

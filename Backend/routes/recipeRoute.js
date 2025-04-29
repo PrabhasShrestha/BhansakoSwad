@@ -19,7 +19,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// File filter and size limit
 const fileFilter = (req, file, callback) => {
     if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
         callback(null, true); // Accept the file
@@ -31,21 +30,21 @@ const fileFilter = (req, file, callback) => {
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 10 * 1024 * 1024 } // Limit to 2MB
+    limits: { fileSize: 10 * 1024 * 1024 } 
 });
 
 
 
 router.get("/recipes", recipeController.getApprovedRecipes);        
 router.get("/recipe/:id", recipeController.getRecipeById);      
-router.post("/addrecipe", upload.single('image'), auth.isAuthorize, recipeController.createRecipe);          
-router.post("/updaterecipe/:id", upload.single('image'), auth.isAuthorize, recipeController.updateRecipe);       
-router.delete("/recipe/:id", recipeController.deleteRecipe);
+router.post("/addrecipe", upload.single('image'), auth.isAuthorize, recipeController.createRecipe);              
 router.get("/search", recipeController.searchRecipe); 
 router.post("/filterRecipes", recipeController.filterRecipes);    
 router.post("/rate",recipeController.giveratings)
 router.get("/ingredients", recipeController.getIngredients);    
-router.post("/ingredients/create",recipeController.addIngredients)
+router.post("/ingredients/create",recipeController.addIngredients);
+router.post("/updateingredients/:id", auth.isAuthorize, recipeController.updateIngredient); 
+router.delete("/ingredients/:id", auth.isAuthorize, recipeController.deleteIngredient);
 router.get("/creator/:id",recipeController.getRecipeById)
 router.post("/favorite",recipeController.addFavorite)
 router.get("/favorites/:userId",recipeController.getFavorite)

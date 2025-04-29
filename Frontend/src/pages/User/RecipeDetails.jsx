@@ -111,13 +111,11 @@ const RecipeDetails = () => {
         }));
     };
 
-    // Function to capitalize the first letter of a string
     const capitalizeFirstLetter = (str) => {
         if (!str) return str;
         return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     };
 
-    // Function to capitalize the first letter of each word in a string (used for amount)
     const capitalizeEachWord = (str) => {
         if (!str) return str;
         return str
@@ -126,7 +124,6 @@ const RecipeDetails = () => {
             .join(' ');
     };
 
-    // Function to translate difficulty to Nepali
     const translateDifficulty = (difficulty) => {
         if (!translated) return difficulty;
         const difficultyMap = {
@@ -137,36 +134,30 @@ const RecipeDetails = () => {
         return difficultyMap[difficulty] || difficulty;
     };
 
-    // Function to translate cooking time to Nepali (e.g., "1 hour 20 minutes" to "१ घण्टा २० मिनेट")
     const translateCookingTime = (cookingTime) => {
         if (!translated) return cookingTime;
 
-        // Split the cooking time into parts (e.g., "1 hour 20 minutes" -> ["1", "hour", "20", "minutes"])
         const parts = cookingTime.split(' ');
-        if (parts.length !== 4) return cookingTime; // Ensure the format is "X hours Y minutes"
+        if (parts.length !== 4) return cookingTime; 
 
-        const hours = parts[0]; // e.g., "1"
-        const hourUnit = parts[1]; // e.g., "hour" or "hours"
-        const minutes = parts[2]; // e.g., "20"
-        const minuteUnit = parts[3]; // e.g., "minute" or "minutes"
+        const hours = parts[0]; 
+        const hourUnit = parts[1]; 
+        const minutes = parts[2]; 
+        const minuteUnit = parts[3]; 
 
-        // Convert numbers to Nepali numerals using the translations object
         const nepaliHours = translations.nepaliNumbers[hours] || hours;
         const nepaliMinutes = translations.nepaliNumbers[minutes] || minutes;
 
-        // Normalize units (e.g., "hour" or "hours" -> "hours")
         const normalizedHourUnit = hourUnit.endsWith('s') ? hourUnit : `${hourUnit}s`;
         const normalizedMinuteUnit = minuteUnit.endsWith('s') ? minuteUnit : `${minuteUnit}s`;
 
-        // Translate the units using the translations object
         const unitMap = {
-            hours: translations.hours, // "घण्टा"
-            minutes: translations.minutes // "मिनेट"
+            hours: translations.hours, 
+            minutes: translations.minutes 
         };
         const translatedHourUnit = unitMap[normalizedHourUnit] || normalizedHourUnit;
         const translatedMinuteUnit = unitMap[normalizedMinuteUnit] || normalizedMinuteUnit;
 
-        // Combine the translated parts
         return `${nepaliHours} ${translatedHourUnit} ${nepaliMinutes} ${translatedMinuteUnit}`;
     };
 

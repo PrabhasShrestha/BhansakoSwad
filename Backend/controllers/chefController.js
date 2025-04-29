@@ -6,13 +6,13 @@ const multer = require("multer");
 const path = require("path");
 const sendMail = require('../helpers/sendMail');
 
-// Configure multer for certificate uploads
+
 const certificateStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "./uploads/chefs"); // Save files in "uploads/chefs" directory
+        cb(null, "./uploads/chefs"); 
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+        cb(null, Date.now() + path.extname(file.originalname)); 
     }
 });
 
@@ -21,10 +21,10 @@ const uploadCertificate = multer({ storage: certificateStorage }).single("certif
 // Configure multer for profile photo uploads
 const photoStorage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "./uploads/chefs"); // Save photos in "uploads/chefs" directory
+        cb(null, "./uploads/chefs"); 
     },
     filename: function (req, file, cb) {
-        cb(null, `photo-${Date.now()}${path.extname(file.originalname)}`); // Unique filename
+        cb(null, `photo-${Date.now()}${path.extname(file.originalname)}`);
     }
 });
 

@@ -226,8 +226,8 @@ const AdminRecipePanel = () => {
         return;
       }
 
-      await axios.put(
-        `${BASE_API_URL}/api/chef/recipes/${selectedRecipe.id}`,
+      await axios.post(
+        `${BASE_API_URL}/api/admin/updaterecipe/${selectedRecipe.id}`,
         data,
         {
           headers: {
@@ -241,7 +241,7 @@ const AdminRecipePanel = () => {
       fetchRecipes();
       setIsEditModalOpen(false);
 
-      // Optionally, refresh the selectedRecipe to reflect the updated data
+
       const response = await axios.get(`${BASE_API_URL}/api/recipe/recipe/${selectedRecipe.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

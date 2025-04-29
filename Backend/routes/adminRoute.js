@@ -5,15 +5,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Define the base URL for the image
 const BASE_URL = 'http://localhost:3000';
 
-// Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join(__dirname, '../images');
     if (process.env.NODE_ENV !== 'production') {
-      console.log('Storing file in:', uploadPath); // Debug log
+      console.log('Storing file in:', uploadPath); 
     }
     cb(null, uploadPath);
   },
@@ -23,10 +21,10 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter and size limit
+
 const fileFilter = (req, file, cb) => {
   if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-    cb(null, true); // Accept the file
+    cb(null, true); 
   } else {
     cb(new Error('Only JPG and PNG images are allowed!'), false);
   }
@@ -35,7 +33,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 } // Limit to 2MB
+  limits: { fileSize: 2 * 1024 * 1024 } 
 }).single('image');
 
 router.get("/Orders",(req, res) => {
@@ -136,7 +134,6 @@ GROUP BY id, first_name, last_name, email, phone_number, activity_status, u.is_a
 router.post("/UserStatus/:id", (req, res) => {
   const userId = req.params.id;
 
-  // Step 1: Get User Details from `users` table
   const checkUserQuery = `
       SELECT id, is_admin, email, activity_status
       FROM users
@@ -454,7 +451,6 @@ router.get('/dashboard/recentUsers', (req, res) => {
 
 
 
-// Use multer to handle the image file upload (expecting a field named 'image')
 router.post('/updaterecipe/:id', (req, res) => {
   upload(req, res, (err) => {
     if (err instanceof multer.MulterError) {
@@ -968,6 +964,7 @@ router.post('/updaterecipe/:id', (req, res) => {
     }
   });
 });
+
 
 
 

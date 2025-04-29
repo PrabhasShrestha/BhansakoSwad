@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaEye, FaEyeSlash, FaUpload } from "react-icons/fa";
+import { ToastContainer, toast } from 'react-toastify';
 import "../styles/UserSignUp.css";
 
 function ChefSignUp() {
@@ -22,6 +23,15 @@ function ChefSignUp() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timer = setTimeout(() => {
+        setErrors({});
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [errors]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -33,10 +43,8 @@ function ChefSignUp() {
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
       const file = e.target.files[0];
-      
-      // Check if file is an image
+
       if (file.type.match('image.*')) {
-        // Create a preview URL for the image
         const reader = new FileReader();
         reader.onload = () => {
           setPreviewUrl(reader.result);
@@ -61,15 +69,34 @@ function ChefSignUp() {
 
   const validateForm = () => {
     let errors = {};
-    if (!formData.full_name) errors.full_name = "Full Name is required";
-    if (!formData.nationality) errors.nationality = "Nationality is required";
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
+    if (!formData.full_name) {
+      errors.full_name = "Full Name is required";
+      toast.error("Full Name is required");
+    }
+    if (!formData.nationality) {
+      errors.nationality = "Nationality is required";
+      toast.error("Nationality is required");
+    }
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = "Valid email is required";
-    if (!formData.phone_number || formData.phone_number.length !== 10)
+      toast.error("Valid email is required");
+    }
+    if (!formData.phone_number || formData.phone_number.length !== 10) {
       errors.phone_number = "Phone Number must be 10 digits";
-    if (!formData.about_you) errors.about_you = "About You is required";
-    if (!formData.password) errors.password = "Password is required";
-    if (!formData.certificate) errors.certificate = "Certificate is required";
+      toast.error("Phone Number must be 10 digits");
+    }
+    if (!formData.about_you) {
+      errors.about_you = "About You is required";
+      toast.error("About You is required");
+    }
+    if (!formData.password) {
+      errors.password = "Password is required";
+      toast.error("Password is required");
+    }
+    if (!formData.certificate) {
+      errors.certificate = "Certificate is required";
+      toast.error("Certificate is required");
+    }
 
     setErrors(errors);
     return Object.keys(errors).length === 0;
@@ -95,39 +122,40 @@ function ChefSignUp() {
           { headers: { "Content-Type": "multipart/form-data" } }
         );
   
-        alert("Your account has been submitted for verification. Please wait for admin approval.");
         console.log("Response from backend:", response.data);
         localStorage.setItem("email", formData.email);
-        navigate("/");
+        toast.success("Your account has been submitted for verification. Please wait for admin approval.", { autoClose: 4000 });
+        setTimeout(() => {
+          navigate("/");
+        }, 4000);
   
       } catch (error) {
         if (error.response) {
           console.error("Error Response Data:", error.response.data);
   
-          // Handle 400 error (Bad Request)
           if (error.response.status === 400) {
-            setErrors({ password: error.response.data.msg }); // Show password mismatch error
+            setErrors({ password: error.response.data.msg });
+            toast.error(error.response.data.msg);
           } 
-          // Handle 409 error (Conflict - Email Already Exists)
           else if (error.response.status === 409) {
             setErrors({ email: "This email is already registered as a chef." });
+            toast.error("This email is already registered as a chef.");
           } 
-          // Handle General Errors
           else {
             setErrors({ api: "Registration failed. Please try again." });
+            toast.error("Registration failed. Please try again.");
           }
         } else {
           setErrors({ api: "Unable to connect to server. Try again later." });
+          toast.error("Unable to connect to server. Try again later.");
         }
       }
     }
   };
   
-
-
   return (
     <div className="container">
-      {/* Left Section: Sign Up Form */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="form-section">
         <h2>HEY! WELCOME</h2>
         <h1>SIGN UP</h1>
@@ -143,7 +171,6 @@ function ChefSignUp() {
               value={formData.full_name}
               onChange={handleChange}
             />
-            {errors.full_name && <p className="error">{errors.full_name}</p>}
           </div>
 
           <div className="input-container">
@@ -157,7 +184,6 @@ function ChefSignUp() {
               value={formData.nationality}
               onChange={handleChange}
             />
-            {errors.nationality && <p className="error">{errors.nationality}</p>}
           </div>
 
           <div className="input-container">
@@ -171,7 +197,6 @@ function ChefSignUp() {
               value={formData.email}
               onChange={handleChange}
             />
-            {errors.email && <p className="error">{errors.email}</p>}
           </div>
 
           <div className="input-container">
@@ -185,29 +210,25 @@ function ChefSignUp() {
               value={formData.phone_number}
               onChange={handleChange}
             />
-            {errors.phone_number && (
-              <p className="error">{errors.phone_number}</p>
-            )}
           </div>
 
           <div className="input-container">
-          <label htmlFor="about_you">About You</label>
-          <textarea
-            id="about_you"
-            name="about_you"
-            placeholder="Tell us about yourself"
-            className={`input-box ${errors.about_you ? "input-error" : ""}`}
-            value={formData.about_you}
-            onChange={handleChange}
-            onInput={(e) => {
-              e.target.style.height = "auto"; // Reset height
-              e.target.style.height = e.target.scrollHeight + "px"; // Adjust height based on content
-            }}
-          />
-          {errors.about_you && <p className="error">{errors.about_you}</p>}
-        </div>
+            <label htmlFor="about_you">About You</label>
+            <textarea
+              id="about_you"
+              name="about_you"
+              placeholder="Tell us about yourself"
+              className={`input-box ${errors.about_you ? "input-error" : ""}`}
+              value={formData.about_you}
+              onChange={handleChange}
+              onInput={(e) => {
+                e.target.style.height = "auto"; 
+                e.target.style.height = e.target.scrollHeight + "px";
+              }}
+            />
+          </div>
 
-        <div className="input-container">
+          <div className="input-container">
             <label htmlFor="certificate">Certificate</label>
             <div className="file-upload-container">
               <div className={`file-input-wrapper ${errors.about_you ? "input-error" : ""}`}>
@@ -235,7 +256,6 @@ function ChefSignUp() {
                 />
               </div>
             </div>
-            {errors.certificate && <p className="error">{errors.certificate}</p>}
           </div>
 
           <div className="input-container">
@@ -257,7 +277,6 @@ function ChefSignUp() {
                 {showPassword ? <FaEye /> : <FaEyeSlash />}
               </span>
             </div>
-            {errors.password && <p className="error">{errors.password}</p>}
           </div>
           <button type="submit" className="create-account-btn">
             Create Account
@@ -268,9 +287,6 @@ function ChefSignUp() {
         </p>
       </div>
 
-      
-
-      {/* Right Section: Information Section */}
       <div className="info-section">
         <h1>CREATE ACCOUNT</h1>
         <h1 style={{ fontSize: "30px" }}>What Will You Get?</h1>
