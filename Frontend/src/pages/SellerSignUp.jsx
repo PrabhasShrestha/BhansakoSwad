@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "../styles/UserSignUp.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import "../styles/UserSignUp.css";
 
 function SellerSignUp() {
   const [formData, setFormData] = useState({
@@ -18,6 +20,15 @@ function SellerSignUp() {
   const [showPassword, setShowPassword] = useState(false); 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timer = setTimeout(() => {
+        setErrors({});
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [errors]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -28,14 +39,30 @@ function SellerSignUp() {
 
   const validateForm = () => {
     let errors = {};
-    if (!formData.shop_name) errors.shop_name = "Shop Name is required";
-    if (!formData.owner_name) errors.owner_name = "Owner Name is required";
-    if (!formData.store_address) errors.store_address = "Store Address is required";
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
+    if (!formData.shop_name) {
+      errors.shop_name = "Shop Name is required";
+      toast.error("Shop Name is required");
+    }
+    if (!formData.owner_name) {
+      errors.owner_name = "Owner Name is required";
+      toast.error("Owner Name is required");
+    }
+    if (!formData.store_address) {
+      errors.store_address = "Store Address is required";
+      toast.error("Store Address is required");
+    }
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = "Valid email is required";
-    if (!formData.phone_number || formData.phone_number.length !== 10)
+      toast.error("Valid email is required");
+    }
+    if (!formData.phone_number || formData.phone_number.length !== 10) {
       errors.phone_number = "Phone Number must be 10 digits";
-    if (!formData.password) errors.password = "Password is required";
+      toast.error("Phone Number must be 10 digits");
+    }
+    if (!formData.password) {
+      errors.password = "Password is required";
+      toast.error("Password is required");
+    }
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -60,25 +87,34 @@ function SellerSignUp() {
           password: "",
         });
         setErrors({});
-        navigate("/SellerVerificationCode"); 
-      }  catch (error) {
+        toast.success("Your account has been registered successfully, and your verification code has been sent to your email.", { autoClose: 4000 });
+        setTimeout(() => {
+          navigate("/SellerVerificationCode");
+        }, 4000);
+      } catch (error) {
         if (error.response) {
-            if (error.response.status === 400) {
-                setErrors({ password: error.response.data.msg }); 
-            } else if (error.response.status === 409) {
-                setErrors({ email: "This email is already registered as a seller." });
-            } else {
-                setErrors({ api: "Registration failed. Please try again." });
-            }
+          console.error("Error Response Data:", error.response.data);
+          if (error.response.status === 400) {
+            setErrors({ password: error.response.data.msg });
+            toast.error(error.response.data.msg);
+          } else if (error.response.status === 409) {
+            setErrors({ email: "This email is already registered as a seller." });
+            toast.error("This email is already registered as a seller.");
+          } else {
+            setErrors({ api: "Registration failed. Please try again." });
+            toast.error("Registration failed. Please try again.");
+          }
         } else {
-            setErrors({ api: "Unable to connect to server. Try again later." });
+          setErrors({ api: "Unable to connect to server. Try again later." });
+          toast.error("Unable to connect to server. Try again later.");
         }
-    }
+      }
     }
   };  
 
   return (
     <div className="container">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="form-section">
         <h2>HEY! WELCOME</h2>
         <h1>SIGN UP</h1>
@@ -94,7 +130,6 @@ function SellerSignUp() {
               value={formData.shop_name}
               onChange={handleChange}
             />
-            {errors.shop_name && <p className="error">{errors.shop_name}</p>}
           </div>
 
           <div className="input-container">
@@ -108,7 +143,6 @@ function SellerSignUp() {
               value={formData.owner_name}
               onChange={handleChange}
             />
-            {errors.owner_name && <p className="error">{errors.owner_name}</p>}
           </div>
 
           <div className="input-container">
@@ -122,7 +156,6 @@ function SellerSignUp() {
               value={formData.store_address}
               onChange={handleChange}
             />
-            {errors.store_address && <p className="error">{errors.store_address}</p>}
           </div>
 
           <div className="input-container">
@@ -136,7 +169,6 @@ function SellerSignUp() {
               value={formData.email}
               onChange={handleChange}
             />
-            {errors.email && <p className="error">{errors.email}</p>}
           </div>
 
           <div className="input-container">
@@ -150,9 +182,6 @@ function SellerSignUp() {
               value={formData.phone_number}
               onChange={handleChange}
             />
-            {errors.phone_number && (
-              <p className="error">{errors.phone_number}</p>
-            )}
           </div>
 
           <div className="input-container">
@@ -174,7 +203,6 @@ function SellerSignUp() {
                 {showPassword ? <FaEye /> : <FaEyeSlash />}
               </span>
             </div>
-            {errors.password && <p className="error">{errors.password}</p>}
           </div>
 
           <button type="submit" className="create-account-btn">

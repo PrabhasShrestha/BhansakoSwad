@@ -7,9 +7,9 @@ import { FaTrash, FaCheck, FaBan, FaPlus, FaEye, FaEllipsisV, FaEdit } from 'rea
 import ViewRecipeModal from '../ViewRecipeModal';
 import EditRecipeModal from '../EditRecipeModal';
 import RecipeModal from '../User/RecipeModal';
-import ManageIngredientsModal from './ManageIngredientsModal'; // Import the new modal
+import ManageIngredientsModal from './ManageIngredientsModal';
 
-const BASE_API_URL = 'http://localhost:3000'; // Define the base API URL
+const BASE_API_URL = 'http://localhost:3000';
 
 const AdminRecipePanel = () => {
   const [recipes, setRecipes] = useState([]);
@@ -19,7 +19,7 @@ const AdminRecipePanel = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [translated, setTranslated] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isManageIngredientsModalOpen, setIsManageIngredientsModalOpen] = useState(false); // New state for the modal
+  const [isManageIngredientsModalOpen, setIsManageIngredientsModalOpen] = useState(false);
   const [ingredients, setIngredients] = useState([]);
   const [cookingSteps, setCookingSteps] = useState([]);
   const [nutritionInfo, setNutritionInfo] = useState([]);
@@ -27,6 +27,8 @@ const AdminRecipePanel = () => {
   const [recipeImagePreview, setRecipeImagePreview] = useState(null);
   const [allIngredients, setAllIngredients] = useState([]);
   const [activeMenu, setActiveMenu] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const recipesPerPage = 5; // Show 5 recipes per page
   const menuRefs = useRef({});
 
   useEffect(() => {
@@ -80,6 +82,31 @@ const AdminRecipePanel = () => {
     recipe.submittedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
     recipe.approvalStatus.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Pagination logic
+  const indexOfLastRecipe = currentPage * recipesPerPage;
+  const indexOfFirstRecipe = indexOfLastRecipe - recipesPerPage;
+  const currentRecipes = filteredRecipes.slice(indexOfFirstRecipe, indexOfLastRecipe);
+  const totalPages = Math.ceil(filteredRecipes.length / recipesPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    setActiveMenu(null);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      setActiveMenu(null);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      setActiveMenu(null);
+    }
+  };
 
   const updateApprovalStatus = async (recipeId, status) => {
     try {
@@ -206,12 +233,8 @@ const AdminRecipePanel = () => {
     data.append('category', category || '');
     data.append('cuisine', cuisine || '');
 
-    // Use the formatted ingredients from EditRecipeModal
     data.append('ingredients', JSON.stringify(ingredients));
-
-    // Use the formatted methods from EditRecipeModal
     data.append('methods', JSON.stringify(methods));
-
     data.append('nutrition', JSON.stringify(nutrition));
 
     if (recipeImage) {
@@ -240,7 +263,6 @@ const AdminRecipePanel = () => {
       toast.success('Recipe updated successfully');
       fetchRecipes();
       setIsEditModalOpen(false);
-
 
       const response = await axios.get(`${BASE_API_URL}/api/recipe/recipe/${selectedRecipe.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -417,7 +439,7 @@ const AdminRecipePanel = () => {
               </button>
               <button
                 className="admin-dashboard-manage-recipe-btn"
-                onClick={() => setIsManageIngredientsModalOpen(true)} // Open the new modal
+                onClick={() => setIsManageIngredientsModalOpen(true)}
               >
                 <FaPlus /> Manage Ingredients
               </button>
@@ -471,8 +493,8 @@ const AdminRecipePanel = () => {
                   </tr>
                 </thead>
                 <tbody className="admin-table-body">
-                  {filteredRecipes.length > 0 ? (
-                    filteredRecipes.map((recipe) => (
+                  {currentRecipes.length > 0 ? (
+                    currentRecipes.map((recipe) => (
                       <tr key={recipe.id} className="admin-recipe-row">
                         <td className="admin-table-cell admin-recipe-title-cell">
                           {recipe.title}
@@ -621,6 +643,33 @@ const AdminRecipePanel = () => {
                   )}
                 </tbody>
               </table>
+
+              {/* Pagination Controls */}
+              <div className="pagination pag-add-rec">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="pagination-button"
+                >
+                   ←
+                </button>
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button
+                    key={index + 1}
+                    onClick={() => handlePageChange(index + 1)}
+                    className={`pagination-button ${currentPage === index + 1 ? 'active' : ''}`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="pagination-button"
+                >
+                  →
+                </button>
+              </div>
             </div>
 
             <ViewRecipeModal 

@@ -488,13 +488,7 @@ const ChefDashboard = () => {
                   <p>Total Recipes</p>
                 </div>
               </div>
-              <div className="chef-dashboard-stat-card">
-                <div className="chef-dashboard-stat-icon"><FaEye /></div>
-                <div className="chef-dashboard-stat-info">
-                  <h3>{stats.totalViews.toLocaleString()}</h3>
-                  <p>Total Views</p>
-                </div>
-              </div>
+            
               <div className="chef-dashboard-stat-card">
                 <div className="chef-dashboard-stat-icon"><FaStar /></div>
                 <div className="chef-dashboard-stat-info">
@@ -519,7 +513,6 @@ const ChefDashboard = () => {
                       <th>Cook Time</th>
                       <th>Difficulty</th>
                       <th>Rating</th>
-                      <th>Views</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -532,7 +525,6 @@ const ChefDashboard = () => {
                           <td>{recipe.cooking_time}</td>
                           <td>{recipe.difficulty}</td>
                           <td>{recipe.rating ? `${recipe.rating} ⭐` : 'N/A'}</td>
-                          <td>{recipe.views.toLocaleString()}</td>
                           <td className="chef-dashboard-recipe-actions">
                             <button
                               className="chef-dashboard-action-btn chef-dashboard-view-btn"

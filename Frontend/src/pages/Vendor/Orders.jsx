@@ -57,7 +57,18 @@ const OrderPage = () => {
     order.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const updateOrderStatus = async (orderId, newStatus) => {
+  const updateOrderStatus = async (orderId, currentStatus, newStatus) => {
+    // Define valid status transitions
+    const validTransitions = {
+      'processing': ['shipped'],
+      'shipped': ['delivered']
+    };
+
+    if (!validTransitions[currentStatus.toLowerCase()] || !validTransitions[currentStatus.toLowerCase()].includes(newStatus.toLowerCase())) {
+      alert(`Invalid status transition. You can only move from ${currentStatus} to ${validTransitions[currentStatus.toLowerCase()]?.join(' or ')}.`);
+      return;
+    }
+
     try {
       await axios.post(`http://localhost:3000/api/orders/${orderId}/status`, { status: newStatus });
 
@@ -70,6 +81,7 @@ const OrderPage = () => {
       console.log(`✅ Order ${orderId} updated to ${newStatus}`);
     } catch (error) {
       console.error("❌ Error updating order status:", error);
+      alert("Failed to update order status. Please try again.");
     }
   };
 
@@ -115,6 +127,7 @@ const OrderPage = () => {
                 <th>Total Amount</th>
                 <th>Order Date</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -144,17 +157,29 @@ const OrderPage = () => {
                   <td>{new Date(order.order_date).toLocaleDateString()}</td>
                   <td>{order.status}</td>
                   <td>
-                    {order.status === "Processing" && (
-                      <button className="status-button" onClick={() => updateOrderStatus(order.order_id, "Shipped")}>
+                    {order.status.toLowerCase() === "processing" && (
+                      <button
+                        className="status-button"
+                        onClick={() => updateOrderStatus(order.order_id, order.status, "Shipped")}
+                      >
                         Mark as Shipped
                       </button>
                     )}
+                    {order.status.toLowerCase() === "shipped" && (
+                      <button
+                        className="status-button"
+                        onClick={() => updateOrderStatus(order.order_id, order.status, "Delivered")}
+                      >
+                        Mark as Delivered
+                      </button>
+                    )}
+                    {order.status.toLowerCase() === "delivered" && null}
                   </td>
                 </tr>
               ))}
               {filteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: "center" }}>No Orders Found</td>
+                  <td colSpan="9" style={{ textAlign: "center" }}>No Orders Found</td>
                 </tr>
               )}
             </tbody>

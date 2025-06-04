@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import '../styles/Footer.css'; // Import the CSS file
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Footer = ({ addTestimonial }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [testimonial, setTestimonial] = useState('');
   const [errors, setErrors] = useState({}); // Store validation and API errors
-  const [success, setSuccess] = useState(''); // Store success message
 
   // Open the testimonial modal
   const openModal = () => {
     setIsModalOpen(true);
-    setSuccess(''); // Clear success message when modal opens
+    setErrors({}); // Clear errors when modal opens
   };
 
   // Close the testimonial modal and reset states
@@ -19,24 +20,37 @@ const Footer = ({ addTestimonial }) => {
     setIsModalOpen(false);
     setTestimonial('');
     setErrors({});
-    setSuccess('');
-    window.location.reload();
   };
 
   // Submit a testimonial
   const submitTestimonial = async () => {
     if (testimonial.trim() === '') {
+      toast.error('Testimonial text is required.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       setErrors({ testimonial: 'Testimonial text is required.' });
       return;
     }
 
     setErrors({}); // Clear previous validation errors
-    setSuccess(''); // Clear previous success message
 
     try {
       const token = localStorage.getItem('token'); // Retrieve token from localStorage
 
       if (!token) {
+        toast.error('You are not logged in. Please log in first.', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         setErrors({ api: 'You are not logged in. Please log in first.' });
         return;
       }
@@ -51,17 +65,47 @@ const Footer = ({ addTestimonial }) => {
         }
       );
 
-      setSuccess('Testimonial submitted successfully! Your testimonial is pending approval.');
-      setTestimonial('');
-       // Clear the testimonial input
+      toast.success('Testimonial submitted successfully! Your testimonial is pending approval.', {
+        position: 'top-right',
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      setTestimonial(''); // Clear the testimonial input
     } catch (error) {
       console.error('Error submitting testimonial:', error);
 
       if (error.response && error.response.status === 401) {
+        toast.error('Unauthorized. Please log in first.', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         setErrors({ api: 'Unauthorized. Please log in first.' });
       } else if (error.response && error.response.status === 400) {
+        toast.error('Invalid testimonial text.', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         setErrors({ testimonial: 'Invalid testimonial text.' });
       } else {
+        toast.error('Failed to submit testimonial. Please try again later.', {
+          position: 'top-right',
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         setErrors({
           api: 'Failed to submit testimonial. Please try again later.',
         });
@@ -139,13 +183,11 @@ const Footer = ({ addTestimonial }) => {
                 Submit
               </button>
             </div>
-
-            {/* Display Success or Error Message */}
-            {success && <p className="success-message">{success}</p>}
-            {errors.api && <p className="error-message">{errors.api}</p>}
           </div>
         </div>
       )}
+
+      <ToastContainer />
     </>
   );
 };

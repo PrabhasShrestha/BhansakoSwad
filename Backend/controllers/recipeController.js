@@ -3,12 +3,16 @@ const db = require("../config/dbConnection");
 
 const getApprovedRecipes = (req, res) => {
   const query = `
-        SELECT r.id, r.title, r.title_ne, r.difficulty, r.cooking_time, r.rating, r.created_at, 
-               r.image_url, r.category, r.user_id, r.cuisine, r.approval_status,
-               CASE WHEN u.email IN (SELECT email FROM chefs WHERE status = 'approved') THEN 1 END AS is_chef_recipe
-        FROM recipes r
-        LEFT JOIN users u ON r.user_id = u.id
-        WHERE r.approval_status = 'approved';
+       SELECT r.id, r.title, r.title_ne, r.difficulty, r.cooking_time, r.rating, r.created_at, 
+           r.image_url, r.category, r.user_id, r.cuisine, r.approval_status,
+           CASE WHEN u.email IN (SELECT email FROM chefs WHERE status = 'approved') THEN 1 END AS is_chef_recipe,
+           IFNULL(AVG(rt.rating), 0) AS average_rating
+    FROM recipes r
+    LEFT JOIN users u ON r.user_id = u.id
+    LEFT JOIN ratings rt ON r.id = rt.recipe_id
+    WHERE r.approval_status = 'approved'
+    GROUP BY r.id, r.title, r.title_ne, r.difficulty, r.cooking_time, r.rating, r.created_at, 
+             r.image_url, r.category, r.user_id, r.cuisine, r.approval_status, is_chef_recipe;
   `;
 
   db.query(query, (err, results) => {
@@ -293,11 +297,14 @@ const filterRecipes = (req, res) => {
 
   const placeholders = ingredients.map(() => "?").join(",");
   const query = `
-      SELECT DISTINCT r.*
+      SELECT DISTINCT r.*, IFNULL(AVG(rt.rating), 0) AS average_rating
       FROM recipes r
       JOIN recipe_ingredients ri ON r.id = ri.recipe_id
       JOIN ingredients i ON ri.ingredient_id = i.id
-      WHERE i.name IN (${placeholders})`;
+      LEFT JOIN ratings rt ON r.id = rt.recipe_id
+      WHERE i.name IN (${placeholders})
+      GROUP BY r.id, r.title, r.title_ne, r.difficulty, r.cooking_time, r.rating, r.created_at, 
+               r.image_url, r.category, r.user_id, r.cuisine, r.approval_status`;
 
   db.query(query, ingredients, (err, results) => {
     if (err) return res.status(500).json({ message: "Database error" });
@@ -384,8 +391,8 @@ const createRecipe = (req, res) => {
 
         const recipeQuery = `
           INSERT INTO recipes 
-          (title, title_ne, difficulty, cooking_time, category, cuisine, image_url, user_id, approval_status) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (title, title_ne, difficulty, cooking_time, category, cuisine, image_url, user_id, approval_status, created_at) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `;
 
         const image_url = req.file
@@ -844,7 +851,7 @@ const getFavorite = async (req, res) => {
   }
 };
 
-// DELETE: Remove a recipe from favorites
+
 const removeFavorite = (req, res) => {
   const { userId, recipeId } = req.body;
 

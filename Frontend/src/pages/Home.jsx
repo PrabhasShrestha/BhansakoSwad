@@ -5,7 +5,7 @@ import FooterBefore from '../components/FooterBefore';
 import Navigationbar from '../components/NavBar';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
-import 'swiper/css'; // Import Swiper styles
+import 'swiper/css';
 import 'swiper/css/pagination';
 import '../styles/Index.css';
 import IndexpageImage from '../assets/HomePage/Indexpage1.jpg';
@@ -24,12 +24,12 @@ import Navbar from '../components/Header';
 const Home = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/getapprovedtestimonials'); 
+        const response = await fetch('http://localhost:3000/api/getapprovedtestimonials');
         if (response.ok) {
           const data = await response.json();
           setTestimonials(data.testimonials);
@@ -42,15 +42,25 @@ const Home = () => {
         setLoading(false);
       }
     };
-  
+
     fetchTestimonials();
   }, []);
-  
+
   const isLoggedIn = localStorage.getItem("token") !== null;
+
+  // Handle navigation for diet preferences
+  const handleDietClick = (category) => {
+    navigate('/recipes', { state: { category } });
+  };
+
+  // Handle navigation for cuisines
+  const handleCuisineClick = (cuisine) => {
+    navigate('/recipes', { state: { category: cuisine } });
+  };
 
   return (
     <div className="index-page">
-      {isLoggedIn ? <Navigationbar/> : <Navbar />}
+      {isLoggedIn ? <Navigationbar /> : <Navbar />}
 
       <section className="hero">
         <div className="hero-content">
@@ -65,12 +75,15 @@ const Home = () => {
             packed with flavor, and simple to follow – cooking has never been
             this easy!
           </p>
-          <button className="explore-button" onClick={()=>{navigate("/recipes")}}>Explore more Recipes</button>
+          <button className="explore-button" onClick={() => navigate("/recipes")}>
+            Explore more Recipes
+          </button>
         </div>
         <div className="hero-image">
           <img src={IndexpageImage} alt="Healthy food" />
         </div>
       </section>
+
       <section className="diet-preference">
         <h2>Discover Recipes by Diet Preference</h2>
         <p>
@@ -82,30 +95,31 @@ const Home = () => {
           <div className="card">
             <img src={NonVegImage} alt="Non-Vegetarian" />
             <h3>Non-Vegetarian</h3>
-            <button>View Recipes</button>
+            <button onClick={() => handleDietClick("Non-Vegetarian")}>View Recipes</button>
           </div>
           <div className="card">
             <img src={PescatarianImage} alt="Pescatarian" />
             <h3>Pescatarian</h3>
-            <button>View Recipes</button>
+            <button onClick={() => handleDietClick("Pescatarian")}>View Recipes</button>
           </div>
           <div className="card">
             <img src={VegImage} alt="Vegetarian" />
             <h3>Vegetarian</h3>
-            <button>View Recipes</button>
+            <button onClick={() => handleDietClick("Vegetarian")}>View Recipes</button>
           </div>
           <div className="card">
             <img src={GlutenFreeImage} alt="Gluten-Free" />
             <h3>Gluten-Free</h3>
-            <button>View Recipes</button>
+            <button onClick={() => handleDietClick("Gluten-Free")}>View Recipes</button>
           </div>
           <div className="card">
             <img src={VeganImage} alt="Vegan" />
             <h3>Vegan</h3>
-            <button>View Recipes</button>
+            <button onClick={() => handleDietClick("Vegan")}>View Recipes</button>
           </div>
         </div>
       </section>
+
       <section className="cuisine-type">
         <h2>Explore By Cuisine Type</h2>
         <p>
@@ -113,25 +127,28 @@ const Home = () => {
           Unlock new culinary possibilities today!
         </p>
         <div className="cuisine-options">
-          <div className="image-container">
-            <img src={Cusine1Image} alt="Cuisine 1" />
+          <div className="image-container" onClick={() => handleCuisineClick("Turkish")}>
+            <img src={Cusine1Image} alt="Turkey Cuisine" />
             <div className="image-overlay">Turkey Cuisine</div>
           </div>
-          <div className="image-container">
-            <img src={Cusine2Image} alt="Cuisine 2" />
+          <div className="image-container" onClick={() => handleCuisineClick("Nepali")}>
+            <img src={Cusine2Image} alt="Nepali Cuisine" />
             <div className="image-overlay">Nepali Cuisine</div>
           </div>
-          <div className="image-container">
-            <img src={Cusine3Image} alt="Cuisine 3" />
+          <div className="image-container" onClick={() => handleCuisineClick("Pakistani")}>
+            <img src={Cusine3Image} alt="Pakistani Cuisine" />
             <div className="image-overlay">Pakistani Cuisine</div>
           </div>
-          <div className="image-container">
-            <img src={Cusine4Image} alt="Cuisine 4" />
+          <div className="image-container" onClick={() => handleCuisineClick("Indian")}>
+            <img src={Cusine4Image} alt="Indian Cuisine" />
             <div className="image-overlay">Indian Cuisine</div>
           </div>
         </div>
-        <button className="cuisine-button">Explore More Cuisine</button>
+        <button className="cuisine-button" onClick={() => navigate("/recipes", { state: { category: "Cuisine" } })}>
+          Explore More Cuisine
+        </button>
       </section>
+
       <section className="testimonials">
         <h2>Testimonials</h2>
         {loading ? (
@@ -152,15 +169,15 @@ const Home = () => {
                   <div className="quote-icon">“</div>
                   <p className="testimonial-text">{testimonial.text}</p>
                   <div className="author">
-                  <img
-                src={
-                  testimonial.user_image
-                    ? `http://localhost:3000${testimonial.user_image}` 
-                    : userImage 
-                }
-                alt={`${testimonial.user_name}'s profile`}
-                className="author-image"
-              />
+                    <img
+                      src={
+                        testimonial.user_image
+                          ? `http://localhost:3000${testimonial.user_image}`
+                          : userImage
+                      }
+                      alt={`${testimonial.user_name}'s profile`}
+                      className="author-image"
+                    />
                     <p className="author-name">{testimonial.user_name}</p>
                   </div>
                 </div>
@@ -170,7 +187,7 @@ const Home = () => {
         )}
       </section>
 
-      {isLoggedIn ? <Footer />: <FooterBefore />}
+      {isLoggedIn ? <Footer /> : <FooterBefore />}
     </div>
   );
 };

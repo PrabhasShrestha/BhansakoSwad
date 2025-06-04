@@ -4,15 +4,15 @@ import "../../styles/User/StoreDetails.css";
 import Navigationbar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import { FaShoppingCart } from "react-icons/fa";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const StoreDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [store, setStore] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); 
-  const [cartMessages, setCartMessages] = useState({});
-  const [showMessage, setShowMessage] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     // Fetch store details
@@ -31,7 +31,7 @@ const StoreDetails = () => {
     fetch(`http://localhost:3000/api/store/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        console.log("✅ Store Products API Response:", data)
+        console.log("✅ Store Products API Response:", data);
         if (data.success) {
           setProducts(data.data);
         } else {
@@ -41,86 +41,96 @@ const StoreDetails = () => {
       .catch((err) => console.error("Error fetching products:", err));
   }, [id]);
 
-  
   const handleQuickAddToCart = (product) => {
     if (!product || !product.product_id || !product.seller_id) {
-        console.error("❌ Invalid product data:", product);
-        return;
+      console.error("❌ Invalid product data:", product);
+      toast.error("Invalid product data.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
     }
 
     const cartItem = {
-        product_id: product.product_id,
-        productdetails_id: product.productdetails_id || product.product_id,
-        seller_id: product.seller_id,
-        quantity: 1,
+      product_id: product.product_id,
+      productdetails_id: product.productdetails_id || product.product_id,
+      seller_id: product.seller_id,
+      quantity: 1,
     };
 
     console.log("🛒 Sending to cart:", JSON.stringify(cartItem, null, 2));
 
     fetch("http://localhost:3000/api/cart/add", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(cartItem),
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(cartItem),
     })
-    .then((res) => {
+      .then((res) => {
         if (!res.ok) {
-            return res.json().then((data) => {
-                throw { status: res.status, message: data.message };
-            });
+          return res.json().then((data) => {
+            throw { status: res.status, message: data.message };
+          });
         }
         return res.json();
-    })
-    .then((data) => {
+      })
+      .then((data) => {
         console.log("🔍 API Response:", data);
 
-        const successMessage = `"${product.product_name}" added to cart! 🛒`;
-        const errorMessage = `Failed to add to cart: ${data.message || "Unknown error"}`;
-
-        setCartMessages((prevMessages) => ({
-            ...prevMessages,
-            [product.product_id]: data.message?.includes("added to cart") || data.message?.includes("updated successfully")
-                ? successMessage
-                : errorMessage,
-        }));
-
-        setTimeout(() => {
-            setCartMessages((prevMessages) => ({
-                ...prevMessages,
-                [product.product_id]: "",
-            }));
-        }, 3000);
-    })
-    .catch((error) => {
+        if (
+          data.message?.includes("added to cart") ||
+          data.message?.includes("updated successfully")
+        ) {
+          toast.success(`"${product.product_name}" added to cart! 🛒`, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        } else {
+          toast.error(`Failed to add to cart: ${data.message || "Unknown error"}`, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+      })
+      .catch((error) => {
         let errorMessage = "❌ Server error, try again.";
 
         if (error.status === 400) {
-            errorMessage = "❌ " + (error.message || "Not enough stock available.");
+          errorMessage = `❌ ${error.message || "Not enough stock available."}`;
         } else if (error.status === 401) {
-            errorMessage = "❌ Unauthorized! Please log in.";
+          errorMessage = "❌ Unauthorized! Please log in.";
         } else if (error.status === 404) {
-            errorMessage = "❌ Product not found.";
+          errorMessage = "❌ Product not found.";
         } else if (error.status === 500) {
-            errorMessage = "❌ Internal server error.";
+          errorMessage = "❌ Internal server error.";
         }
 
         console.error(`❌ Error (${error.status}):`, error.message || "Unknown error");
 
-        setCartMessages((prevMessages) => ({
-            ...prevMessages,
-            [product.product_id]: errorMessage,
-        }));
-
-        setTimeout(() => {
-            setCartMessages((prevMessages) => ({
-                ...prevMessages,
-                [product.product_id]: "",
-            }));
-        }, 3000);
-    });
-};
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      });
+  };
 
   if (!store) return <p>Loading store details...</p>;
 
@@ -140,11 +150,11 @@ const StoreDetails = () => {
               placeholder="Search in Store"
               className="search-box"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)} 
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button className="search-button">Search</button>
           </div>
-          <button className="cart-button" onClick={() => navigate('/shoppingcart')}>
+          <button className="cart-button" onClick={() => navigate("/shoppingcart")}>
             <FaShoppingCart size={24} />
           </button>
         </div>
@@ -155,49 +165,49 @@ const StoreDetails = () => {
             <p>No products match your search.</p>
           ) : (
             filteredProducts.map((product) => (
-                <div
-                  key={product.product_id || product.product_name}
-                  className="product-card"
-                  onClick={() => {
-                    if (!product.product_id) {
-                      console.error("Product ID is undefined for:", product);
-                    } else {
-                      console.log("🛒 Navigating to product:", product);
-                      console.log("🔍 Product ID:", product.product_id);
-                      console.log("🔍 Seller ID:", product.seller_id);
-                    }
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  <img src={product.image} alt={product.product_name} className="product-image" onClick={()=>{navigate(`/product/${product.product_id}?seller_id=${product.seller_id}`)}} />
-                  {cartMessages[product.product_id] && (
-                    <p style={{
-                     
-                      color: cartMessages[product.product_id].includes("❌") ? "red" : "green",
-                        fontSize: "9px",
-                        marginTop: "3px", 
-                        marginLeft: "10px"             
-                    }}>
-                        {cartMessages[product.product_id]}
-                    </p>)}
-                  <div className="product-info">
-                    <div className="product-details">
-                      <h4 className="product-name">{product.product_name}</h4>
-                      <p className="product-price">Rs {product.price} per {product.unit || 'kg'}</p>
-                    </div>
-                    
-                    <button className="add-to-cart-button" onClick={() => handleQuickAddToCart(product)}>
-                      <FaShoppingCart size={13} style={{ marginRight: "3px" }} /> Add
-                    </button>
+              <div
+                key={product.product_id || product.product_name}
+                className="product-card"
+                onClick={() => {
+                  if (!product.product_id) {
+                    console.error("Product ID is undefined for:", product);
+                  } else {
+                    console.log("🛒 Navigating to product:", product);
+                    console.log("🔍 Product ID:", product.product_id);
+                    console.log("🔍 Seller ID:", product.seller_id);
+                  }
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <img
+                  src={product.image}
+                  alt={product.product_name}
+                  className="product-image"
+                  onClick={() =>
+                    navigate(`/product/${product.product_id}?seller_id=${product.seller_id}`)
+                  }
+                />
+                <div className="product-info">
+                  <div className="product-details">
+                    <h4 className="product-name">{product.product_name}</h4>
+                    <p className="product-price">
+                      Rs {product.price} per {product.unit || "kg"}
+                    </p>
                   </div>
-                 
+                  <button
+                    className="add-to-cart-button"
+                    onClick={() => handleQuickAddToCart(product)}
+                  >
+                    <FaShoppingCart size={13} style={{ marginRight: "3px" }} /> Add
+                  </button>
                 </div>
-              )
-            )
+              </div>
+            ))
           )}
         </div>
       </div>
       <Footer />
+      <ToastContainer />
     </div>
   );
 };

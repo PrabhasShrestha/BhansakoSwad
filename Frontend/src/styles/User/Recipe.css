@@ -687,3 +687,52 @@
       height: 60px;
     }
   }
+
+  .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.pagination-button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: #e6f0fa;
+  color: #4a90e2;
+  border-color: #4a90e2;
+}
+
+.pagination-button.active {
+  background-color: #4a90e2;
+  color: #fff;
+  border-color: #4a90e2;
+}
+
+.pagination-button:disabled {
+  background-color: #fff;
+  color: #ccc;
+  border-color: #ddd;
+  cursor: not-allowed;
+}
+
+.pagination-button:disabled:hover {
+  background-color: #fff;
+  color: #ccc;
+  border-color: #ddd;
+}

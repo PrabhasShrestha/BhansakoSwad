@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "../../styles/UserSignUp.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa"; 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import "../../styles/UserSignUp.css";
+
 function UserSignUp() {
   const [formData, setFormData] = useState({
     first_name: "",
@@ -17,6 +20,15 @@ function UserSignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate(); 
 
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timer = setTimeout(() => {
+        setErrors({});
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [errors]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -27,14 +39,30 @@ function UserSignUp() {
 
   const validateForm = () => {
     let errors = {};
-    if (!formData.first_name) errors.first_name = "First Name is required";
-    if (!formData.last_name) errors.last_name = "Last Name is required";
-    if (!formData.address) errors.address = "Address is required";
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email))
+    if (!formData.first_name) {
+      errors.first_name = "First Name is required";
+      toast.error("First Name is required");
+    }
+    if (!formData.last_name) {
+      errors.last_name = "Last Name is required";
+      toast.error("Last Name is required");
+    }
+    if (!formData.address) {
+      errors.address = "Address is required";
+      toast.error("Address is required");
+    }
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = "Valid email is required";
-    if (!formData.phone_number || formData.phone_number.length !== 10)
+      toast.error("Valid email is required");
+    }
+    if (!formData.phone_number || formData.phone_number.length !== 10) {
       errors.phone_number = "Phone Number must be 10 digits";
-    if (!formData.password) errors.password = "Password is required";
+      toast.error("Phone Number must be 10 digits");
+    }
+    if (!formData.password) {
+      errors.password = "Password is required";
+      toast.error("Password is required");
+    }
     setErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -59,20 +87,22 @@ function UserSignUp() {
           password: "",
         });
         setErrors({});
-        navigate("/verify"); 
+        toast.success("Your account has been registered successfully, and your verification code has been sent to your email.", { autoClose: 4000 });
+        setTimeout(() => {
+          navigate("/verify");
+        }, 4000);
       } catch (error) {
         if (error.response?.status === 409) {
-          
           setErrors({ email: "This email is already registered" });
+          toast.error("This email is already registered");
         } else {
-          
           console.error(
             "Error during registration:",
             error.response?.data?.message || error.message
           );
-          setErrors({
-            api: error.response?.data?.message || "Registration failed",
-          });
+          const errorMessage = error.response?.data?.message || "Registration failed";
+          setErrors({ api: errorMessage });
+          toast.error(errorMessage);
         }
       }
     }
@@ -80,6 +110,7 @@ function UserSignUp() {
 
   return (
     <div className="container">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="form-section">
         <h2>HEY! WELCOME</h2>
         <h1>SIGN UP</h1>
@@ -95,7 +126,6 @@ function UserSignUp() {
               value={formData.first_name}
               onChange={handleChange}
             />
-            {errors.first_name && <p className="error">{errors.first_name}</p>}
           </div>
 
           <div className="input-container">
@@ -109,7 +139,6 @@ function UserSignUp() {
               value={formData.last_name}
               onChange={handleChange}
             />
-            {errors.last_name && <p className="error">{errors.last_name}</p>}
           </div>
 
           <div className="input-container">
@@ -123,7 +152,6 @@ function UserSignUp() {
               value={formData.address}
               onChange={handleChange}
             />
-            {errors.address && <p className="error">{errors.address}</p>}
           </div>
 
           <div className="input-container">
@@ -137,7 +165,6 @@ function UserSignUp() {
               value={formData.email}
               onChange={handleChange}
             />
-            {errors.email && <p className="error">{errors.email}</p>}
           </div>
 
           <div className="input-container">
@@ -151,9 +178,6 @@ function UserSignUp() {
               value={formData.phone_number}
               onChange={handleChange}
             />
-            {errors.phone_number && (
-              <p className="error">{errors.phone_number}</p>
-            )}
           </div>
 
           <div className="input-container">
@@ -175,7 +199,6 @@ function UserSignUp() {
                 {showPassword ? <FaEye /> : <FaEyeSlash />}
               </span>
             </div>
-            {errors.password && <p className="error">{errors.password}</p>}
           </div>
 
           <button type="submit" className="create-account-btn">
@@ -186,7 +209,6 @@ function UserSignUp() {
           Already have an account? <a href="/login" className="login-link">Login</a>
         </p>
       </div>
-
 
       <div className="info-section">
         <h1>CREATE ACCOUNT</h1>

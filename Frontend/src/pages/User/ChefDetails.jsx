@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/User/ChefDetails.css';
 import hullHullChicken from '../../assets/RecipePage/vegan.jpg';
-import DefaultChefImage from '../../assets/RecipePage/vegan.jpg';
+import DefaultChefImage from '../../assets/RecipePage/chef.jpg';
 import { FaClock, FaFire, FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import Footer from '../../components/Footer';
 import Navigationbar from '../../components/NavBar';

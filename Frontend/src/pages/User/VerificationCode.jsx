@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "../../styles/Verification.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const VerificationCode = () => {
   const [code, setCode] = useState(new Array(6).fill(""));
@@ -21,6 +23,17 @@ const VerificationCode = () => {
     }
   }, [email]);
 
+  useEffect(() => {
+    if (error || success || resendMessage) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccess("");
+        setResendMessage("");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success, resendMessage]);
+
   const handleChange = (element, index) => {
     if (isNaN(element.value)) return;
 
@@ -37,7 +50,7 @@ const VerificationCode = () => {
     const verificationCode = code.join("");
 
     if (verificationCode.length !== 6) {
-      setError("Please enter a complete 6-digit verification code.");
+      toast.error("Please enter a complete 6-digit verification code.");
       return;
     }
 
@@ -48,21 +61,20 @@ const VerificationCode = () => {
       });
 
       if (response.data.success) {
-        setSuccess("Verification successful! You can now log in.");
-        setError("");
+        toast.success("Verification successful! You can now log in.");
         setTimeout(() => {
           navigate("/Login");
         }, 2000);
       } else {
-        setError(response.data.message || "Verification failed. Please try again.");
+        toast.error("Correct code should be used, please check email.");
       }
     } catch (error) {
       if (error.response) {
-        setError(error.response.data.message || "An error occurred during verification.");
+        toast.error(error.response.data.message || "Correct code should be used, Please check your email properly.");
       } else if (error.request) {
-        setError("No response from server. Please check your connection.");
+        toast.error("No response from server. Please check your connection.");
       } else {
-        setError("An unexpected error occurred.");
+        toast.error("An unexpected error occurred.");
       }
       console.error("Verification Error:", error);
     }
@@ -71,25 +83,24 @@ const VerificationCode = () => {
   const handleResendCode = async () => {
     setIsResending(true);
     setResendMessage("");
-  
+
     try {
       const response = await axios.post("http://localhost:3000/api/resend-code", { email });
-  
+
       console.log("Resend Code Response:", response.data); // Debugging log
-  
+
       if (response.data.success) {
-        setResendMessage("A new verification code has been sent to your email.");
-        setError(""); // Clear any previous errors
+        toast.info("A new verification code has been sent to your email.");
       } else {
-        setError(response.data.message || "Failed to resend the code. Please try again.");
+        toast.error(response.data.message || "Failed to resend the code. Please try again.");
       }
     } catch (error) {
       if (error.response) {
-        setError(error.response.data.message || "Failed to resend the code.");
+        toast.error(error.response.data.message || "Failed to resend the code.");
       } else if (error.request) {
-        setError("No response from server. Please check your connection.");
+        toast.error("No response from server. Please check your connection.");
       } else {
-        setError("An unexpected error occurred.");
+        toast.error("An unexpected error occurred.");
       }
       console.error("Resend Code Error:", error);
     } finally {
@@ -97,9 +108,9 @@ const VerificationCode = () => {
     }
   };
 
-
   return (
     <div className="verification-container">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="verification-box">
         <h2>Verify</h2>
         <p>Please check your email for the 6-digit verification code.</p>
@@ -122,9 +133,6 @@ const VerificationCode = () => {
         <button className="resend-button" onClick={handleResendCode} disabled={isResending}>
           {isResending ? "Sending..." : "Resend Code"}
         </button>
-        {error && <p className="error-message">{error}</p>}
-        {success && <p className="success-message">{success}</p>}
-        {resendMessage && <p className="resend-message">{resendMessage}</p>}
       </div>
     </div>
   );
